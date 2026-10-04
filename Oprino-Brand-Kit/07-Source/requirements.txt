@@ -1,0 +1,9 @@
+cairosvg
+fonttools
+reportlab
+pymupdf
+pillow
+
+numpy
+
+scipy

@@ -1,0 +1,14 @@
+{
+  "silhouette_iou": 0.9930188658170161,
+  "vector_source": "user-supplied pin/check raster",
+  "raster_images_in_master_svg": 0,
+  "original_reference_sha256": "2124af6aa2f847ea4b16a210ce0311034c4cf4298c40f7dbb926ae0247330bc6",
+  "revision": "1.3",
+  "logo_png_width": 4096,
+  "logo_svg_embedded_images": 0,
+  "source_pixel_comparison": "The clean vector silhouette matches the thresholded raster mask with approximately 99.3% area overlap; smoothing and a fitted circular dot intentionally replace raster edge noise.",
+  "export_colors": "sRGB",
+  "png_compression": "lossless",
+  "transparent_logo_pngs": true,
+  "print_master": "native vector SVG / PDF"
+}

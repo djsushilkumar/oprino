@@ -1,0 +1,1 @@
+../ADR-006-authentication.md

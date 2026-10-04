@@ -1,0 +1,30 @@
+@font-face { font-family: 'Unbounded'; src: url('../06-Fonts/Unbounded-Medium.ttf') format('truetype'); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url('../06-Fonts/SpaceGrotesk-Regular.ttf') format('truetype'); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url('../06-Fonts/SpaceGrotesk-SemiBold.ttf') format('truetype'); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: Manrope; src: url('../06-Fonts/Manrope-Variable.ttf') format('truetype'); font-style: normal; font-weight: 200 800; font-display: swap; }
+:root {
+  --oprino-navy: #0F172A;
+  --oprino-cobalt: #164CFF;
+  --oprino-ocean: #087DE5;
+  --oprino-mint: #20BAAA;
+  --oprino-slate: #475569;
+  --oprino-paper: #F8FAFC;
+  --oprino-border: #DDE5EF;
+  --oprino-white: #FFFFFF;
+  --oprino-font-wordmark: 'Unbounded', sans-serif;
+  --oprino-font-heading: 'Space Grotesk', sans-serif;
+  --oprino-font-body: 'Manrope', sans-serif;
+  --oprino-h1: clamp(2rem, 1.4rem + 2.6vw, 3rem);
+  --oprino-h2: clamp(1.625rem, 1.25rem + 1.7vw, 2.25rem);
+  --oprino-h3: clamp(1.25rem, 1.05rem + 0.9vw, 1.625rem);
+  --oprino-body: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+  --oprino-radius: 1rem;
+  --oprino-space-1: 0.5rem;
+  --oprino-space-2: 1rem;
+  --oprino-space-3: 1.5rem;
+  --oprino-space-4: 2rem;
+  --oprino-space-6: 3rem;
+  --oprino-space-8: 4rem;
+  --oprino-space-12: 6rem;
+}
+/* Mint is a decorative accent; use navy or cobalt for normal text on white. */

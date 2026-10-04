@@ -1,0 +1,16 @@
+{
+  "version": "1.1",
+  "source_image": "Oprino-original-user-image.png",
+  "source_sha256": "2124af6aa2f847ea4b16a210ce0311034c4cf4298c40f7dbb926ae0247330bc6",
+  "crop_pixels": [
+    573,
+    568,
+    420,
+    420
+  ],
+  "pixel_identical_crop": true,
+  "icon_redrawn": false,
+  "full_color_embedded_image": "Oprino-supplied-icon-crop.png",
+  "one_color_alpha_source": "Oprino-supplied-icon-transparent.png",
+  "original_icon_detail_px": 412
+}
