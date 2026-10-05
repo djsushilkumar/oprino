@@ -153,7 +153,7 @@ flowchart TD
   - Requires maintaining Apple Developer Push Certificates / Auth Keys and Google Service Account JSONs per deployment environment.
   - Mobile developers must handle push notification permission dialogs and native channel configurations (Android 13+ runtime permissions).
 - **Mitigation:**
-  - Use Expo Config Plugins (`@react-native-firebase/app`, `@react-native-firebase/messaging`) to cleanly automate native Android/iOS push setup during prebuild.
+  - Use official Flutter plugins (`firebase_core`, `firebase_messaging`, `flutter_local_notifications`) with standard native Gradle and APNs configurations as established in [`ADR-001`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md).
 
 ---
 

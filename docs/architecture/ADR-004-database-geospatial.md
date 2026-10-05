@@ -23,19 +23,19 @@ Key challenges include:
 
 ## 2. Production PostgreSQL & PostGIS Version Evaluation
 
-Rather than defaulting arbitrarily to a single version, we evaluate current mature production combinations across cloud hosting support, backup/PITR tooling, and PostGIS extension stability:
+Rather than defaulting arbitrarily to an outdated version or untested builds, we evaluate modern production combinations across cloud hosting support, backup/PITR tooling, and PostGIS extension stability:
 
 | Evaluated Combination | Managed Cloud Support (AWS RDS/Aurora, Supabase, Neon) | Stable PostGIS Compatibility | Backup & PITR Tooling (pgBackRest, WAL-G, Cloud PITR) | Production Maturity & Extension Ecosystem | Assessment |
 |---|:---:|:---:|:---:|:---:|---|
-| **PostgreSQL 15 + PostGIS 3.3** | Universal (All clouds) | Stable | Fully supported | Mature legacy; lacks PG16/17 performance optimizations for logical replication and parallel aggregation. | Discard: Older generation. |
-| **PostgreSQL 16 + PostGIS 3.4 (Stable)** | **Universal across all tier-1 cloud providers** | **Stable 3.4.x (GA)** | **Full mature support across pgBackRest, WAL-G, AWS RDS, Neon** | **Exceptional stability; optimized query planner, parallel aggregations, logical replication improvements.** | **Recommended Baseline.** |
-| **PostgreSQL 17 + PostGIS 3.5 (Stable)** | Rapidly expanding (AWS RDS supported, Neon supported) | Stable 3.5.x (GA) | Supported in modern pgBackRest | Excellent memory management improvements in VACUUM and JSON operations; mature GA release. | **Permitted Upgrade Target at Scaffolding.** |
-| **PostgreSQL 17 + PostGIS 3.5-rc/beta** | Experimental | **UNACCEPTABLE (Beta/RC)** | Untested | Unstable for production multi-tenant data. | **Strictly Prohibited.** |
+| **PostgreSQL 17 + PostGIS 3.5 (Stable)** | Broad production support across tier-1 providers | Stable 3.5.x (GA) | Mature support across pgBackRest, WAL-G, AWS RDS, Neon | High stability; mature baseline with optimized query planning and memory management. | **Permitted Fallback Baseline** (if PG18 hosting constraint). |
+| **PostgreSQL 18 + PostGIS 3.6.x (Stable GA)** | **Target greenfield standard across tier-1 managed platforms** | **Stable 3.6.x (GA)** | **Full native support across modern pgBackRest and managed cloud PITR** | **Superior I/O parallelism, advanced spatial indexing, vacuum efficiency, and optimized connection pooling.** | **Preferred Greenfield Baseline.** |
+| **PostgreSQL 19 Beta / RC + Any PostGIS** | Experimental | **UNACCEPTABLE (Beta/RC)** | Untested | Unstable for production multi-tenant data. | **Strictly Prohibited.** |
 
 ### Version Policy Directive:
-- **Baseline Engine:** **PostgreSQL 16 or 17 with PostGIS 3.4+ / 3.5+ (Stable GA only).**
-- **Strict Rule:** Beta or Release Candidate (RC) builds of PostGIS are **strictly prohibited** in production architecture.
-- **Selection Criterion:** Pin the latest mature GA combination supported natively by the selected managed cloud hosting provider and PITR backup infrastructure during Phase 01C scaffolding.
+- **Preferred Greenfield Baseline:** **PostgreSQL 18 with current stable PostGIS 3.6.x (GA).**
+- **Hosting Limitation Exception:** Allow **PostgreSQL 17** only if the selected managed cloud hosting provider has a documented production limitation preventing PostgreSQL 18.
+- **Strict Prohibition:** PostgreSQL 19 beta/RC or any Beta/Release Candidate builds of PostGIS are **strictly prohibited** in production architecture.
+- **Scaffolding Pinning:** Exact patch versions (e.g. `18.x` / `3.6.x`) must be pinned during Phase 01C scaffolding.
 
 ---
 
@@ -61,7 +61,7 @@ Rather than defaulting arbitrarily to a single version, we evaluate current matu
 
 ## 4. Decision & Detailed Architecture
 
-**Selected Architecture: PostgreSQL (Mature Supported GA: 16 or 17) with Stable PostGIS (3.4+ / 3.5+ GA), utilizing Dual-Domain Schema Isolation.**
+**Selected Architecture: PostgreSQL 18 (Preferred Greenfield Baseline; PG17 Permitted Fallback for Hosting Constraints) with Current Stable PostGIS (3.6.x GA), utilizing Dual-Domain Schema Isolation.**
 
 ```mermaid
 graph TD

@@ -31,23 +31,23 @@ During Phase 01A, strict prohibitions against premature implementation were main
 - [x] **Runtime Baseline Selection Policy:**
   - Pinned Active-LTS version-selection policy recorded: *"Pin current approved LTS at Phase 01C scaffolding and keep it within supported lifecycle."* ([`ADR-003`](file:///workspace/oprino/docs/architecture/ADR-003-backend-platform.md)).
 - [x] **PostgreSQL & PostGIS Engine Evaluation:**
-  - Mature supported GA combination policy: PostgreSQL 16 or 17 with PostGIS 3.4+ / 3.5+ GA. Beta/RC builds strictly prohibited ([`ADR-004`](file:///workspace/oprino/docs/architecture/ADR-004-database-geospatial.md)).
+  - Preferred greenfield baseline: PostgreSQL 18 with current stable PostGIS 3.6.x GA (PG17 fallback permitted only for documented hosting limitations; PG19 beta/RC strictly prohibited) ([`ADR-004`](file:///workspace/oprino/docs/architecture/ADR-004-database-geospatial.md)).
 - [x] **Durable Domain Events & Outbox Pattern:**
   - Transactional Outbox pattern implemented in PostgreSQL (`outbox_events`). Redis Pub/Sub scoped strictly to ephemeral real-time fan-out ([`ADR-015`](file:///workspace/oprino/docs/architecture/ADR-015-domain-events.md)).
 - [x] **Domain SQLite vs. Geolocation SDK Persistence Separation:**
-  - `op-sqlite` strictly handles application domain entities (tasks, punches, visits, checklists, outbox mutations). Transistor SDK handles continuous location telemetry via its internal native SQLite queue ([`ADR-008`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md), [`ADR-009`](file:///workspace/oprino/docs/architecture/ADR-009-offline-sync.md)).
+  - Drift + SQLite (`drift` with `package:sqlite3` / Bundled Native SQLite) strictly handles application domain entities (tasks, punches, visits, checklists, outbox mutations). Transistor SDK (`flutter_background_geolocation`) handles continuous location telemetry via its internal native SQLite queue ([`ADR-008`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md), [`ADR-009`](file:///workspace/oprino/docs/architecture/ADR-009-offline-sync.md)).
 - [x] **Measurable SLO Targets & Device Validation Matrix:**
   - Replaced ungrounded guarantees with testable SLOs: battery drain (< 0.5%/hr stationary, < 1.5–2.5%/hr active), live-map delivery latency (< 2–3s p95). Device validation matrix covers Samsung, Xiaomi, Oppo, Vivo, Pixel, and iPhone ([`ADR-008`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md), [`LOCATION-PIPELINE.md`](file:///workspace/oprino/docs/architecture/LOCATION-PIPELINE.md)).
 - [x] **Duty-Hours Privacy Enforcement Boundaries:**
-  - 3-Boundary control: Acquisition control (explicit punch-out native stop + local safe expiry deadline), Local persistence control (native queue post-duty purge), and Server ingestion control (zero-trust active shift check) ([`PRIVACY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/PRIVACY-ARCHITECTURE.md)).
+  - 3-Boundary control: Acquisition control (explicit punch-out immediate stop + safe local deadline safety mechanism), Local persistence control (native queue post-duty purge), and Server ingestion control (zero-trust active shift check). Phase 01B spike defined to validate BOTH Android aggressive OEM/Doze and iOS suspended scheduler behavior ([`PRIVACY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/PRIVACY-ARCHITECTURE.md), [`ADR-008`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md)).
 - [x] **Multi-Tier Telemetry Retention & Least-Privileged Maintenance:**
   - Comprehensive deletion across primary tables, replicas, backups/PITR (35-day rolling), exports, and logs. Derived mileage governed by a separate 3-year policy. Application workers restricted to security-definer procedure `telemetry.prune_expired_partitions()` with zero direct DDL permissions ([`RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md)).
 - [x] **Zero-Trust Multi-Tenancy & Pooled Connection Safety:**
   - 5-Stage verification pipeline: Authenticated Identity -> Membership Check -> Active Context -> Transaction-Scoped `SET LOCAL app.current_workspace_id` -> RLS Enforcement. Automated negative isolation test suite defined ([`ADR-005`](file:///workspace/oprino/docs/architecture/ADR-005-multitenancy.md), [`SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md)).
 - [x] **Reopened ADR-006 Authentication:**
-  - Selected Application-Owned Audited Framework (Better Auth) with PostgreSQL persistence and Redis session cache, evaluating all 14 criteria. Eliminates hand-written crypto while avoiding per-MAU vendor lock-in ([`ADR-006`](file:///workspace/oprino/docs/architecture/ADR-006-authentication.md)).
+  - Selected Application-Owned Audited Framework (Better Auth) with PostgreSQL persistence and Redis session cache. Native session management via Web cookies and Flutter Dio / `flutter_secure_storage`; layered device governance without custom crypto primitives ([`ADR-006`](file:///workspace/oprino/docs/architecture/ADR-006-authentication.md)).
 - [x] **Parameterized Infrastructure Cost Model:**
-  - Complete line-item accounting across 5 scale profiles (10, 50, 200, 500, 2,500 active employees), separating fixed platform baseline from variable usage costs. Seat pricing treated as a commercial assumption ([`INFRA-COST-MODEL.md`](file:///workspace/oprino/docs/architecture/INFRA-COST-MODEL.md)).
+  - Complete line-item accounting across 5 scale profiles (10, 50, 200, 500, 2,500 active employees), separating fixed platform baseline from variable usage costs. Perpetual Transistor SDK license decoupled from monthly per-user cloud hosting costs ($15.89 down to $0.403/user/mo) ([`INFRA-COST-MODEL.md`](file:///workspace/oprino/docs/architecture/INFRA-COST-MODEL.md)).
 - [x] **Realistic Maps Architecture & Cost Boundaries:**
   - Separated mobile SDK rendering ($0), web vector tile infrastructure (MapTiler/PMTiles ~$25/mo), geocoding with database caching, and OS deep-link turn-by-turn navigation ($0) ([`ADR-011`](file:///workspace/oprino/docs/architecture/ADR-011-maps-geospatial-provider.md)).
 - [x] **Scope Drift Removal:**
@@ -58,6 +58,13 @@ During Phase 01A, strict prohibitions against premature implementation were main
   - Redefined as "Append-Only for Application Roles". Documented privileged break-glass procedures, infrastructure administration boundaries, and backup retention ([`AUDIT-LOG-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/AUDIT-LOG-ARCHITECTURE.md)).
 - [x] **New ADR-020 Mobile Packaging Strategy:**
   - Authored ADR-020 comparing unified role-aware application vs. separate store binaries; recommended One Unified Role-Aware App ("Oprino") accommodating SMB working foremen and supervisors ([`ADR-020`](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md)).
+- [x] **Mobile Framework Pivot to Flutter (Stakeholder Directive):**
+  - Superseded React Native with Flutter Stable (Ref Baseline: Flutter 3.47 / Stable Dart) across 14 technical dimensions ([`ADR-001`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md)).
+  - Re-evaluated offline persistence and approved Drift + SQLite (`drift` with `package:sqlite3` / Bundled Native SQLite) ([`ADR-009`](file:///workspace/oprino/docs/architecture/ADR-009-offline-sync.md)).
+  - Upgraded background location to Transistor Software `flutter_background_geolocation` ([`ADR-008`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md)).
+  - Established OpenAPI 3.1 as the formal cross-language contract boundary, compiling strongly-typed Dart clients via `openapi-generator-cli dart-dio` ([`CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md), [`ADR-018`](file:///workspace/oprino/docs/architecture/ADR-018-api-style.md)).
+  - Restructured repository layout to a polyglot monorepo (Turborepo/pnpm for TS, standalone pub for Flutter/Dart) ([`ADR-017`](file:///workspace/oprino/docs/architecture/ADR-017-monorepo.md)).
+  - Defined 5 new Phase 01B spikes validating Flutter location, Drift sync, Better Auth REST, OpenAPI Dart generation, and secure storage lifecycle.
 
 ---
 

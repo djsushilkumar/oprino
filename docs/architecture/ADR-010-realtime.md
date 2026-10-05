@@ -93,7 +93,7 @@ To engineer a cost-effective and battery-efficient architecture, Oprino categori
 ```mermaid
 flowchart LR
     WorkerMobile[Employee Mobile App] -->|HTTP POST Telemetry Batch| API[Fastify API]
-    API -->|1. Persist to DB| DB[(PostgreSQL 16)]
+    API -->|1. Persist to DB| DB[(PostgreSQL 18 / 17)]
     API -->|2. Publish to Redis Pub/Sub| Redis[(Redis Channel: live_ops:workspace_id)]
     
     Redis -->|3. Fan-out to Dashboard Workers| SSEStream[Fastify SSE Stream Handler]

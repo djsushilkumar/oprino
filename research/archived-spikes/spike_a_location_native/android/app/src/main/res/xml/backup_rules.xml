@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <exclude domain="sharedpref" path="FlutterSecureStorage"/>
+    <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml"/>
+    <exclude domain="sharedpref" path="oprino_auth_session.xml"/>
+    <exclude domain="sharedpref" path="oprino_installation.xml"/>
+    <exclude domain="database" path="oprino.sqlite"/>
+    <exclude domain="database" path="oprino.sqlite-wal"/>
+    <exclude domain="database" path="oprino.sqlite-shm"/>
+</full-backup-content>

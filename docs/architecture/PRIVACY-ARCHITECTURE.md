@@ -59,12 +59,16 @@ flowchart TD
 ```
 
 ### 2.1 Mobile OS Timing Realities & Safe Local Deadline Strategy
-- **Mobile Operating System Limitation:** Modern mobile operating systems (Android Doze mode, iOS background app suspension) **cannot guarantee** executing an automatic schedule boundary at an exact second while an app is suspended or without network connectivity.
-- **Explicit Punch-Out:** When an employee taps "Punch Out", the application synchronously invokes `BackgroundGeolocation.stop()`. The foreground notification is destroyed immediately; the OS GPS radio powers off.
-- **Safe Local Deadline Strategy:** 
-  - To handle scenarios where an employee loses connectivity or forgets to punch out at the end of their shift, the mobile app provisions a **local hard deadline timestamp** in the native SDK configuration when the shift begins.
-  - If the device is suspended or offline when the deadline timestamp is reached, the native OS AlarmManager/Timer terminates tracking autonomously, without requiring network or server commands.
-  - On the backend, zero-trust validation drops any telemetry batch timestamped outside the scheduled shift window + company tolerance buffer.
+- **Mobile Operating System Limitation:** Modern mobile operating systems (Android Doze mode, OEM battery killers, iOS background app suspension) **cannot guarantee** executing an automatic schedule boundary at an exact second while an app is suspended or offline. Exact automatic cutoff timing must **not** be claimed as a mathematical certainty until empirically measured during Phase 01B prototyping.
+- **Explicit Punch-Out:** When an employee taps "Punch Out", the application synchronously invokes `BackgroundGeolocation.stop()`. The foreground notification is destroyed immediately; the OS GPS radio powers off instantly.
+- **Automatic Shift Expiry as a Safety Mechanism:**
+  - Automatic shift expiry serves as an operational safety mechanism subject to OS constraints, backed redundantly by local queue purge and server ingestion rejection.
+  - The mobile app provisions a **local safe deadline timestamp** in the native SDK configuration when the shift begins (`stopAfterElapsedMinutes` / OS AlarmManager alarm).
+  - If the employee forgets to punch out or loses connectivity, the native SDK executes a local shutdown when the deadline timestamp is reached or upon the next OS scheduler wake.
+  - **Local Persistence & Server Rejection Backing:** Any lingering coordinates timestamped past duty end are purged from the local native SQLite queue prior to upload, and the server zero-trust ingestion boundary (`POST /v1/telemetry/locations`) unconditionally drops any points outside an authorized shift window.
+- **Phase 01B Prototype Validation:** Research spike `research/spikes/location-duty-boundary` must empirically measure and validate cutoff behavior across:
+  1. Android OEM variants (Samsung OneUI, Xiaomi HyperOS, Oppo ColorOS, Vivo FuntouchOS) under Doze and deep sleep.
+  2. iOS devices under app suspension, Significant Motion triggers, and `BGAppRefreshTask` schedules.
 
 ---
 

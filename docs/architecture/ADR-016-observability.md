@@ -25,7 +25,7 @@ However, field workforce software presents unique **Privacy & Compliance Challen
 
 ### Alternative A: Unified Open-Source & Privacy-Scrubbed Stack (Pino + Sentry + OpenTelemetry / Prometheus)
 - **Logging:** Fastify native `pino` with JSON structured logging, automatic request-id correlation, and built-in redacting serializers for sensitive fields (`latitude`, `longitude`, `password`, `token`, `phone`).
-- **Error Tracking:** Sentry across Web, Mobile (React Native), and Backend API with client-side beforeSend scrubbing hooks.
+- **Error Tracking:** Sentry across Web, Mobile (Flutter), and Backend API with client-side beforeSend scrubbing hooks.
 - **Metrics & Health:** Fastify Prometheus metrics endpoint (`fastify-metrics`) exposing standard HTTP latencies, status codes, active SSE streams, BullMQ queue depths, and DB pool stats. Kubernetes/Docker liveness & readiness probes.
 - **Pros:** Industry standard, zero performance overhead (Pino is the fastest Node.js logger), unified error aggregation in Sentry, complete privacy control via redactors.
 - **Cons:** Requires configuring Sentry project keys and Prometheus scrapers.
@@ -56,7 +56,7 @@ However, field workforce software presents unique **Privacy & Compliance Challen
 ### Rationale:
 1. **Privacy Invariance:** Privacy is a core product tenet of Oprino. Pino's native redaction paths (`redact: ['req.headers.authorization', 'payload.latitude', 'payload.longitude', 'payload.phone', 'payload.password']`) ensure zero telemetry leaks at the serialization level before log lines reach stdout.
 2. **Predictable Cloud Costs:** By utilizing Prometheus/Grafana for infrastructure metrics and standard log aggregation (Loki or CloudWatch), infrastructure monitoring costs scale predictably rather than exponentially per log line.
-3. **Cross-Platform Exception Visibility:** Sentry provides first-class support for React Native bridgeless crash reporting, Next.js source-mapped exceptions, and Node.js unhandled rejections under a single dashboard.
+3. **Cross-Platform Exception Visibility:** Sentry provides first-class support for Flutter Impeller crash reporting, Next.js source-mapped exceptions, and Node.js unhandled rejections under a single dashboard.
 
 ---
 
@@ -65,7 +65,7 @@ However, field workforce software presents unique **Privacy & Compliance Challen
 ```mermaid
 flowchart TD
     subgraph Clients["Surfaces"]
-        MOB["React Native Mobile"]
+        MOB["Flutter Mobile App"]
         WEB["Next.js Web Dashboard"]
     end
 
@@ -128,7 +128,7 @@ Fastify exposes two dedicated zero-overhead health check endpoints:
 1. `GET /health/liveness`: Returns `200 OK { status: "UP", timestamp }`. Verifies the Node.js process is responsive and event-loop is healthy.
 2. `GET /health/readiness`: Returns `200 OK` or `503 Service Unavailable`. Tests active connectivity to:
    - Primary PostgreSQL database (`SELECT 1;`)
-   - Redis cluster (`PING`)
+   - Managed Redis HA instance (`PING`)
    - If either dependency fails, returns `503` so Kubernetes / load balancers route traffic away from the instance.
 
 ### 5.4 Prometheus Metrics Catalog (`/metrics`)

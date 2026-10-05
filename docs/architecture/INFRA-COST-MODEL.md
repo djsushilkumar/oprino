@@ -20,8 +20,9 @@ This document establishes a fully parameterized, bottom-up infrastructure cost m
 5. **2,500 Total Active Platform Employees (Fleet of 25–50 Multi-Tenant SMB Companies)**
 
 ### Modeling Governance:
-- **Comprehensive Line-Item Accounting:** Includes API compute, background workers, PostgreSQL primary + replicas, PostGIS, SSD storage, PITR/backups, Redis HA, R2 object storage (capacity and Class A/B operations), transactional email, Sentry, logging, Transistor Software SDK commercial support, web vector tiles, geocoding, CI/CD runners, container registry, CDN/WAF, secrets management, and backup storage.
+- **Comprehensive Line-Item Accounting:** Includes API compute, background workers, PostgreSQL primary + replicas, PostGIS, SSD storage, PITR/backups, Redis HA, R2 object storage (capacity and Class A/B operations), transactional email, Sentry, logging, web vector tiles, geocoding, CI/CD runners, container registry, CDN/WAF, secrets management, and backup storage.
 - **Fixed vs. Variable Separation:** Distinguishes fixed baseline platform operational costs from volume-driven marginal costs.
+- **Separation of Software Licensing:** One-time/perpetual commercial software licenses (such as Transistor SDK) are modeled separately as capital licenses with optional annual maintenance assumptions, rather than conflated with recurring monthly cloud infrastructure hosting charges.
 - **Pricing as Business Assumption:** Retail seat pricing ($4.00 to $6.00/seat/month) is modeled explicitly as a **commercial business assumption**, not an architectural certainty.
 
 ---
@@ -32,7 +33,7 @@ This document establishes a fully parameterized, bottom-up infrastructure cost m
 |---|---|---|---|:---:|
 | **Compute: API** | Stateless Fastify API Containers | AWS ECS Fargate / Hetzner Cloud | 2x containers (2 vCPU, 4GB RAM each): ~$65/mo per instance | Semi-Fixed |
 | **Compute: Worker** | BullMQ Background Workers | AWS ECS Fargate / Hetzner Cloud | 2x containers (2 vCPU, 4GB RAM each): ~$65/mo per instance | Semi-Fixed |
-| **Database: Primary**| Managed PostgreSQL 16/17 + PostGIS | AWS RDS / Managed Cloud Postgres | Primary: 4 vCPU, 16GB RAM: ~$180.00/mo | Fixed Base |
+| **Database: Primary**| Managed PostgreSQL 18 (or 17) + PostGIS | AWS RDS / Managed Cloud Postgres | Primary: 4 vCPU, 16GB RAM: ~$180.00/mo | Fixed Base |
 | **Database: Replica**| Physical Streaming Read Replica | AWS RDS / Managed Cloud Postgres | Replica: 2 vCPU, 8GB RAM: ~$90.00/mo (Added at >200 scale) | Semi-Fixed |
 | **Database Storage** | Provisioned SSD (GP3 / NVMe) | Managed Cloud Storage | $0.115 per GB / month | Variable |
 | **Database PITR** | Automated Backups & WAL Archiving | Managed S3 Backup Storage | 35-day rolling retention: ~$0.023 per GB / month | Variable |
@@ -44,7 +45,6 @@ This document establishes a fully parameterized, bottom-up infrastructure cost m
 | **Transactional Email**| Operational digests, alerts, invites | Resend API | $20.00 base (50k emails), then $0.80 per 1,000 | Variable |
 | **Error Monitoring** | Cross-Platform Crash Reporting | Sentry Team Tier | $26.00 / month flat | Fixed |
 | **Logs & Metrics** | Fastify Metrics + Loki / Prometheus | Managed Grafana Cloud / Self-hosted | ~$25.00 / month | Fixed |
-| **Geolocation SDK** | Transistor Background Geolocation | Commercial OEM Support & License | Amortized platform license & support: ~$42.00 / month | Fixed |
 | **Web Map Tiles** | MapLibre Vector Tile Delivery | MapTiler Cloud / PMTiles on R2 | Base free tier + $0.05 per 1k requests: ~$25.00 / month | Semi-Fixed |
 | **Address Geocoding**| Customer Site Geocoding & Cache | Radar API + PostgreSQL Cache | 100k free tier + cache hits: ~$10.00 / month | Variable |
 | **Routing / Navigation**| Turn-by-Turn Driving Directions | Native OS Deep Link Handoff | $0.00 API cost | $0 Cost |
@@ -52,13 +52,20 @@ This document establishes a fully parameterized, bottom-up infrastructure cost m
 | **Edge CDN & WAF** | Ingress Security & DDoS Protection | Cloudflare Pro / Business | ~$20.00 / month | Fixed |
 | **Secrets Manager** | Centralized Secrets Distribution | Doppler / Infisical Team | ~$18.00 / month | Fixed |
 
+### 2.1 Commercial Software Licensing (Transistor SDK Model)
+Per [`ADR-020`](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md), Oprino distributes a single unified role-aware mobile application (`com.oprino.app`). Commercial SDK licensing is modeled separately from recurring cloud hosting:
+- **Planning Reference:** Current Transistor Software Starter package: **$399 one-time perpetual license** covering iOS and Android under a single application bundle ID (`com.oprino.app`), supporting unlimited devices/users.
+- **Included Support/Updates:** 12 months of version updates and developer support included at initial purchase.
+- **Future Maintenance Renewal Assumption:** Any subsequent optional annual update/support renewal is **TBD / verify with vendor at purchase time** and modeled strictly as a periodic software maintenance assumption, NOT a recurring monthly cloud infrastructure hosting charge.
+- **Per-User Decoupling:** Software licensing costs do not scale per seat/user and are excluded from per-employee monthly hosting calculations.
+
 ---
 
 ## 3. Parameterized Cost Projections Across 5 Scales
 
 ```
 +-----------------------------------------------------------------------------------------------------------------+
-|                                 PARAMETERIZED MONTHLY INFRASTRUCTURE EXPENSE MODEL                              |
+|                            PARAMETERIZED MONTHLY CLOUD INFRASTRUCTURE EXPENSE MODEL                             |
 +-----------------------------------------------------+-----------+-----------+-----------+-----------+-----------+
 | Scale Profile:                                      | 10 Users  | 50 Users  | 200 Users | 500 Users | 2,500 Usr |
 | Active Tenant SMB Companies:                        | 1 Tenant  | 1 Tenant  | 1 Tenant  | 2 Tenants | 50 Tenants|
@@ -71,7 +78,6 @@ This document establishes a fully parameterized, bottom-up infrastructure cost m
 | • Managed Redis HA (Primary + Replica with AOF)     | $25.00    | $45.00    | $65.00    | $65.00    | $65.00    |
 | • Sentry Error Tracking                             | $0.00     | $26.00    | $26.00    | $26.00    | $26.00    |
 | • Metrics & Logging Storage                         | $10.00    | $15.00    | $25.00    | $25.00    | $25.00    |
-| • Transistor Geolocation Commercial License Support | $42.00    | $42.00    | $42.00    | $42.00    | $42.00    |
 | • Web Vector Tiles (MapTiler / PMTiles)             | $5.00     | $10.00    | $15.00    | $20.00    | $25.00    |
 | • CI/CD Runners & Container Registry                | $10.00    | $15.00    | $25.00    | $30.00    | $30.00    |
 | • Edge CDN / WAF Shield                             | $0.00     | $20.00    | $20.00    | $20.00    | $20.00    |
@@ -85,9 +91,9 @@ This document establishes a fully parameterized, bottom-up infrastructure cost m
 | • Transactional Email (Resend)                      | $0.00     | $20.00    | $20.00    | $35.00    | $75.00    |
 | • Address Geocoding API (Radar API + Cache)         | $0.00     | $0.00     | $5.00     | $10.00    | $10.00    |
 +-----------------------------------------------------+-----------+-----------+-----------+-----------+-----------+
-| TOTAL ALL-IN MONTHLY INFRASTRUCTURE COST:           | $200.90   | $441.15   | $594.80   | $904.50   | $1,048.50 |
+| TOTAL ALL-IN MONTHLY CLOUD INFRASTRUCTURE COST:     | $158.90   | $399.15   | $552.80   | $845.50   | $1,006.50 |
 |                                                     |           |           |           |           |           |
-| ALL-IN INFRASTRUCTURE COST PER ACTIVE EMPLOYEE / MO | $20.09    | $8.82     | $2.97     | $1.81     | $0.419    |
+| ALL-IN CLOUD INFRASTRUCTURE COST PER EMPLOYEE / MO  | $15.89    | $7.98     | $2.76     | $1.69     | $0.403    |
 +-----------------------------------------------------+-----------+-----------+-----------+-----------+-----------+
 ```
 
@@ -97,13 +103,13 @@ This document establishes a fully parameterized, bottom-up infrastructure cost m
 
 Retail SaaS seat pricing for SMB workforce platforms typically ranges between **$4.00 and $6.00 per employee per month**. 
 
-Below is the mathematical gross margin model at 2,500 active employees (Total Infra: **$1,048.50 / month**, or **$0.419 / seat / month**):
+Below is the mathematical gross margin model at 2,500 active employees (Total Monthly Cloud Infra: **$1,006.50 / month**, or **$0.403 / seat / month**):
 
 | Assumed Retail Price per Seat | Total Monthly Revenue (2,500 Seats) | All-In Infrastructure Cost | Payment Gateway Fees (~2.9% + $0.30) | Net Gross Profit | Calculated Gross Margin |
 |---|:---:|:---:|:---:|:---:|:---:|
-| **Conservative: $4.00 / user / mo** | $10,000.00 | $1,048.50 (10.5%) | ~$305.00 (3.0%) | $8,646.50 | **86.5%** |
-| **Baseline: $5.00 / user / mo** | $12,500.00 | $1,048.50 (8.4%) | ~$377.50 (3.0%) | $11,074.00 | **88.6%** |
-| **Target: $6.00 / user / mo** | $15,000.00 | $1,048.50 (7.0%) | ~$450.00 (3.0%) | $13,501.50 | **90.0%** |
+| **Conservative: $4.00 / user / mo** | $10,000.00 | $1,006.50 (10.1%) | ~$305.00 (3.1%) | $8,688.50 | **86.9%** |
+| **Baseline: $5.00 / user / mo** | $12,500.00 | $1,006.50 (8.1%) | ~$377.50 (3.0%) | $11,116.00 | **88.9%** |
+| **Target: $6.00 / user / mo** | $15,000.00 | $1,006.50 (6.7%) | ~$450.00 (3.0%) | $13,543.50 | **90.3%** |
 
 ---
 

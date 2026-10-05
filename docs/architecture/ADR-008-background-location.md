@@ -1,9 +1,10 @@
-# ADR-008: Mobile Background Location & Duty-Hours Tracking Architecture (Re-evaluated)
+# ADR-008: Mobile Background Location & Duty-Hours Tracking Architecture (Flutter Baseline)
 
-**Status:** Updated & Recommended for Phase 01A  
-**Date:** October 2026 (Reconciled)  
+**Status:** APPROVED (Updated for Final Flutter Baseline & Empirical Spike Scope)  
+**Date:** October 2026 (Revised & Re-Architected)  
 **Deciders:** Lead Systems Architect, Mobile Engineering, Privacy Officer  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))  
+**Underlying Framework:** Flutter Stable (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) ([`ADR-001`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md))
 
 ---
 
@@ -14,7 +15,7 @@ Background location tracking is the core technical challenge for mobile workforc
 - **Mobile OS Background Constraints (Android & iOS):**
   - Android 14/15/16 strictly terminates background location unless an explicit Foreground Service with `android:foregroundServiceType="location"` and a visible, ongoing notification is active.
   - iOS 17/18/19 enforces strict power management, app suspension, and user transparency notifications (`showsBackgroundLocationIndicator = true`).
-  - Aggressive OEM battery killers (Xiaomi/MIUI, Samsung/OneUI, Oppo/ColorOS, Vivo) kill background processes unless native motion-triggered stationary sleep and OEM battery exemption configurations are applied.
+  - Aggressive OEM battery killers (Xiaomi/MIUI/HyperOS, Samsung/OneUI, Oppo/ColorOS, Vivo/Funtouch) kill background processes unless native motion-triggered stationary sleep and OEM battery exemption configurations are applied.
 - **Battery & Data Efficiency:** Unbounded continuous GPS polling rapidly drains phone batteries and consumes mobile data. The engine must adapt dynamically based on movement.
 - **Architectural Separation:** Avoid creating two competing GPS sync engines. Clearly delineate application domain storage from native geolocation SDK persistence.
 
@@ -22,30 +23,30 @@ Background location tracking is the core technical challenge for mobile workforc
 
 ## 2. Alternatives Evaluated
 
-### Alternative A: Enterprise Geolocation SDK (Transistor Software `react-native-background-geolocation`)
-- **Overview:** Specialized native background geolocation engine for React Native with built-in native motion-detection state machine and independent native SQLite persistence.
+### Alternative A: Enterprise Geolocation SDK (Transistor Software `flutter_background_geolocation`)
+- **Overview:** Specialized native background geolocation engine for Flutter with built-in native motion-detection state machine and independent native SQLite persistence.
 - **Key Capabilities:**
   - Hardware motion recognition (accelerometer/gyroscope) switches between stationary sleep and active tracking.
-  - Native SQLite queue inside the native C++/Kotlin/Swift layer: buffers breadcrumbs even if React Native JavaScript is suspended or killed.
+  - Native SQLite queue inside the native C++/Kotlin/Swift layer: buffers breadcrumbs even if the Flutter Dart isolate is suspended or killed.
   - Direct native HTTP upload pipeline (`autoSync: true`) directly streaming batches to `/v1/telemetry/locations`.
-- **Pros:** Unrivaled survivability across OEM Android variants; offloads low-level OS lifecycle handling from JS thread; eliminates double-queuing in domain SQLite.
-- **Cons:** Commercial platform license fee ($300–$600 one-time per platform, budgeted in infra model).
+- **Pros:** Unrivaled survivability across OEM Android variants; offloads low-level OS lifecycle handling from Flutter Dart UI isolate; eliminates double-queuing in domain SQLite.
+- **Cons:** Commercial platform license fee (Current planning reference: Starter at $399 one-time perpetual license covering iOS and Android under a single application bundle ID `com.oprino.app`, including 1 year of vendor updates/support).
 
-### Alternative B: Hand-Crafted Native Service (Custom Kotlin + Swift CoreLocation)
+### Alternative B: Hand-Crafted Native Service (Custom Kotlin + Swift CoreLocation via Flutter Platform Channels)
 - **Overview:** Writing custom Android foreground services and iOS location delegates from scratch.
 - **Pros:** Zero commercial license fee.
 - **Cons:** Astronomical engineering maintenance; high vulnerability to OEM battery-killer updates; high risk of background execution drops on budget devices.
 
-### Alternative C: Basic Open-Source (`expo-location` TaskManager)
-- **Overview:** Standard Expo background location wrapper.
+### Alternative C: Basic Open-Source (`geolocator` / `flutter_background_service`)
+- **Overview:** Standard community background location wrappers.
 - **Pros:** Open-source.
-- **Cons:** Lacks motion-triggered stationary geofence sleep; high battery drain; prone to OS termination during 8-hour shifts.
+- **Cons:** Lacks motion-triggered stationary geofence sleep; high battery drain; prone to OS termination during 8-hour shifts on budget Android hardware.
 
 ---
 
 ## 3. Decision
 
-**Adopt Transistor Software `react-native-background-geolocation` with Clean Engine Separation and Multi-Tier Duty Control.**
+**Adopt Transistor Software `flutter_background_geolocation` with Clean Engine Separation and Multi-Tier Duty Control.**
 
 ---
 
@@ -56,13 +57,13 @@ To avoid competing sync queues, data corruption, and duplicate uploads:
 ```mermaid
 flowchart TD
     subgraph MobileDevice["Mobile Device Runtime"]
-        subgraph DomainApp["React Native Application Layer"]
-            UI["Mobile App UI (React Native)"]
-            DOM_DB[("Domain SQLite (op-sqlite)<br>• Tasks & Checklists<br>• Attendance Punches<br>• Site Visits & Proof<br>• Outbox Mutations")]
-            SYNC_ENG["Domain Sync Engine<br>(POST /v1/sync/mutations)"]
+        subgraph DomainApp["Flutter Application Layer (Dart)"]
+            UI["Mobile App UI (Flutter / Impeller)"]
+            DOM_DB[("Domain SQLite (Drift)<br>• Tasks & Checklists<br>• Attendance Punches<br>• Site Visits & Proof<br>• Outbox Mutations")]
+            SYNC_ENG["Domain Sync Engine (Isolate)<br>(POST /v1/sync/mutations via Dio)"]
         end
 
-        subgraph TransistorSDK["Native Geolocation SDK Layer"]
+        subgraph TransistorSDK["Native Geolocation SDK Layer (Kotlin / Swift)"]
             MOTION["Native Motion State Machine<br>(Accelerometer / Gyroscope)"]
             NATIVE_DB[("SDK Native SQLite Queue<br>• Location Breadcrumbs<br>• Battery & Speed Telemetry")]
             NATIVE_HTTP["Native HTTP Uploader<br>(POST /v1/telemetry/locations)"]
@@ -79,7 +80,7 @@ flowchart TD
 ```
 
 ### Explicit Boundary Definitions:
-1. **Domain SQLite (`op-sqlite`):**
+1. **Domain SQLite (`package:drift` + `package:sqlite3` with bundled native SQLite):**
    - **Responsibility:** Pure business entities: tasks, checklists, attendance punch records, customer site visits, proof photos, notes, signatures, and `outbox_mutations`.
    - **Exclusion:** Does **NOT** store high-frequency continuous location breadcrumbs.
 2. **SDK Native Persistence (Transistor SQLite):**
@@ -97,7 +98,7 @@ The non-negotiable rule is enforced across three distinct control points:
 flowchart TD
     subgraph Control1["1. Acquisition Control (Mobile Device)"]
         PUNCH_OUT["Employee Taps Punch Out<br>OR Local Deadline Expires"]
-        STOP["SDK.stop()<br>Foreground Service Killed<br>Ongoing Notification Dismissed<br>GPS Radio Powered Off"]
+        STOP["bg.BackgroundGeolocation.stop()<br>Foreground Service Killed<br>Ongoing Notification Dismissed<br>GPS Radio Powered Off"]
     end
 
     subgraph Control2["2. Local Persistence Control (Mobile Device)"]
@@ -119,44 +120,59 @@ flowchart TD
 ```
 
 ### 5.1 Mobile OS Timing Realities & Safe Local Deadline Strategy
-- **OS Reality:** Mobile operating systems (Android Doze, iOS background app suspension) **cannot guarantee** executing an automatic schedule boundary at an exact second while an app is suspended or offline.
-- **Explicit Employee Punch-Out:** Invokes immediate, synchronous `BackgroundGeolocation.stop()`. The foreground notification disappears instantly; location hardware halts.
-- **Safe Local Deadline Strategy:** 
-  - Upon punching in or synchronizing shift schedules, the app configures a **local hard deadline timestamp** in the native SDK configuration (`stopAfterElapsedMinutes` / native OS AlarmManager alarm).
-  - If the employee loses network connectivity or forgets to punch out, the native SDK autonomously executes a local shutdown when the deadline timestamp is reached, even if the main JavaScript app is suspended.
-  - Server-side validation drops any point timestamped after the scheduled shift window + grace buffer.
+- **OS Reality & Unmeasured Timing Invariant:** Mobile operating systems (Android Doze, OEM battery optimizations, iOS suspended states) **cannot guarantee** executing an automatic schedule boundary at an exact second while an app is suspended, in deep sleep, or without network connectivity. Exact automatic cutoff timing must **not** be claimed as a mathematical certainty until empirically measured during Phase 01B prototyping.
+- **Explicit Employee Punch-Out:** Invokes immediate, synchronous `bg.BackgroundGeolocation.stop()`. The foreground notification disappears; native location hardware powers down. Exact hardware shutdown latency is a validation target to be measured in Phase 01B rather than presumed.
+- **Automatic Shift Expiry as a Defense Safety Mechanism:**
+  - Automatic shift expiry is an operational safety mechanism subject to OS constraints, backed redundantly by local queue purge and server ingestion rejection.
+  - Upon punching in or synchronizing shift schedules, the app configures a **local safe deadline timestamp** in the native SDK configuration (`stopAfterElapsedMinutes` / native OS AlarmManager alarm).
+  - If the employee forgets to punch out or loses connectivity, the native SDK executes a local shutdown when the deadline timestamp is reached or upon the next OS scheduler wake.
+  - **Local Persistence & Server Rejection Backing:** Any lingering coordinates timestamped past duty end are purged from the local native SQLite queue prior to upload, and the server zero-trust ingestion boundary (`POST /v1/telemetry/locations`) unconditionally drops any points outside an authorized shift window.
 
 ---
 
-## 6. Measurable Target SLOs & Device Validation Matrix
+## 6. Measurable Target SLOs & Phase 01B Spike Scope
 
-Architectural claims must be grounded in measurable Service Level Objectives (SLOs) rather than marketing assertions.
+Architectural targets must be grounded in measurable Service Level Objectives (SLOs) and empirical validation rather than marketing assertions. All numbers below are **targets to validate**, not guaranteed baselines prior to measurement:
 
-### 6.1 Performance & Power Target SLOs
+### 6.1 Performance & Power Target SLOs (To Be Validated)
 - **Battery Drain Target SLO:**
-  - *Stationary Mode:* < 0.5% battery drain per hour.
-  - *Active Travel Mode (Driving/Walking):* < 1.5% – 2.5% battery drain per active hour on mid-tier hardware.
+  - *Stationary Mode Target:* < 0.5% battery drain per hour.
+  - *Active Travel Mode Target (Driving/Walking):* < 1.5% – 2.5% battery drain per active hour on mid-tier hardware.
 - **Live-Map Delivery Target SLO:**
-  - Under stable cellular/Wi-Fi coverage, 95% of transmitted breadcrumbs reach the manager web dashboard within **< 3.0 seconds (p95)**.
-- **Motion Transition Target SLO:**
-  - Stationary geofence engages after 5 minutes of stillness within a 30m radius; wakes up within 50m of displacement.
+  - Fastify SSE live operational map delivery latency target: **< 2.0 to 3.0 seconds (p95)** from physical coordinate capture to dashboard map render under standard 4G/LTE connectivity.
 
-### 6.2 Representative Device Validation Matrix
-Prior to production sign-off, the background tracking pipeline must be benchmarked and validated across the following hardware/OS profiles:
+### 6.2 Baseline Device Validation Matrix
+Empirical verification of battery and tracking continuity during Phase 01B must validate the following device spectrum:
+1. **Samsung Galaxy A-Series / S-Series (Android 14/15, One UI 6+):** Deep Sleep & App Standby Buckets.
+2. **Xiaomi Redmi / Note Series (HyperOS / MIUI 14):** Aggressive MIUI battery saver and background task killing.
+3. **Oppo / Vivo (ColorOS / Funtouch OS):** Strict background freeze and memory management policies.
+4. **Google Pixel (Stock Android 14/15/16):** Standard Android Doze and Foreground Service compliance.
+5. **Apple iPhone 13/14/15/16 (iOS 17/18):** CoreLocation background modes and user location indicator compliance.
 
-| OEM / Brand | Test Device Profiles | Operating System | Critical Test Focus |
-|---|---|---|---|
-| **Samsung** | Galaxy A15 (Low), Galaxy A54 (Mid), S24 (High) | OneUI 6 (Android 14) / OneUI 7 (Android 15) | Battery optimization whitelist, foreground service stability. |
-| **Xiaomi / Redmi** | Redmi Note 12/13 (Low/Mid), Xiaomi 13 (High) | HyperOS / MIUI 14 (Android 13/14) | Aggressive autostart restrictions, memory cleaner whitelist. |
-| **Oppo / Realme** | Realme C-series (Budget), Reno 11 (Mid) | ColorOS 14 / Realme UI 5.0 | Background freeze prevention, deep sleep wakeups. |
-| **Vivo / iQOO** | Vivo Y27 (Budget), V29 (Mid) | Funtouch OS 14 | "High background power consumption" permission toggle. |
-| **Google Pixel** | Pixel 7a (Mid), Pixel 8 (High) | Stock Android 14 / 15 | Reference baseline: foreground service notifications, Doze mode. |
-| **Apple iPhone** | iPhone 11 (Legacy), iPhone 14 (Mid), iPhone 16 (Current)| iOS 17 / iOS 18 | `showsBackgroundLocationIndicator`, Significant Motion API. |
+### 6.3 Phase 01B Location Spike Scope (Android & iOS)
+The Phase 01B location spike must validate both operating systems under real-world conditions:
+1. **Android Aggressive OEM & Doze Behavior:**
+   - Measure stationary geofence exit latency and active tracking continuity across Samsung, Xiaomi, and Vivo devices.
+   - Measure behavior during deep Doze mode when the phone is motionless for > 60 minutes.
+   - Validate foreground service sticky restart behavior (`START_STICKY`) after OS memory eviction.
+2. **iOS Suspended & Background Scheduler Behavior:**
+   - Validate CoreLocation tracking reliability when the Flutter app is in the `Suspended` state.
+   - Measure background execution budget and wake-up reliability using `allowsBackgroundLocationUpdates` and `pausesLocationUpdatesAutomatically = false`.
+   - Test wake-up recovery from Significant Location Change (SLC) service after device reboots.
+3. **Duty Boundary Validation:**
+   - Verify that explicit punch-out halts hardware GPS polling immediately, measuring the exact shutdown latency during Phase 01B prototyping.
+   - Empirically benchmark automatic cutoff timing (`safe_local_deadline_utc`) across both OSes without speculative claims.
+   - Verify that any coordinates recorded past duty expiration are purged locally and authoritatively rejected by Fastify (`telemetry_ingest_rejected_off_duty`).
 
 ---
 
-## 7. Compliance with Phase 00 Approved Scope
+## 7. Consequences & Trade-offs
 
-- Strictly guarantees that off-duty employee tracking is technically impossible and never an intended behavior.
-- Separates domain business persistence from native location SDK persistence, eliminating competing sync queues.
-- Replaces unverified marketing claims with measurable engineering SLOs and an exhaustive OEM validation matrix.
+- **Positive:**
+  - Complete elimination of off-duty tracking liability via 3 independent privacy barriers.
+  - Zero double-queuing: domain mutations use Drift SQLite; location points use native Transistor SQLite.
+  - Battle-tested OEM survivability on frontline Android hardware.
+- **Negative:**
+  - Commercial platform license fee (Current planning reference: Starter at $399 one-time perpetual license, decoupled from monthly cloud hosting; future update/support renewals TBD / verified with vendor at purchase time).
+- **Compliance:**
+  - Strictly adheres to Phase 00 frozen privacy baseline. Off-duty location tracking remains strictly non-existent.

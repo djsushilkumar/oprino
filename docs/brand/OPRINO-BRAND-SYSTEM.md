@@ -235,3 +235,179 @@ During the brand audit of the supplied Brand Kit v1.3, the following nuances wer
 3. **Mint Contrast Warning:**  
    *Finding:* Mint (`#20BAAA`) is widely featured in the logo gradient.  
    *Reconciliation:* Mint is codified strictly as an accent, pill background, and progress indicator. It is explicitly banned from being used as a typography color on white surfaces.
+
+---
+
+## 11. Flutter ThemeData & ThemeExtension Specification
+
+To guarantee 100% brand token fidelity across the mobile application without redesigning the brand, the design tokens are codified into a strongly-typed Flutter `ThemeExtension`.
+
+### 11.1 OprinoThemeExtension Dart Implementation
+
+```dart
+import 'package:flutter/material.dart';
+
+@immutable
+class OprinoThemeExtension extends ThemeExtension<OprinoThemeExtension> {
+  // Brand Colors
+  final Color navy;
+  final Color cobalt;
+  final Color ocean;
+  final Color mint;
+  final Color deepBlue;
+  final Color slate;
+  final Color paper;
+  final Color border;
+  final Color white;
+
+  // Spacing Scale
+  final double space0_5; // 4.0 px
+  final double space1;   // 8.0 px
+  final double space2;   // 16.0 px
+  final double space3;   // 24.0 px
+  final double space4;   // 32.0 px
+  final double space6;   // 48.0 px
+  final double space8;   // 64.0 px
+
+  // Corner Radii
+  final BorderRadius radiusSm; // 8.0 px
+  final BorderRadius radiusMd; // 16.0 px
+  final BorderRadius radiusLg; // 24.0 px
+
+  const OprinoThemeExtension({
+    this.navy = const Color(0xFF0F172A),
+    this.cobalt = const Color(0xFF164CFF),
+    this.ocean = const Color(0xFF087DE5),
+    this.mint = const Color(0xFF20BAAA),
+    this.deepBlue = const Color(0xFF1235A4),
+    this.slate = const Color(0xFF475569),
+    this.paper = const Color(0xFFF8FAFC),
+    this.border = const Color(0xFFDDE5EF),
+    this.white = const Color(0xFFFFFFFF),
+    this.space0_5 = 4.0,
+    this.space1 = 8.0,
+    this.space2 = 16.0,
+    this.space3 = 24.0,
+    this.space4 = 32.0,
+    this.space6 = 48.0,
+    this.space8 = 64.0,
+    this.radiusSm = const BorderRadius.all(Radius.circular(8.0)),
+    this.radiusMd = const BorderRadius.all(Radius.circular(16.0)),
+    this.radiusLg = const BorderRadius.all(Radius.circular(24.0)),
+  });
+
+  @override
+  OprinoThemeExtension copyWith({
+    Color? navy, Color? cobalt, Color? ocean, Color? mint,
+    Color? deepBlue, Color? slate, Color? paper, Color? border, Color? white,
+    double? space0_5, double? space1, double? space2, double? space3,
+    double? space4, double? space6, double? space8,
+    BorderRadius? radiusSm, BorderRadius? radiusMd, BorderRadius? radiusLg,
+  }) {
+    return OprinoThemeExtension(
+      navy: navy ?? this.navy,
+      cobalt: cobalt ?? this.cobalt,
+      ocean: ocean ?? this.ocean,
+      mint: mint ?? this.mint,
+      deepBlue: deepBlue ?? this.deepBlue,
+      slate: slate ?? this.slate,
+      paper: paper ?? this.paper,
+      border: border ?? this.border,
+      white: white ?? this.white,
+      space0_5: space0_5 ?? this.space0_5,
+      space1: space1 ?? this.space1,
+      space2: space2 ?? this.space2,
+      space3: space3 ?? this.space3,
+      space4: space4 ?? this.space4,
+      space6: space6 ?? this.space6,
+      space8: space8 ?? this.space8,
+      radiusSm: radiusSm ?? this.radiusSm,
+      radiusMd: radiusMd ?? this.radiusMd,
+      radiusLg: radiusLg ?? this.radiusLg,
+    );
+  }
+
+  @override
+  OprinoThemeExtension lerp(ThemeExtension<OprinoThemeExtension>? other, double t) {
+    if (other is! OprinoThemeExtension) return this;
+    return OprinoThemeExtension(
+      navy: Color.lerp(navy, other.navy, t)!,
+      cobalt: Color.lerp(cobalt, other.cobalt, t)!,
+      ocean: Color.lerp(ocean, other.ocean, t)!,
+      mint: Color.lerp(mint, other.mint, t)!,
+      deepBlue: Color.lerp(deepBlue, other.deepBlue, t)!,
+      slate: Color.lerp(slate, other.slate, t)!,
+      paper: Color.lerp(paper, other.paper, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      white: Color.lerp(white, other.white, t)!,
+      space0_5: space0_5, space1: space1, space2: space2,
+      space3: space3, space4: space4, space6: space6, space8: space8,
+      radiusSm: BorderRadius.lerp(radiusSm, other.radiusSm, t)!,
+      radiusMd: BorderRadius.lerp(radiusMd, other.radiusMd, t)!,
+      radiusLg: BorderRadius.lerp(radiusLg, other.radiusLg, t)!,
+    );
+  }
+}
+```
+
+### 11.2 Master ThemeData Integration
+
+```dart
+ThemeData buildOprinoLightTheme() {
+  const oprino = OprinoThemeExtension();
+
+  return ThemeData(
+    useMaterial3: true,
+    fontFamily: 'Manrope',
+    scaffoldBackgroundColor: oprino.paper,
+    colorScheme: ColorScheme.light(
+      primary: oprino.cobalt,
+      onPrimary: oprino.white,
+      secondary: oprino.ocean,
+      onSecondary: oprino.white,
+      surface: oprino.white,
+      onSurface: oprino.navy,
+      outline: oprino.border,
+      error: const Color(0xFFE63946),
+      onError: oprino.white,
+    ),
+    textTheme: const TextTheme(
+      // Headings use Space Grotesk
+      displayLarge: TextStyle(fontFamily: 'Space Grotesk', fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+      displayMedium: TextStyle(fontFamily: 'Space Grotesk', fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+      titleLarge: TextStyle(fontFamily: 'Space Grotesk', fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+      titleMedium: TextStyle(fontFamily: 'Space Grotesk', fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+      // Body & UI use Manrope
+      bodyLarge: TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.w400, color: Color(0xFF0F172A)),
+      bodyMedium: TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.w400, color: Color(0xFF475569)),
+      labelLarge: TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: oprino.cobalt,
+        foregroundColor: oprino.white,
+        elevation: 0,
+        minimumSize: const Size(double.infinity, 48),
+        shape: RoundedRectangleBorder(borderRadius: oprino.radiusSm),
+        textStyle: const TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.w600, fontSize: 16),
+      ),
+    ),
+    cardTheme: CardTheme(
+      color: oprino.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: oprino.radiusMd,
+        side: BorderSide(color: oprino.border, width: 1.0),
+      ),
+    ),
+    extensions: const [oprino],
+  );
+}
+```
+
+### 11.3 Component Token Guidelines
+- **Primary Action Button:** Cobalt `#164CFF` background, White `#FFFFFF` text, Manrope 600, height 48px, radius 8px (`radiusSm`).
+- **Duty Active Pill:** Mint `#20BAAA` background, Navy `#0F172A` text (Contrast 7.37:1 AAA Pass), Manrope 600, height 28px, pill radius.
+- **Card Container:** White `#FFFFFF` surface, Border `#DDE5EF` (1px solid), radius 16px (`radiusMd`), zero elevation.
+- **Background Surface:** Paper `#F8FAFC`.
+

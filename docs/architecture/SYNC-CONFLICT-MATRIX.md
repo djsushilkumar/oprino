@@ -101,7 +101,7 @@ sequenceDiagram
     participant Mobile as Mobile App (Offline SQLite)
     participant SyncMgr as Mobile Sync Manager
     participant Server as Fastify Sync Engine
-    participant DB as PostgreSQL 16
+    participant DB as PostgreSQL 18 (or 17)
 
     Note over Mobile,SyncMgr: Device reconnects to LTE/Wi-Fi
     SyncMgr->>Mobile: SELECT * FROM outbox_mutations ORDER BY client_timestamp ASC

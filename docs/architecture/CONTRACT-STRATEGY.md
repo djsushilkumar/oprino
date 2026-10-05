@@ -1,174 +1,163 @@
-# Oprino Type Contracts & Schema Strategy Specification
+# Oprino Type Contracts & Polyglot Schema Strategy Specification
 
-**Status:** Proposed / Recommended for Phase 01A  
-**Date:** October 2026  
+**Status:** APPROVED (Updated for Polyglot Flutter + TypeScript Monorepo)  
+**Date:** October 2026 (Revised & Re-Architected)  
 **Controlling Documents:** 
 - Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`ADR-017: Monorepo Architecture`](file:///workspace/oprino/docs/architecture/ADR-017-monorepo.md)
+- [`ADR-001: Mobile Application Framework Selection (Flutter)`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md)
+- [`ADR-017: Monorepo Architecture & Workspace Layout`](file:///workspace/oprino/docs/architecture/ADR-017-monorepo.md)
 - [`ADR-018: API Architecture & Contracts`](file:///workspace/oprino/docs/architecture/ADR-018-api-style.md)
 
 ---
 
-## 1. Overview & "Single Source of Truth" Paradigm
+## 1. Overview & The Polyglot Contract Paradigm
 
-In a distributed multi-platform platform (Web, Mobile Android/iOS, Fastify API, BullMQ Workers), data contract drift is a major source of bugs and deployment friction. 
+In a polyglot architecture featuring a **Next.js Web Dashboard** (TypeScript), a **Fastify Backend API** (TypeScript), **BullMQ Workers** (TypeScript), and a **Flutter Mobile App** (Dart), direct TypeScript/Zod schema imports into mobile are no longer possible. 
 
-Oprino resolves this by establishing **`packages/contracts`** as the absolute, single source of truth across the monorepo.
-- **Zod Schemas** define runtime validation rules, data coercion, and type constraints.
-- **TypeScript Types** are inferred automatically via `z.infer<typeof Schema>`.
-- **Fastify Route Validators** consume Zod schemas directly via `@fastify/type-provider-zod` for zero-overhead HTTP serialization.
-- **OpenAPI 3.1 Specs** are auto-generated directly from the route schemas.
-- **Client Forms** (Web and Mobile) import the exact same Zod schemas for instant client-side validation.
+To eliminate cross-language contract drift, Oprino establishes **OpenAPI 3.1** as the formal, authoritative cross-language contract boundary.
+
+```text
+Backend Schemas (Zod / Type Provider in packages/contracts)
+                        ↓
+            Fastify API Routes & Ingress
+                        ↓
+             OpenAPI 3.1 Specification (openapi.json)
+           ↙                                     ↘
+Next.js Web Client                        openapi-generator-cli (dart-dio)
+(TanStack Query / Direct TS)                             ↓
+                                           Generated Dart Client & Models
+                                                (generated/dart-api)
+                                                         ↓
+                                              Flutter Mobile Application
+```
+
+### Architectural Principles:
+1. **Single Source of Truth on Backend:** All HTTP schemas, DTOs, query parameters, and error envelopes originate in `packages/contracts` using Zod schemas.
+2. **Authoritative OpenAPI 3.1 Specification:** Fastify extracts schemas via `@fastify/type-provider-zod` and compiles the canonical `openapi.json` via `@fastify/swagger`.
+3. **Automated Dart Code Generation:** `openapi-generator-cli` with the `dart-dio` generator compiles `openapi.json` into a versioned Dart package (`oprino_api`) located at `generated/dart-api`.
+4. **Compile-Time Drift Elimination:** `apps/mobile` imports `oprino_api` via a local path dependency. Any breaking change to a backend schema causes an immediate compile-time error in the Flutter app during local builds and CI verification.
+
+---
+
+## 2. Monorepo Package & Generation Layout
+
+```
+oprino/
+├── packages/
+│   ├── contracts/                # Backend TypeScript source of truth
+│   │   ├── src/
+│   │   │   ├── auth/             # Login, session, device registration DTOs
+│   │   │   ├── tasks/            # Task CRUD, state transitions, checklists
+│   │   │   ├── attendance/       # Punch-in/out, shift models, regularizations
+│   │   │   ├── locations/        # Breadcrumbs, telemetry batch DTOs
+│   │   │   ├── sync/             # Offline mutation envelopes, replay batches
+│   │   │   ├── proof/            # Photo metadata, signatures, checklists
+│   │   │   ├── visits/           # Customer sites, check-in records
+│   │   │   └── common/           # Pagination, error envelopes, UUIDs
+│   │   ├── openapi.json          # Compiled canonical OpenAPI 3.1 specification
+│   │   └── package.json
+│   └── tokens/                   # Design token source (JSON)
+│
+├── generated/
+│   └── dart-api/                 # Compiled Dart Client & Models (Git tracked or CI generated)
+│       ├── lib/
+│       │   ├── api/              # Strongly typed API classes (TasksApi, AuthApi, etc.)
+│       │   ├── model/            # Strongly typed Dart DTOs (TaskDTO, LocationDTO, etc.)
+│       │   └── oprino_api.dart   # Main library export
+│       └── pubspec.yaml          # Standalone Dart package
+│
+├── apps/
+│   ├── web/                      # Next.js 15+ Dashboard (imports packages/contracts)
+│   └── mobile/                   # Flutter Unified Mobile App (pub; Reference Baseline: Flutter 3.47)
+│
+└── services/
+    ├── api/                      # Fastify REST API (validates against packages/contracts)
+    └── worker/                   # BullMQ Background Worker
+```
+
+---
+
+## 3. OpenAPI Dart Code Generation Pipeline
+
+### 3.1 Tooling Selection: `openapi-generator-cli` with `dart-dio`
+Following evaluation of Dart generation options:
+- **`dart-dio` (Selected):** Generates robust Dart classes using the enterprise-standard `dio` HTTP client. Provides native interceptors (for auth bearer tokens and installation IDs), timeout management, file upload streams (for photo proofs), and JSON serialization.
+- **Alternatives Rejected:**
+  - *`dart` (built-in http):* Lacks interceptor chains and advanced cancellation tokens; cumbersome for multipart file uploads.
+  - *Hand-written Dart DTOs:* Unacceptable risk of contract drift across 50+ endpoints.
+
+### 3.2 Automated Generation Command
+```bash
+# Executed via root Turborepo pipeline: pnpm run generate:dart-api
+npx @openapitools/openapi-generator-cli generate \
+  -i packages/contracts/openapi.json \
+  -g dart-dio \
+  -o generated/dart-api \
+  --additional-properties=\
+pubName=oprino_api,\
+pubVersion=1.0.0,\
+pubDescription="Generated Oprino API Client for Flutter",\
+serializationLibrary=json_serializable,\
+dateLibrary=core
+```
+
+### 3.3 Flutter Consumption via Path Dependency
+In `apps/mobile/pubspec.yaml`:
+```yaml
+name: oprino_mobile
+description: "Oprino Unified Mobile Application"
+
+environment:
+  sdk: '^3.6.0'
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  oprino_api:
+    path: ../../generated/dart-api
+  dio: ^5.7.0
+  drift: ^2.24.0
+  sqlite3: ^2.5.0
+  flutter_secure_storage: ^9.2.2
+```
+
+---
+
+## 4. Cross-Platform Contract Drift CI Verification
+
+To guarantee that the backend API, web frontend, and Flutter mobile client never desynchronize:
 
 ```mermaid
 flowchart TD
-    ZOD["packages/contracts (Zod Schemas)"]
-    
-    TS["Inferred TypeScript Interfaces (z.infer)"]
-    FASTIFY["Fastify Ingress Validation & OpenAPI Spec"]
-    WEB["Next.js Web Forms & TanStack Query"]
-    MOBILE["React Native Mobile & Local SQLite"]
+    DEV["Developer Alters Fastify Route / Zod Schema"]
+    EXPORT["Export openapi.json via Fastify CLI"]
+    GENERATE["Generate Dart Client (openapi-generator dart-dio)"]
+    DIFF_CHECK{"git diff --exit-code"}
+    TEST_FLUTTER["flutter test (Compile & Run Dart Tests)"]
+    MERGE["Pull Request Approved"]
 
-    ZOD --> TS
-    ZOD --> FASTIFY
-    ZOD --> WEB
-    ZOD --> MOBILE
+    DEV --> EXPORT --> GENERATE --> DIFF_CHECK
+    DIFF_CHECK -- "No Uncommitted Changes" --> TEST_FLUTTER --> MERGE
+    DIFF_CHECK -- "Uncommitted Changes Found" --> FAIL["CI Failure: Generated Dart Client Out of Sync"]
 ```
+
+1. **Step 1:** Developer updates a Zod schema in `packages/contracts`.
+2. **Step 2:** Fastify route types update automatically; `pnpm run openapi:export` regenerates `packages/contracts/openapi.json`.
+3. **Step 3:** Generator updates `generated/dart-api`.
+4. **Step 4:** CI executes `flutter test` in `apps/mobile`. If a required field was removed or altered, the Flutter build fails at compile time with a clear type error.
 
 ---
 
-## 2. Package Structure (`packages/contracts`)
+## 5. Contract Evolution & Compatibility Rules
 
-```
-packages/contracts/
-├── src/
-│   ├── auth/              # Login, token refresh, session models
-│   ├── tasks/             # Task CRUD, state transitions, priorities, checklists
-│   ├── attendance/        # Punch-in, punch-out, shift models, regularizations
-│   ├── locations/         # GPS breadcrumbs, telemetry batch DTOs, live map SSE
-│   ├── sync/              # Offline mutation envelopes, replay batch DTOs
-│   ├── proof/             # Watermarked photos, signatures, checklists
-│   ├── visits/            # Customer sites, check-in/out records
-│   ├── common/            # Pagination, sorting, standard error envelopes
-│   ├── events/            # Strongly-typed domain event contracts
-│   └── index.ts           # Central export barrel
-├── package.json
-└── tsconfig.json
-```
-
----
-
-## 3. Core Contract Examples
-
-### 3.1 Standard Response & Error Envelopes (`common/envelope.ts`)
-
-```typescript
-import { z } from 'zod';
-
-export const errorDetailSchema = z.object({
-  field: z.string().optional(),
-  issue: z.string(),
-});
-
-export const apiErrorResponseSchema = z.object({
-  error: z.object({
-    code: z.string(),
-    message: z.string(),
-    statusCode: z.number().int(),
-    requestId: z.string().uuid(),
-    timestamp: z.string().datetime(),
-    details: z.array(errorDetailSchema).optional(),
-  }),
-});
-
-export const paginationMetaSchema = z.object({
-  nextCursor: z.string().nullable(),
-  hasMore: z.boolean(),
-  totalCount: z.number().int().optional(),
-});
-
-export function createPaginatedResponseSchema<T extends z.ZodTypeAny>(itemSchema: T) {
-  return z.object({
-    data: z.array(itemSchema),
-    pagination: paginationMetaSchema,
-  });
-}
-```
-
-### 3.2 Task Creation & State Transition Contract (`tasks/task.contract.ts`)
-
-```typescript
-import { z } from 'zod';
-
-export const taskPriorityEnum = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
-export const taskStatusEnum = z.enum([
-  'ASSIGNED',
-  'ACCEPTED',
-  'IN_PROGRESS',
-  'ON_HOLD',
-  'COMPLETED',
-  'CANCELLED',
-  'APPROVED',
-  'REJECTED_REWORK',
-]);
-
-export const createTaskSchema = z.object({
-  title: z.string().min(3).max(255),
-  description: z.string().max(2000).optional(),
-  priority: taskPriorityEnum.default('MEDIUM'),
-  assigneeId: z.string().uuid().optional(),
-  customerId: z.string().uuid().optional(),
-  siteId: z.string().uuid().optional(),
-  dueAt: z.string().datetime().optional(),
-  estimatedDurationMinutes: z.number().int().positive().optional(),
-  checklist: z.array(z.object({
-    id: z.string().uuid(),
-    title: z.string().min(1),
-    isRequired: z.boolean().default(false),
-  })).optional(),
-});
-
-export type CreateTaskDTO = z.infer<typeof createTaskSchema>;
-```
-
-### 3.3 Telemetry Ingestion Contract (`locations/telemetry.contract.ts`)
-
-```typescript
-import { z } from 'zod';
-
-export const locationBreadcrumbSchema = z.object({
-  recordedAt: z.string().datetime(),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-  accuracy: z.number().nonnegative(),
-  altitude: z.number().optional(),
-  speed: z.number().nonnegative().optional(),
-  heading: z.number().min(0).max(360).optional(),
-  batteryLevel: z.number().min(0).max(1).optional(),
-  isCharging: z.boolean().optional(),
-  activity: z.string().optional(),
-});
-
-export const locationBatchIngestSchema = z.object({
-  batchId: z.string().uuid(),
-  employeeId: z.string().uuid(),
-  points: z.array(locationBreadcrumbSchema).min(1).max(500),
-});
-
-export type LocationBatchIngestDTO = z.infer<typeof locationBatchIngestSchema>;
-```
-
----
-
-## 4. Contract Evolution & Compatibility Rules
-
-1. **Additive Changes Only:** Fields added to request bodies must be optional or provide safe default values. Fields added to response schemas must be tolerated by client parsers (Zod `.passthrough()` or standard non-strict object parsing).
-2. **Never Rename Existing Fields:** If a field name must change, support both the legacy and new field names across at least one minor release cycle before deprecating.
+1. **Additive Changes Only:** Fields added to request bodies must be optional or provide safe defaults. Fields added to response schemas must be tolerated by client parsers.
+2. **Never Rename Existing Fields:** If a field name must change, support both legacy and new field names across at least one minor release cycle before deprecating.
 3. **Strict Path Versioning:** Breaking schema alterations require incrementing the API path version (`/v1/` to `/v2/`).
 
 ---
 
-## 5. Compliance with Phase 00 Approved Scope
+## 6. Compliance with Phase 00 Approved Scope
 
-- Ensures full data contract synchronization between Web, Mobile, and Backend.
-- Enforces strict input validation across all SMB tenant interactions.
+- Ensures 100% data contract synchronization between TypeScript Web/API and Dart Flutter clients.
+- Enforces strict input validation and compile-time type safety across all multi-tenant boundaries.

@@ -28,7 +28,7 @@ flowchart TD
         MOTION["Hardware Motion Sensor (Accelerometer)"]
         SDK_ENGINE["Transistor Geolocation State Machine<br>(Stationary Sleep vs Active Motion)"]
         QUALITY_FILTER{"Quality Filter (Accuracy < 50m, Speed < 160km/h)"}
-        NATIVE_QUEUE[("SDK Native SQLite Queue<br>(Independent of JS Runtime)")]
+        NATIVE_QUEUE[("SDK Native SQLite Queue<br>(Independent of Flutter UI Isolate)")]
         NATIVE_HTTP["Native HTTP Uploader<br>(autoSync: true)"]
     end
 
@@ -96,7 +96,7 @@ Prior to production deployment, performance must be benchmarked across:
 
 | Control Boundary | Execution Point | Technical Mechanism |
 |---|---|---|
-| **1. Acquisition Control** | Mobile Device | **Explicit Punch-Out:** Synchronously calls `BackgroundGeolocation.stop()`; destroys foreground service notification; unhooks GPS hardware.<br>**Safe Local Deadline:** Configures a native timer/alarm for the scheduled shift end. If connectivity is lost or punch-out forgotten, the native SDK self-terminates tracking offline. |
+| **1. Acquisition Control** | Mobile Device (Flutter) | **Explicit Punch-Out:** Synchronously calls `bg.BackgroundGeolocation.stop()`; destroys foreground service notification; unhooks GPS hardware.<br>**Safe Local Deadline:** Configures a native timer/alarm for the scheduled shift end. If connectivity is lost or punch-out forgotten, the native SDK self-terminates tracking offline. |
 | **2. Local Persistence Control** | Mobile Device | **Queue Purging:** Upon shift end, the native queue scans for any uncommitted points timestamped after the duty end time and deletes them from local device storage before upload. |
 | **3. Server Ingestion Control** | Fastify API | **Zero-Trust Validation:** `POST /v1/telemetry/locations` joins active shifts in PostgreSQL. Coordinates timestamped outside an active shift window are dropped immediately (`200 OK { accepted: 0, dropped: N, reason: 'OFF_DUTY_FILTER' }`). |
 

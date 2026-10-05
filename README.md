@@ -43,7 +43,7 @@ All Phase 01A Technical Architecture research, ADRs, specifications, and trade-o
 | [`docs/architecture/ENVIRONMENT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/ENVIRONMENT-STRATEGY.md) | 4-tier environment progression, Doppler/Infisical secrets management, and Zod env validation. |
 | [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md) | Single source of truth across the monorepo via `@oprino/contracts` and Zod schemas. |
 | [`docs/architecture/RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md) | Automated 30-day partition drops, pre-purge mileage rollups, and least-privileged maintenance. |
-| [`docs/architecture/INFRA-COST-MODEL.md`](file:///workspace/oprino/docs/architecture/INFRA-COST-MODEL.md) | Parameterized SMB unit economics: ~$0.38-$0.42/user/mo all-in infra cost delivering 88-90% gross margin. |
+| [`docs/architecture/INFRA-COST-MODEL.md`](file:///workspace/oprino/docs/architecture/INFRA-COST-MODEL.md) | Parameterized SMB unit economics: ~$0.40/user/mo at scale delivering 87-90% gross margin; decoupled software licensing. |
 | [`docs/architecture/FAILURE-MODES.md`](file:///workspace/oprino/docs/architecture/FAILURE-MODES.md) | 20 real-world field failure scenarios and automated self-healing recovery runbooks. |
 | [`docs/architecture/TECHNICAL-RISK-REGISTER.md`](file:///workspace/oprino/docs/architecture/TECHNICAL-RISK-REGISTER.md) | Risk register with probability, severity, early triggers, and proactive mitigations. |
 | [`docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md`](file:///workspace/oprino/docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md) | Final architecture freeze verification ending with `Approval: PENDING`. |

@@ -11,7 +11,7 @@
 
 Oprino exposes backend capabilities to three diverse clients:
 1. **Next.js Web Dashboard:** High-density data tables, real-time live map monitoring, operational reporting.
-2. **React Native Mobile Apps:** Field workers on spotty 3G/4G/5G connections, requiring lightweight payloads, deterministic error codes, idempotent mutation replays, and battery-efficient transfers.
+2. **Flutter Mobile Application:** Field workers on spotty 3G/4G/5G connections, requiring lightweight payloads, deterministic error codes, idempotent mutation replays, and battery-efficient transfers.
 3. **Future Third-Party Integrations (V1.5+):** External SMB systems (ERP, HRMS, payroll, webhooks).
 
 The API architecture must guarantee:
@@ -65,7 +65,7 @@ The API architecture must guarantee:
 
 ### Rationale:
 1. **Field Network Durability:** REST allows straightforward idempotency keys on mutation endpoints (`POST`, `PUT`, `PATCH`), enabling the mobile offline sync engine to safely replay failed transactions without duplicate side-effects.
-2. **Integration-Ready (Phase 00 PRD Requirement):** Oprino PRD mandates readiness for future external SMB software integration. OpenAPI 3.1 provides the universal lingua franca for B2B APIs, client SDK generation, and webhook specifications.
+2. **Integration-Ready & Cross-Language Boundary:** OpenAPI 3.1 provides the authoritative specification bridging Fastify TypeScript route schemas with the Flutter client, enabling automated generation of strongly-typed Dart clients (`oprino_api` via `openapi-generator-cli dart-dio`) while simultaneously preparing the foundation for future external SMB software integrations.
 3. **Defense-in-Depth against DoS:** GraphQL allows arbitrary nested queries that can bring down a multi-tenant relational database. Fixed REST endpoints allow granular rate limiting, precise SQL query tuning, and index optimization.
 
 ---
@@ -136,7 +136,7 @@ All non-204 responses return a consistent JSON envelope.
 ### 5.3 Standard Error Code Taxonomy
 - `BAD_REQUEST` (400): Malformed JSON or syntax error.
 - `VALIDATION_ERROR` (422): Zod/TypeBox schema validation failure.
-- `UNAUTHENTICATED` (401): Missing, expired, or invalid JWT.
+- `UNAUTHENTICATED` (401): Missing, expired, or invalid session token.
 - `FORBIDDEN` (403): User lacks permission (RBAC) or tenant mismatch.
 - `NOT_FOUND` (404): Resource does not exist within the workspace.
 - `CONFLICT` (409): State conflict or unique constraint violation.

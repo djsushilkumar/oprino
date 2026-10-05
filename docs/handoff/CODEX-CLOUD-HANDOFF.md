@@ -11,9 +11,10 @@
 ## 1. Current Project Governance & Status
 
 - **Phase 00 (Product Planning, Scoping & Brand Freeze):** **APPROVED & FROZEN** by stakeholder sign-off.
-- **Phase 01A (Technical Architecture Research & ADR Freeze):** **COMPLETED & RECONCILED**.
-- **Phase 01A Stakeholder Technical Architecture Approval:** **PENDING**.
-- **Production Implementation (Phase 01B / Scaffolding):** **NOT STARTED**. Permission is strictly withheld until formal technical architecture approval is granted.
+- **Phase 01A (Technical Architecture Research & ADR Freeze):** **APPROVED & FROZEN**.
+- **Phase 01B (Technical Validation Spikes):** **CONDITIONALLY CLOSED** (Physical OEM mobile validation formally deferred to mobile release gate).
+- **Pre-Phase-01C Repository Cleanup:** **IN PROGRESS**.
+- **Phase 01C (Production Monorepo Scaffolding):** **AUTHORIZED** (to commence immediately upon repository cleanup clearance).
 
 ---
 
@@ -77,8 +78,13 @@ Before modifying code or configuration, Codex and all coding agents **MUST** rea
 
 The repository is currently at the boundary of Phase 01A and Phase 01B:
 
-1. **Current Gate:** **Stakeholder Technical Architecture Approval of Phase 01A.**
-2. **Phase 01B (Spike Prototyping):** Isolated research spikes under `research/spikes/` testing native Android Doze deadlines, Better Auth route hooks, and transactional outbox latency.
+1. **Current Gate:** **Stakeholder Technical Architecture Approval of Phase 01A (Flutter Baseline).**
+2. **Phase 01B (Spike Prototyping):** Isolated research spikes under `research/spikes/` validating:
+   - Spike 1: Flutter + Transistor Android OEM/Doze & iOS suspended background-location reliability and duty-boundary cutoff.
+   - Spike 2: Flutter Drift SQLite local persistence, cross-isolate concurrency, and offline mutation outbox sync.
+   - Spike 3: Flutter authentication against Better Auth REST endpoints via Dio AuthInterceptor and `flutter_secure_storage`.
+   - Spike 4: OpenAPI 3.1 schema export to Dart client generation compatibility (`openapi-generator-cli dart-dio`).
+   - Spike 5: Platform secure-storage lifecycle, device revocation handling, and biometric re-authentication.
 3. **Phase 01C (Monorepo Scaffolding):** Establishing the Turborepo/pnpm workspace, setting up package boundaries (`@oprino/contracts`, `@oprino/tokens`), and pinning the Active-LTS Node.js runtime.
 
 > [!WARNING]

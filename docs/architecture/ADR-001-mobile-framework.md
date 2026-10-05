@@ -1,79 +1,128 @@
 # ADR-001: Mobile Application Framework Selection
 
-**Status:** Proposed / Recommended for Phase 01A  
-**Date:** October 2026  
-**Deciders:** Lead Systems Architect, Mobile Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Status:** SUPERSEDED (React Native / Expo Decision Superseded by Stakeholder Directive) → **APPROVED (Flutter Stable + Dart Baseline)**  
+**Date:** October 2026 (Revised & Re-Architected)  
+**Deciders:** Stakeholder Technical Committee, Lead Systems Architect, Mobile Engineering  
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))  
+**Superseded Architecture:** React Native 0.76+ via Expo Prebuild (New Architecture / Bridgeless Mode)  
+**Selected Architecture:** **Flutter Stable (Production Release at Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain)**
 
 ---
 
 ## 1. Context & Problem Statement
 
-Oprino requires two native-quality mobile application experiences targeting both Android and iOS:
-1. **Employee Mobile App:** Offline-first execution, background duty-hours location tracking, camera capture with metadata watermarks, on-glass customer signatures, and persistent duty-state visibility.
-2. **Owner / Manager Mobile App:** Real-time operational map monitoring, instant approval workflows (proof of work, leave, attendance regularizations), operational exception alerts, and rapid task assignment.
+Oprino requires two native-quality mobile operational experiences packaged within a single unified store binary:
+1. **Employee Mobile Surface:** Offline-first task execution, background duty-hours location tracking, camera capture with metadata watermarks, on-glass customer signatures, and persistent duty-state visibility.
+2. **Owner / Manager Mobile Surface:** Real-time operational map monitoring, instant approval workflows (proof of work, leave, attendance regularizations), operational exception alerts, and rapid task assignment.
 
-The framework choice must satisfy demanding operational constraints:
-- Reliable background execution and foreground service management across a fragmented spectrum of budget Android devices (MIUI, ColorOS, OneUI, stock Android) and strict iOS lifecycle limits.
-- High-performance local embedded database operations for offline queuing and synchronization.
-- High developer velocity and maximum code/contract sharing across Mobile, Web, and Backend in an SMB-cost-effective engineering structure.
+Following the Phase 01A architecture review, a stakeholder directive mandated that the Oprino mobile application must be built using **Flutter**. This ADR formally records the superseding of the preliminary React Native evaluation and establishes the comprehensive Flutter architecture baseline across Android and iOS.
 
 ---
 
-## 2. Alternatives Evaluated
+## 2. Superseded Decision Record (Historical)
 
-### Alternative A: React Native (via Expo Prebuild / New Architecture Bridgeless)
-- **Overview:** Meta's cross-platform framework using TypeScript, React 19, Fabric renderer, TurboModules, and the Bridgeless C++ runtime.
-- **Background Location:** Supported via native foreground services (`android:foregroundServiceType="location"`) and Transistor Software's industry-standard `react-native-background-geolocation` or background actions.
-- **Offline Storage:** High-performance native SQLite via `op-sqlite`, WatermelonDB, or Expo SQLite.
-- **Code Sharing:** 100% shared TypeScript domain models, Zod validation schemas, API contracts, and utility libraries with Next.js Web and Fastify Backend.
-- **Native Escape Hatch:** Expo Config Plugins and Prebuild generate clean, reproducible native Kotlin/Swift projects while retaining OTA update capabilities.
-
-### Alternative B: Flutter (Google / Dart)
-- **Overview:** Google's UI toolkit compiling directly to native ARM machine code using the Impeller rendering engine (Vulkan on Android, Metal on iOS).
-- **Background Location:** Supported via `flutter_background_service`, `geolocator`, and Transistor's `flutter_background_geolocation`.
-- **Offline Storage:** Drift (typed SQLite abstraction) and Isar. Exceptional local database performance.
-- **Code Sharing:** Dart language boundary prevents direct code/type sharing with TypeScript Web and Backend; requires maintaining dual model definitions or complex code generation (Protobuf/OpenAPI).
-- **Native Escape Hatch:** Standard Flutter platform channels and FFI.
-
-### Alternative C: Fully Separate Native Apps (Kotlin for Android + Swift for iOS)
-- **Overview:** Developing separate native Android and native iOS apps from scratch.
-- **Pros:** Unmatched native OS access and zero cross-platform abstraction overhead.
-- **Cons:** 2x engineering headcount, severe risk of feature drift between Android and iOS, doubled maintenance cost, unfeasible for SMB SaaS economics.
+*The initial Phase 01A draft evaluated React Native (Expo Prebuild) as Alternative A and Flutter as Alternative B. The React Native recommendation was selected primarily for monorepo language homogeneity (sharing TypeScript/Zod schemas with Fastify). That decision is hereby marked **SUPERSEDED** by stakeholder directive. The contract sharing model is transitioned to OpenAPI 3.1 code-generation (see [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md) and [`ADR-018`](file:///workspace/oprino/docs/architecture/ADR-018-api-style.md)).*
 
 ---
 
-## 3. Comparative Evaluation Matrix
+## 3. Flutter Technical Evaluation (14 Core Dimensions)
 
-| Criterion | Weight | React Native (Expo) | Flutter (Dart) | Separate Native (Kotlin/Swift) |
-|---|:---:|:---:|:---:|:---:|
-| **Android Foreground Services & Reliability** | 15% | 9 / 10 | 9 / 10 | 10 / 10 |
-| **iOS Background Location Compliance** | 15% | 9 / 10 | 9 / 10 | 10 / 10 |
-| **Offline Embedded Storage & Sync Engine** | 15% | 9 / 10 (op-sqlite/Watermelon) | 10 / 10 (Drift) | 10 / 10 (Room/CoreData) |
-| **Monorepo & Contract Sharing with Web/API** | 20% | **10 / 10 (Unified TS/Zod)** | 5 / 10 (Dual Language) | 2 / 10 (Triple Language) |
-| **Native Device Hardware (Camera/Signatures)** | 10% | 9 / 10 | 9 / 10 | 10 / 10 |
-| **UI Performance on Budget Android Devices** | 10% | 8.5 / 10 (Bridgeless) | 9.5 / 10 (Impeller) | 10 / 10 |
-| **Developer Velocity & SMB Cost Efficiency** | 15% | **9.5 / 10** | 7.5 / 10 | 4 / 10 |
-| **Weighted Total** | **100%** | **9.15 / 10** | **8.15 / 10** | **6.10 / 10** |
+To ensure enterprise-grade stability, predictable performance on budget frontline Android devices, and strict compliance with Apple App Store and Google Play guidelines, Flutter Stable is evaluated across 14 operational dimensions:
+
+### 3.1 Current Stable Flutter Release & Runtime Policy
+- **Flutter Framework Policy:** Oprino pins the current production Flutter Stable release at Phase 01C scaffolding (Reference baseline: Flutter 3.47 with the corresponding stable Dart toolchain). Exact versions are pinned via repository tooling during Phase 01C; the architecture avoids hard-freezing legacy minimum versions permanently in ADRs.
+- **Rendering Engine:** **Impeller** (Metal on iOS, Vulkan on Android with OpenGL ES fallback). Impeller precompiles shaders ahead of time (AOT), eliminating shader compilation stutter ("jank") that historically affected low-to-mid tier mobile devices.
+- **Compilation Target:** Ahead-Of-Time (AOT) compiled native ARM64 machine code, ensuring fast startup times (< 1.2s cold start) and minimal memory footprints on frontline devices.
+
+### 3.2 Android Platform Support & SDK Policy
+- **SDK Targets:** `minSdkVersion: 24` (Android 7.0+, covering > 96% of global active Android devices), `targetSdkVersion >= 36` (strictly following current Google Play target API policy at each release), and `compileSdkVersion` meeting or exceeding the toolchain requirement.
+- **Foreground Service Integration:** Full native support for `android:foregroundServiceType="location|dataSync"` with ongoing persistent notifications (`NotificationCompat.Builder`) and custom Notification Channels.
+- **Battery Optimization Exemption:** Standard Android Intents (`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) to survive aggressive OEM task killers (Samsung One UI, Xiaomi MIUI/HyperOS, Oppo ColorOS, Vivo Funtouch).
+
+### 3.3 iOS Platform Support
+- **OS Targets:** `iOS 15.0+` minimum deployment target, supporting Swift 5.10+ and Xcode 16+.
+- **CoreLocation Background Modes:** Native entitlement configuration for `UIBackgroundModes: ["location", "fetch", "processing", "remote-notification"]`.
+- **Transparency Compliance:** Native integration with `showsBackgroundLocationIndicator = true` ensuring Apple App Store review guideline compliance for field workforce tracking.
+
+### 3.4 Native Platform Channels & Interop
+- **Inter-Process Communication:** Standard Flutter `MethodChannel` and `EventChannel` for asynchronous bidirectional communication between Dart and native Kotlin/Swift.
+- **Type-Safe Code Generation:** **Pigeon** (`package:pigeon`) utilized for high-frequency or complex native platform bridges, generating compile-time type-safe Kotlin and Swift interfaces to prevent runtime string-key message serialization errors.
+- **C/C++ Interop:** Direct C-FFI (`dart:ffi`) enables native-speed interaction with shared C libraries without method-channel marshaling overhead.
+
+### 3.5 Background Services & Isolates
+- **Dart Isolates:** Multi-threaded computation via independent Dart memory heaps (`Isolate.spawn`), keeping the main UI thread at a locked 60/120 FPS during heavy offline serialization or database query processing.
+- **Background Task Execution:** Supported via `flutter_background_service` and `workmanager` for scheduled background synchronizations and periodic health checks when the app is backgrounded.
+
+### 3.6 Foreground Services
+- **Duty-Hours Foreground Service:** Managed directly by Transistor Software's `flutter_background_geolocation`, which initiates an OS-managed Android Foreground Service containing an active notification displaying current duty status ("Oprino: Shift Active — Location Monitored for Duty Tracking").
+
+### 3.7 Push Notifications
+- **Provider:** **Firebase Cloud Messaging (FCM)** for Android and **Apple Push Notification service (APNs)** for iOS via official `firebase_messaging` and `flutter_local_notifications` packages.
+- **Background Message Handler:** Top-level background isolate handler (`@pragma('vm:entry-point')`) processes silent data pushes (e.g. instant shift cancellations, urgent task dispatch) even when the app is suspended.
+
+### 3.8 Camera & Optical Proof Capture
+- **Hardware Access:** Official `camera` package providing direct viewfinder streaming, auto-focus, torch control, and high-resolution photo capture.
+- **On-Device Compression & Metadata:** Captured images are compressed client-side via `flutter_image_compress` (target: < 1.5MB JPEG) and embedded with GPS EXIF metadata (timestamp, latitude, longitude, altitude) prior to offline outbox queueing.
+
+### 3.9 On-Glass Customer Signatures
+- **Touch Capture:** Smooth vector signature capture on canvas using `signature` package with Catmull-Rom spline smoothing.
+- **Export & Integrity:** Exports high-contrast PNG byte arrays directly into the local attachments directory, hashed with SHA-256 for cryptographic non-repudiation before sync upload.
+
+### 3.10 In-App Maps & Geospatial Surfaces
+- **Vector Map Rendering:** `flutter_map` (powered by Leaflet principles) with vector tile support via `maplibre_gl` or MapLibre vector tile endpoints, styled with Oprino's custom monochrome/slate basemap.
+- **OS Navigation Handoff:** Direct deep-link launching (`url_launcher`) to Google Maps (`google.navigation:q=`) on Android and Apple Maps (`http://maps.apple.com/?daddr=`) on iOS for turn-by-turn routing at zero API cost.
+
+### 3.11 Modern Offline Embedded Persistence
+- **Engine Selection:** **Drift + SQLite** (`package:drift` + `package:sqlite3` with bundled native SQLite). Provides compile-time verified type-safe SQL, relational foreign keys, step-by-step schema migrations with verification tests, and background database execution via `NativeDatabase.createInBackground(...)` (see [`ADR-009`](file:///workspace/oprino/docs/architecture/ADR-009-offline-sync.md)).
+
+### 3.12 Secure Platform Storage
+- **Hardware-Backed Storage:** `flutter_secure_storage` protects sensitive credentials and installation tokens using:
+  - **Android:** Platform-backed secure encrypted storage utilizing Android Keystore-protected key material.
+  - **iOS:** Keychain-backed secure storage with `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`.
+  - Implementation follows the pinned supported plugin release without hard-coding obsolete Android Jetpack library internals.
+
+### 3.13 Non-Invasive Device Identity & Governance
+- **Oprino Installation Identity:** Upon first launch, Oprino generates a cryptographically random, non-hardware-fingerprinted Installation ID (`installation_id`) saved in secure storage.
+- **Diagnostic Metadata:** `device_info_plus` collects non-invasive operational telemetry (device model, manufacturer, OS build) strictly for troubleshooting and administrative visibility—never as an authentication identity or invasive hardware fingerprint.
+- **Biometric Authentication:** `local_auth` package enables biometric unlock (fingerprint, Face ID, device PIN) for app re-entry.
+
+### 3.14 Testing, Build & Release Pipeline
+- **Automated Testing:** 
+  - Unit & Bloc/Repository Tests: `test` and `bloc_test`.
+  - Widget & UI Component Tests: `flutter_test`.
+  - Integration Tests on Real Hardware: `integration_test` executing end-to-end flows on Android and iOS devices/emulators.
+  - Golden Tests: `golden_toolkit` verifying pixel-perfect brand consistency across device viewports.
+- **CI/CD & Code Signing:** Standard automated Gradle/Fastlane pipelines for Google Play (AAB) and App Store Connect (IPA). Optional over-the-air (OTA) code patch engine (Shorebird) evaluated for rapid post-release bug fixes without full store review.
 
 ---
 
-## 4. Decision
+## 4. Decision & Rationale
 
-**Adopt React Native using Expo Prebuild (Continuous Native Generation) and the New Architecture (Bridgeless Mode).**
+**Adopt Flutter Stable (Reference Baseline: Flutter 3.47 / Stable Dart Toolchain; exact version pinned at Phase 01C Scaffolding) as the Exclusive Mobile Application Framework for Android and iOS.**
 
-### Key Rationale:
-1. **End-to-End TypeScript Monorepo:** Using React Native allows Oprino to share 100% of domain types, Zod validation schemas, business logic utilities, and API client contracts across the Mobile Apps, Web Dashboard, and Backend API in a single monorepo (`packages/contracts`). This eliminates cross-platform API drift—the single biggest source of mobile bugs in distributed field applications.
-2. **Proven Background Location Capabilities:** Transistor Software’s `react-native-background-geolocation` is the global benchmark for enterprise field tracking, battle-tested across thousands of Android OEM variations (handling Samsung, Xiaomi, and Vivo battery optimizations) and fully supporting Android 14/15/16 foreground location services.
-3. **High-Performance Offline SQLite:** Utilizing `op-sqlite` (direct JSI bindings to C++ SQLite) delivers sub-millisecond query execution on device, perfectly satisfying Oprino's offline-first local queue requirement.
-4. **Unified App Shell:** Both the Employee Mobile App and Manager Mobile App can live within the same monorepo codebase or share foundational component packages, slashing development and maintenance overhead.
+### Decisive Rationale:
+1. **Unrivaled Cross-Platform UI Consistency & Impeller Speed:** Flutter renders directly to native Vulkan/Metal canvas via Impeller, ensuring that complex operational surfaces (live attendance cards, task agendas, signature pads) render with rock-solid 60/120 FPS performance across fragmented budget Android devices without JavaScript bridge overhead.
+2. **First-Class Offline Relational Architecture:** The modern Drift architecture (`package:drift` + `package:sqlite3` with bundled native SQLite) provides a compile-time type-safe relational database engine with isolate-safe background execution (`NativeDatabase.createInBackground`).
+3. **Enterprise Background Location Support:** Transistor Software officially maintains `flutter_background_geolocation`, providing identical battle-tested native background services, stationary motion geofences, and OEM battery-killer survivability in Flutter as in React Native.
+4. **Unified Role-Aware Architecture:** A single Flutter codebase compiles into the unified `com.oprino.app` store binary, dynamically presenting Employee, Manager, and Owner surfaces via role-driven state management (see [`ADR-020`](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md)).
+5. **Decoupled Cross-Language Contract Safety:** Rather than relying on monorepo TypeScript imports, Oprino establishes OpenAPI 3.1 as the formal contract boundary between Fastify and Flutter, auto-generating a strongly-typed Dart client via `openapi-generator-cli` (`dart-dio`).
 
 ---
 
 ## 5. Consequences & Mitigations
 
-- **Consequence:** React Native historically had bridge overhead and frame drops on low-end Android devices.  
-  *Mitigation:* Enable the React Native New Architecture (Fabric + Bridgeless Mode), which communicates directly with C++ without the serialized JSON bridge.
-- **Consequence:** Background location permissions on iOS and Android require strict native manifest configurations.  
-  *Mitigation:* Utilize Expo Config Plugins to generate authoritative, reproducible `AndroidManifest.xml` and `Info.plist` entries programmatically during build, preventing manual native file drift.
-- **Reversal Cost:** High. Re-architecting from React Native to Flutter would require rewriting the mobile client layer in Dart, though backend and web contracts would remain intact.
+- **Consequence:** Loss of direct TypeScript/Zod schema imports across Mobile and Web.  
+  *Mitigation:* Fastify auto-generates OpenAPI 3.1 specifications (`openapi.json`), which compile into strongly-typed Dart models and API clients using `openapi-generator-cli` with `dart-dio`. CI/CD validates that the OpenAPI spec and generated Dart client are in 100% lockstep before merges.
+- **Consequence:** Initial binary size is larger than minimal native Kotlin/Swift apps due to bundled Flutter C++ engine and Impeller runtime (~15–20MB AAB download size).  
+  *Mitigation:* Negligible impact on modern LTE/5G networks; well within Google Play / App Store standard thresholds for enterprise field applications.
+- **Consequence:** Engineering team requires Dart and Flutter proficiency.  
+  *Mitigation:* Dart's object-oriented syntax is instantly familiar to TypeScript/C#/Java developers; comprehensive widget architecture, Flutter DevTools, and static analysis provide high onboarding velocity.
+
+---
+
+## 6. References
+- Controlling PRD: [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)
+- Packaging Strategy: [`docs/architecture/ADR-020-mobile-packaging.md`](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md)
+- Background Geolocation: [`docs/architecture/ADR-008-background-location.md`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md)
+- Local Offline Storage: [`docs/architecture/ADR-009-offline-sync.md`](file:///workspace/oprino/docs/architecture/ADR-009-offline-sync.md)
+- Cross-Language Contract Strategy: [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md)

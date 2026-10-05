@@ -17,7 +17,7 @@ The platform bridges real-time managerial visibility with field operational auto
 
 ### Core Architectural Mandates:
 1. **Duty-Hours-Only Tracking:** Off-duty employee location tracking must **NEVER** be an intended Oprino behavior. Guaranteed across native OS acquisition control, local queue persistence purging, and server-side zero-trust active shift validation.
-2. **Offline-First Field Autonomy:** Full mobile operational continuity in zero-connectivity environments via embedded SQLite (`op-sqlite`) and deterministic mutation replay.
+2. **Offline-First Field Autonomy:** Full mobile operational continuity in zero-connectivity environments via Drift + SQLite (`package:drift` + `package:sqlite3` with bundled native SQLite) and deterministic mutation replay.
 3. **Automated 30-Day Retention Pruning:** High-frequency GPS telemetry is isolated in daily partitions and physically dropped via automated least-privileged maintenance jobs (`telemetry.prune_expired_partitions()`).
 4. **Peer Location Privacy:** Employee-to-employee live location visibility is **OFF BY DEFAULT**.
 5. **Durable Business Events:** Core mutations commit atomically with an outbox record in PostgreSQL (`outbox_events`); Redis Pub/Sub is scoped strictly to ephemeral real-time fan-out.
@@ -70,7 +70,7 @@ The Container diagram breaks down the high-level executable applications, data s
 flowchart TD
     subgraph ClientContainers["Client Applications"]
         WEB["Owner/Manager Web Dashboard<br>[Next.js App Router / React 19]<br>TanStack Table, MapLibre GL, Tailwind"]
-        MOB["Unified Role-Aware Mobile App<br>[React Native / Expo Prebuild]<br>op-sqlite (Domain), Transistor Geolocation, Native Maps"]
+        MOB["Unified Role-Aware Mobile App<br>[Flutter Stable (Ref: 3.47)]<br>Better Auth (Dio / SecureStore), Drift SQLite (Domain), flutter_background_geolocation"]
     end
 
     subgraph EdgeIngress["Edge & Gateway Layer"]
@@ -83,7 +83,7 @@ flowchart TD
     end
 
     subgraph DataContainers["Data & Storage Tier"]
-        PG[("PostgreSQL 16/17 + PostGIS (GA)<br>public (Transactional) + telemetry (Daily Partitioned)<br>+ audit (Append-Only) + outbox_events")]
+        PG[("PostgreSQL 18 (or 17) + PostGIS 3.6.x (GA)<br>public (Transactional) + telemetry (Daily Partitioned)<br>+ audit (Append-Only) + outbox_events")]
         REDIS[("Managed Redis 7+ (Primary/Replica HA with AOF)<br>BullMQ Job Queues, Session Blacklist,<br>Ephemeral SSE Pub/Sub, Idempotency Cache")]
         R2[("Cloudflare R2 Private Bucket<br>Proof Photos, Signatures, PDF Exports")]
     end
@@ -110,7 +110,7 @@ Inside the Fastify API container, services are structured as clean, decoupled do
 ```mermaid
 flowchart TD
     subgraph IngressPipeline["Ingress Authentication & Tenant Verification"]
-        AUTH_GUARD["Authentication Guard<br>(Better Auth Engine: JWT/Session Cookie)"]
+        AUTH_GUARD["Authentication Guard<br>(Better Auth Session Engine: Web Cookie / Flutter Dio Bearer)"]
         TENANT_GUARD["5-Stage Tenant Verification Guard<br>(Verify Workspace Membership -> Scope Active Context)"]
         RBAC_GUARD["RBAC Guard<br>(Domain:Action:Scope Validator)"]
         ZOD_GUARD["Zod Schema Validator<br>(Payload Stripping & Type Coercion)"]

@@ -1,108 +1,140 @@
-# ADR-017: Monorepo Architecture, Package Layout & Build Tooling
+# ADR-017: Monorepo Architecture, Polyglot Workspace Layout & Build Tooling
 
-**Status:** Proposed / Recommended for Phase 01A  
-**Date:** October 2026  
+**Status:** APPROVED (Updated for Polyglot Flutter + TypeScript Workspace)  
+**Date:** October 2026 (Revised & Re-Architected)  
 **Deciders:** Lead Systems Architect, DevOps, Frontend & Mobile Leads  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))  
+**Underlying Architecture:** **Turborepo + pnpm Workspaces (TypeScript) & Standalone Dart/Pub Workspace (Flutter)**
 
 ---
 
 ## 1. Context & Problem Statement
 
-Oprino consists of multiple software applications and shared components:
-1. **Owner/Manager Web Dashboard:** Next.js App Router web application.
-2. **Employee & Manager Mobile Apps:** React Native (Expo Prebuild) targeting Android and iOS.
-3. **Core API Server:** Fastify TypeScript REST service.
-4. **Background Worker:** BullMQ background job processor.
-5. **Shared Domain Contracts:** Zod schemas, DTOs, domain event interfaces, sync mutation contracts.
-6. **Brand Design System:** Canonical color tokens, typography scales, spacing units derived from the Oprino Brand Kit.
-7. **Database Layer:** Database schemas, migration files, and query repositories.
+Oprino consists of multiple software applications and shared components operating across two primary language ecosystems:
+1. **TypeScript Ecosystem:**
+   - **Next.js Web Dashboard (`apps/web`):** Next.js 15 App Router.
+   - **Core API Server (`services/api`):** Fastify TypeScript REST service.
+   - **Background Worker (`services/worker`):** Node/BullMQ asynchronous background processor.
+   - **Shared Domain Contracts (`packages/contracts`):** Zod schemas, Fastify type providers, OpenAPI 3.1 generator.
+   - **Database Layer (`packages/database`):** Drizzle ORM schema, migrations, and seeders.
+   - **Brand Design Tokens (`packages/tokens`):** Canonical JSON design tokens and Style Dictionary compilers.
+2. **Dart / Flutter Ecosystem:**
+   - **Unified Mobile App (`apps/mobile`):** Flutter (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) targeting Android and iOS.
+   - **Generated API Client (`generated/dart-api`):** Compiled Dart client and DTO models generated from the OpenAPI 3.1 specification.
 
-Managing these components across independent Git repositories would cause:
-- **Contract Drift:** Mobile and Web apps falling out of sync with backend API changes.
-- **Dependency Duplication:** Multiple versions of shared utilities, date-handling libraries, and brand tokens.
-- **Coordination Friction:** Requiring multi-repo pull requests, manual npm publishing, and complex release coordination.
-
-We require a unified monorepo architecture that maximizes developer velocity, enables atomic full-stack commits, enforces strict package boundaries, and provides fast, cached build pipelines.
+Managing these components across independent repositories would cause severe contract drift, multi-repo PR gridlock, and version fragmentation. We require a polyglot monorepo layout with clear toolchain boundaries.
 
 ---
 
 ## 2. Alternatives Evaluated
 
-### Alternative A: Turborepo + pnpm Workspaces
-- **Package Manager:** `pnpm` with strict dependency isolation via hard links and symlinks, preventing phantom dependencies.
-- **Build Orchestrator:** Vercel's `Turborepo` providing fast incremental builds, topological execution graphs, task pipelining, and local/remote computation caching.
+### Alternative A: Polyglot Monorepo (pnpm Workspaces + Turborepo + Native Flutter Pub)
+- **Architecture:** `pnpm` manages the TypeScript services and shared packages. Flutter (`apps/mobile`) and the generated Dart client (`generated/dart-api`) remain native Dart/Pub packages. Turborepo orchestrates cross-stack task execution (contracts export → Dart code-gen → Flutter tests).
 - **Pros:**
-  - Extremely fast cache hits; written in Rust.
-  - Native integration with Next.js, Fastify, and React Native (Expo Prebuild).
-  - Minimal configuration overhead compared to older enterprise tools.
-  - Native pnpm workspace protocol (`workspace:*`) for zero-build local development symlinks.
-- **Cons:** Remote caching requires setting up Vercel Remote Cache or self-hosted S3 cache.
+  - Avoids shoehorning Dart packages into npm/pnpm.
+  - Native Dart and Flutter tooling (`flutter pub get`, `flutter test`, `flutter build`) work without hacks.
+  - Fast, cached TypeScript pipelines for Web and API.
+  - Single git repository enables atomic commits across API schema changes, generated Dart models, and mobile client code.
+- **Cons:** Requires lightweight wrapper scripts in root `package.json` to bridge TypeScript and Flutter task invocations.
 
-### Alternative B: Nx + pnpm / npm Workspaces
-- **Overview:** Enterprise monorepo tool originally created for Angular, now supporting React/Node.
-- **Pros:** Deep dependency graph visualization, project generators, rich plugin ecosystem.
-- **Cons:** Significantly steeper learning curve, high configuration verbosity, heavy framework-specific plugins that can conflict with Expo prebuild workflows.
+### Alternative B: Nx Polyglot Monorepo with Community Dart Plugins
+- **Architecture:** Nx workspace using community Nx Flutter plugins.
+- **Pros:** Unified CLI for all commands (`nx run mobile:build`).
+- **Cons:** Community Dart plugins for Nx are notoriously fragile, lag behind Flutter SDK updates, and break standard IDE tooling (Android Studio / VS Code Flutter extension).
 
-### Alternative C: Multi-Repo Architecture (Separate Repos per App)
-- **Overview:** Independent Git repositories for `oprino-web`, `oprino-mobile`, `oprino-api`, `oprino-shared`.
-- **Pros:** Complete isolation of git commit history.
-- **Cons:** Destroys developer velocity; requires private npm package registry, version bumping, and multi-repo PR coordination for simple API field changes.
-
----
-
-## 3. Comparative Evaluation Matrix
-
-| Criterion | Weight | Alternative A: Turborepo + pnpm | Alternative B: Nx | Alternative C: Multi-Repo |
-|---|:---:|:---:|:---:|
-| **Developer Velocity & Frictionless Setup** | 25% | **9.5 / 10** | 7 / 10 | 4 / 10 |
-| **Type & Contract Sharing (TS/Zod)** | 25% | **10 / 10 (Instant symlinks)** | 9 / 10 | 4 / 10 (Publish delay) |
-| **Expo React Native Compatibility** | 20% | **9.5 / 10 (Standard Metro config)** | 7.5 / 10 | 8 / 10 |
-| **Build & CI Pipeline Caching** | 15% | **9.5 / 10 (Fast Rust engine)** | 9.5 / 10 | 3 / 10 (No shared cache) |
-| **Maintenance Simplicity for SMB Team** | 15% | **9.5 / 10** | 6.5 / 10 (Heavy plugins) | 5 / 10 |
-| **Weighted Total** | **100%** | **9.65 / 10** | **7.95 / 10** | **4.75 / 10** |
+### Alternative C: Multi-Repo Architecture (Separate Repos per Stack)
+- **Architecture:** Separate Git repos for web, backend, mobile, and contracts.
+- **Pros:** Absolute separation of git history.
+- **Cons:** Catastrophic developer friction; requires publishing Dart packages and npm packages to private registries for simple field additions.
 
 ---
 
-## 4. Decision & Rationale
+## 3. Decision
 
-**Selected Architecture: Alternative A — Turborepo + pnpm Workspaces.**
+**Adopt Alternative A: Polyglot Monorepo using Turborepo + pnpm Workspaces for TypeScript Services, paired with a Native Dart/Pub Workspace for Flutter.**
 
-### Rationale:
-1. **Contract Integrity:** Changes to API request/response schemas in `@oprino/contracts` immediately propagate to `apps/web`, `apps/mobile`, and `apps/api` without building or publishing packages. TypeScript compiler flags any breaking schema mismatch in real time.
-2. **Deterministic & Fast:** `pnpm` prevents the dreaded "phantom dependency" bugs common in npm/yarn where packages inadvertently import unlisted transitive dependencies. Hard-linking saves gigabytes of disk space across apps.
-3. **Seamless Expo Prebuild Support:** Expo Prebuild works cleanly with Turborepo using standard Metro monorepo configuration (`watchFolders` pointing to workspace packages).
+### Architectural Rationale:
+1. **Respect Tooling Boundaries:** Do **NOT** force Dart packages into `pnpm`. `pnpm` manages JavaScript/TypeScript dependencies; the `flutter` and `dart` CLIs manage Dart dependencies via standard `pubspec.yaml` files.
+2. **Formal Contract Bridge via Generated Code:** Fastify generates `packages/contracts/openapi.json`. An automated script invokes `openapi-generator-cli` (`dart-dio`) to compile strongly-typed Dart code into `generated/dart-api`.
+3. **Atomic Cross-Stack Commits:** A feature requiring a database migration, an API endpoint update, a web dashboard view, and a Flutter mobile screen is implemented, tested, and committed in a single pull request.
 
 ---
 
-## 5. Monorepo Structure & Package Layout
+## 4. Polyglot Monorepo Structure
 
-```
+```text
 oprino/
 ├── apps/
-│   ├── api/                    # Fastify TypeScript Core REST API
-│   ├── worker/                 # BullMQ Asynchronous Background Worker
-│   ├── web/                    # Next.js App Router Web Dashboard
-│   └── mobile/                 # React Native (Expo Prebuild) iOS/Android App
+│   ├── web/                      # Next.js 15+ App Router Web Dashboard (pnpm)
+│   └── mobile/                   # Flutter Unified Mobile App (pub; Reference Baseline: Flutter 3.47)
+│       ├── lib/                  # Dart source (Employee, Manager, Owner surfaces)
+│       ├── test/                 # Widget, unit, and golden tests
+│       ├── android/              # Native Android gradle project
+│       ├── ios/                  # Native iOS Xcode workspace
+│       └── pubspec.yaml          # Flutter dependencies (references generated/dart-api)
+│
+├── services/
+│   ├── api/                      # Fastify TypeScript Core REST API (pnpm)
+│   └── worker/                   # BullMQ Asynchronous Background Worker (pnpm)
 │
 ├── packages/
-│   ├── contracts/              # Shared Zod Schemas, API DTOs, Event Models, Sync DTOs
-│   ├── tokens/                 # Oprino Brand Tokens (Colors, Typography, Spacing)
-│   ├── database/               # PostgreSQL Schema (Drizzle), Migrations, Seeders
-│   ├── utils/                  # Pure TypeScript utility functions (dates, geohash, math)
-│   ├── config-typescript/      # Shared base tsconfig files
-│   └── config-eslint/          # Shared ESLint & Prettier configs
+│   ├── contracts/                # Canonical Zod schemas & OpenAPI 3.1 exporter (pnpm)
+│   ├── tokens/                   # Brand token source (JSON) & Style Dictionary compiler (pnpm)
+│   ├── database/                 # PostgreSQL schema (Drizzle), migrations, seeders (pnpm)
+│   ├── config-typescript/        # Shared base tsconfig files (pnpm)
+│   └── config-eslint/            # Shared ESLint & Prettier configs (pnpm)
 │
-├── docs/                       # Architecture, PRD, Brand System, Audits
+├── generated/
+│   └── dart-api/                 # Auto-generated Dart API Client (pub package)
+│       ├── lib/                  # Generated Dio client & DTO models
+│       └── pubspec.yaml          # Standalone Dart package definition
+│
+├── docs/                         # Canonical System Architecture & Product PRD
 ├── .gitignore
-├── pnpm-workspace.yaml
-├── turbo.json
-└── package.json
+├── pnpm-workspace.yaml           # Declares apps/web, services/*, packages/*
+├── turbo.json                    # Turborepo task pipeline
+└── package.json                  # Root orchestration scripts
 ```
 
-### 5.1 Workspace Task Pipeline (`turbo.json`)
-The monorepo pipeline defines strict task dependencies:
+---
 
+## 5. Toolchain Configuration & Workspace Boundaries
+
+### 5.1 `pnpm-workspace.yaml` (TypeScript Workspace)
+```yaml
+packages:
+  - 'apps/web'
+  - 'services/*'
+  - 'packages/*'
+```
+*(Notice: `apps/mobile` and `generated/dart-api` are deliberately excluded from `pnpm-workspace.yaml`).*
+
+### 5.2 Flutter Local Path Dependency (`apps/mobile/pubspec.yaml`)
+```yaml
+name: oprino_mobile
+description: "Oprino Unified Role-Aware Mobile Application"
+publish_to: "none"
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Generated API client linked via local monorepo path
+  oprino_api:
+    path: ../../generated/dart-api
+  dio: ^5.7.0
+  drift: ^2.24.0
+  sqlite3: ^2.5.0
+  flutter_background_geolocation: ^4.16.0
+  flutter_secure_storage: ^9.2.2
+  go_router: ^14.6.0
+  flutter_riverpod: ^2.6.1
+```
+
+### 5.3 Turborepo Pipeline (`turbo.json`)
 ```json
 {
   "$schema": "https://turbo.build/schema.json",
@@ -110,7 +142,14 @@ The monorepo pipeline defines strict task dependencies:
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "dist/**"]
+    },
+    "generate:contracts": {
+      "cache": false
+    },
+    "generate:dart": {
+      "dependsOn": ["generate:contracts"],
+      "outputs": ["generated/dart-api/**"]
     },
     "typecheck": {
       "dependsOn": ["^build"]
@@ -119,40 +158,40 @@ The monorepo pipeline defines strict task dependencies:
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
+      "dependsOn": ["^build"]
     }
   }
 }
 ```
 
-### 5.2 Package Boundaries & Dependency Rules
-- `packages/contracts`: Must remain 100% pure TypeScript and Zod. Zero native or runtime dependencies (no database drivers, no UI components). Safe for import anywhere.
-- `packages/tokens`: Exports brand colors, spacing, and typography primitives consumed by Tailwind in Web and StyleSheet/Unistyles in Mobile.
-- `packages/database`: Contains PostgreSQL connection logic and Drizzle ORM schemas. Must NEVER be imported into `apps/mobile` or `apps/web` (enforced via package `private: true` and ESLint boundary rules).
-- `apps/mobile` and `apps/web`: Communicate with the backend strictly through HTTP REST and SSE endpoints defined in `packages/contracts`.
+### 5.4 Root Orchestration Scripts (`package.json`)
+```json
+{
+  "name": "oprino-monorepo",
+  "private": true,
+  "scripts": {
+    "dev:web": "turbo run dev --filter=@oprino/web",
+    "dev:api": "turbo run dev --filter=@oprino/api",
+    "dev:mobile": "cd apps/mobile && flutter run",
+    "generate:contracts": "pnpm --filter=@oprino/contracts export:openapi",
+    "generate:dart": "pnpm generate:contracts && npx @openapitools/openapi-generator-cli generate -i packages/contracts/openapi.json -g dart-dio -o generated/dart-api --additional-properties=pubName=oprino_api,serializationLibrary=json_serializable",
+    "build": "turbo run build",
+    "test:ts": "turbo run test",
+    "test:mobile": "cd apps/mobile && flutter test",
+    "test": "pnpm test:ts && pnpm test:mobile"
+  }
+}
+```
 
 ---
 
 ## 6. Consequences & Trade-offs
 
 - **Positive:**
-  - One pull request can update an API endpoint, update the mobile client, and update the web dashboard simultaneously with guaranteed type safety.
-  - Zero package registry publishing delay.
-  - Single, uniform ESLint, Prettier, and TypeScript configuration.
+  - Zero friction for mobile developers: standard `flutter run` and `flutter test` work out of the box without Node/npm baggage.
+  - End-to-end type safety: Fastify schema changes immediately trigger compilation failures in Flutter during local builds or CI.
+  - Efficient CI caching: Turborepo caches TypeScript builds; Gradle/Xcode caches handle mobile compilation.
 - **Negative:**
-  - Large single repository git clone.
-  - Metro bundler on React Native requires `watchFolders` configuration to properly resolve symlinked monorepo packages.
-- **Mitigation:**
-  - Standard Expo monorepo template handles Metro symlinks cleanly without custom brittle scripts.
-
----
-
-## 7. Compliance with Phase 00 Approved Scope
-
-- Ensures full parity between Employee Mobile, Owner/Manager Mobile, and Owner/Manager Web Dashboard by sharing the identical domain contracts and brand tokens.
-- Supports rapid multi-industry expansion with modular package boundaries.
+  - Requires developers working across the full stack to have both Node.js (Active-LTS) and Flutter (pinned Stable release, reference baseline: Flutter 3.47+) installed locally.
+- **Compliance:**
+  - Perfectly aligns with Phase 00 frozen product scope while establishing a scalable polyglot engineering structure.

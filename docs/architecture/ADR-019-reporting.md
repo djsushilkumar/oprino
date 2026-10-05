@@ -26,7 +26,7 @@ Technical challenges:
 ## 2. Alternatives Evaluated
 
 ### Alternative A: Hybrid In-Engine Aggregation (PostgreSQL + Node.js Streaming CSV + BullMQ Headless PDF)
-- **Live Aggregations:** Executed directly in PostgreSQL 16 using composite indexes, materialized rollups (`daily_attendance_summaries`, `daily_conveyance_summaries`), and window functions.
+- **Live Aggregations:** Executed directly in PostgreSQL 18 (or 17) using composite indexes, materialized rollups (`daily_attendance_summaries`, `daily_conveyance_summaries`), and window functions.
 - **CSV Exports:** Streamed asynchronously from PostgreSQL cursors using Node.js streams to standard HTTP download or uploaded to S3 if requested as an asynchronous background batch.
 - **PDF Generation:** Executed in the dedicated BullMQ background worker using headless Chromium (Puppeteer) rendering HTML/Tailwind templates, saved to private S3 storage with temporary signed download links.
 - **Pros:** Zero additional database infrastructure; zero data synchronization lag; leverages existing relational indexes; streaming CSV requires < 25 MB RAM regardless of row count.
@@ -56,9 +56,9 @@ Technical challenges:
 **Selected Architecture: Alternative A — Hybrid In-Engine Relational Aggregation + Node.js Cursor Streaming + BullMQ PDF Generation Worker.**
 
 ### Rationale:
-1. **Right-Sized for SMB Economics:** A 200-employee company generates ~5,000 attendance records, ~3,000 tasks, and ~600 visits per month. PostgreSQL 16 handles queries across this dataset in < 15ms when properly indexed. Adding a columnar OLAP database would add needless operational failure points.
+1. **Right-Sized for SMB Economics:** A 200-employee company generates ~5,000 attendance records, ~3,000 tasks, and ~600 visits per month. PostgreSQL 18 (or 17) handles queries across this dataset in < 15ms when properly indexed. Adding a columnar OLAP database would add needless operational failure points.
 2. **Memory-Safe Streaming:** By piping PostgreSQL query cursors directly into `fast-csv` and writing directly to the HTTP response stream (or S3 multipart upload), memory consumption remains flat at ~15MB regardless of dataset size.
-3. **Preserving Mileage Beyond 30-Day GPS Purge:** Raw GPS coordinates are dropped after 30 days per Phase 00 privacy policy. A nightly BullMQ worker computes total daily duty mileage and stores it in `daily_travel_summaries (workspace_id, employee_id, date, total_km, approved_by)`. This ensures business financial reporting remains permanently accessible while respecting privacy limits.
+3. **Preserving Mileage Under 3-Year Operational Policy:** Raw GPS coordinates are dropped after 30 days per Phase 00 privacy policy. A nightly BullMQ worker computes total daily duty mileage and stores it in `daily_travel_summaries (workspace_id, employee_id, date, total_km, approved_by)`. This ensures business conveyance reporting remains accessible under the 3-year operational retention policy ([`RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md)) while respecting privacy limits.
 
 ---
 
@@ -77,7 +77,7 @@ flowchart TD
         CTRL_EXP["Export Controller"]
     end
 
-    subgraph Data["Database Tier (PostgreSQL 16)"]
+    subgraph Data["Database Tier (PostgreSQL 18 / 17)"]
         IDX["Composite Indexes & Rollup Tables"]
         CUR["PostgreSQL Row-by-Row Cursor"]
     end

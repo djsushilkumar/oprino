@@ -31,8 +31,8 @@ flowchart LR
 |---|---|---|---|---|
 | **API Host** | `http://localhost:4000` | `https://api.dev.oprino.com` | `https://api.staging.oprino.com` | `https://api.oprino.com` |
 | **Web Dashboard** | `http://localhost:3000` | `https://app.dev.oprino.com` | `https://app.staging.oprino.com` | `https://app.oprino.com` |
-| **Database** | Docker Compose PostgreSQL 16 + PostGIS | Managed Cloud PostgreSQL (Shared Burstable) | Managed Cloud PostgreSQL (Dedicated Mirror) | High-Availability PostgreSQL 16 Cluster + Standby Replica |
-| **Redis Broker** | Docker Compose Redis 7 (Standalone) | Managed Redis (Single Node) | Managed Redis (Cluster) | Managed Redis 7+ High-Availability Cluster |
+| **Database** | Docker Compose PostgreSQL 18 (or 17) + PostGIS | Managed Cloud PostgreSQL (Shared Burstable) | Managed Cloud PostgreSQL (Dedicated Mirror) | High-Availability PostgreSQL 18 (or 17) + Standby Replica |
+| **Redis Broker** | Docker Compose Redis 7 (Standalone) | Managed Redis (Single Node) | Managed Redis (Primary/Replica) | Managed Redis 7+ High-Availability (Primary/Replica) |
 | **File Storage** | MinIO (S3-compatible local Docker) | Cloudflare R2 (`oprino-dev-media`) | Cloudflare R2 (`oprino-staging-media`) | Cloudflare R2 (`oprino-prod-media` - Private) |
 | **Mobile Push** | Mock Push Logger (stdout) | FCM / APNs Sandbox / TestFlight | FCM / APNs Sandbox / TestFlight | FCM HTTP v1 / Apple Production APNs |
 | **Transactional Email**| Resend Test Mode / MailHog | Resend Sandbox | Resend Staging (Whitelisted) | Resend Production Verified Domain |
@@ -80,7 +80,7 @@ export const serverEnvSchema = z.object({
 ## 4. Local Developer Experience (`pnpm dev`)
 
 To provide frictionless onboarding for developers:
-1. `docker compose up -d`: Boots PostgreSQL 16 (with PostGIS enabled), Redis 7, and MinIO in 5 seconds.
+1. `docker compose up -d`: Boots PostgreSQL 18 (or 17, with PostGIS enabled), Redis 7, and MinIO in 5 seconds.
 2. `pnpm db:seed`: Seeds sample SMB workspaces:
    - **Acme Facility Services** (15 employees, maintenance workflows)
    - **Apex Field Sales** (80 employees, distributed visit routes)
@@ -88,11 +88,11 @@ To provide frictionless onboarding for developers:
 
 ---
 
-## 5. Mobile Build & Deployment Pipeline (Expo EAS)
+## 5. Mobile Build & Deployment Pipeline (Flutter CI/CD & Fastlane)
 
 Mobile application releases follow a structured release channel strategy:
-- **Internal Builds (Daily):** Expo Application Services (EAS) compiles Android APKs and iOS simulator builds for internal team testing upon merge to `develop`.
-- **Preview Builds (Release Candidates):** EAS builds distributed to internal stakeholders and QA testers via Google Play Internal Track and Apple TestFlight.
+- **Internal Builds (Daily):** GitHub Actions with Flutter CLI compiles Android APKs and iOS simulator builds for internal team testing upon merge to `develop`.
+- **Preview Builds (Release Candidates):** Automated Fastlane builds distributed to internal stakeholders and QA testers via Google Play Internal Track and Apple TestFlight.
 - **Production Store Builds:** Promoted to Google Play Store and Apple App Store upon passing all release checklists.
 
 ---

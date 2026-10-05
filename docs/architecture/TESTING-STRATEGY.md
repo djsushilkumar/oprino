@@ -47,7 +47,7 @@ flowchart TD
 
 ### 3.2 Backend Integration Testing (Fastify + Testcontainers / Ephemeral PostgreSQL)
 - **Scope:** Fastify routes, middleware, authentication, RBAC, domain event dispatch, database queries.
-- **Execution:** Runs against a real PostgreSQL 16 instance with PostGIS and Redis enabled.
+- **Execution:** Runs against a real PostgreSQL 18 (or 17) instance with PostGIS and Redis enabled.
 - **Multi-Tenant Invariant Matrix:**
   Every route test suite includes explicit negative tests:
   1. User from Workspace A requests resource from Workspace B -> **Assert 404 or 403**.

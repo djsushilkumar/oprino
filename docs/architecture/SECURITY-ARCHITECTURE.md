@@ -37,8 +37,8 @@ flowchart TD
 
     subgraph Layer2["Layer 2: Identity & Session Management"]
         AUDITED_AUTH["Audited Auth Framework (Better Auth)<br>Argon2id Hashing, Timing-Safe Tokens"]
-        DUAL_SESSION["Web: HttpOnly Secure Cookies<br>Mobile: Keystore/Keychain Tokens"]
-        DEVICE["Hardware Device Binding & Revocation"]
+        DUAL_SESSION["Web: HttpOnly Secure Cookies<br>Mobile: Platform Secure Storage"]
+        DEVICE["Installation Registration & Revocation"]
     end
 
     subgraph Layer3["Layer 3: 5-Stage Multi-Tenant Authorization"]
@@ -57,7 +57,7 @@ flowchart TD
     end
 
     subgraph Layer5["Layer 5: Mobile Device Security"]
-        KEYSTORE["Hardware Keystore / iOS Keychain"]
+        KEYSTORE["Platform-Backed Secure Storage (Android / iOS)"]
         MOCK["Mock GPS Detection & Anti-Tamper"]
         SQLCIPHER["Encrypted Local SQLite DB"]
     end
@@ -85,8 +85,8 @@ Per [`ADR-006`](file:///workspace/oprino/docs/architecture/ADR-006-authenticatio
 - **Credential Storage:** User passwords hashed using **Argon2id** (memory cost: 64MB, iterations: 3, parallelism: 4). Plaintext passwords are never logged, cached, or transmitted after hashing.
 - **Dual Surface Session Handling:**
   - **Web Dashboard:** Secure, HttpOnly, SameSite=Lax, encrypted session cookies protecting against JavaScript XSS token theft.
-  - **Mobile Apps:** Secure tokens stored in device hardware (Android Keystore / iOS Keychain) with single-use refresh token rotation and theft detection.
-- **Device Registration & Revocation:** Sessions are bound to physical hardware device identifiers. Deactivating an employee or reporting a lost device flushes session records immediately from Redis and PostgreSQL.
+  - **Mobile Apps:** Secure opaque session tokens stored in platform-backed secure storage (Android Keystore / iOS Keychain) under namespaced keys.
+- **Installation Registration & Revocation:** Sessions are bound to Oprino-generated Installation IDs (`installation_id`). Deactivating an employee or revoking an installation flushes session records immediately from Redis and PostgreSQL.
 
 ### 3.3 Layer 3 & 4: Zero-Trust 5-Stage Multi-Tenancy & Pooled RLS Safety
 Per [`ADR-005`](file:///workspace/oprino/docs/architecture/ADR-005-multitenancy.md):
@@ -114,11 +114,50 @@ CI/CD enforces automated regression tests against cross-tenant attacks:
 - Rapid workspace switching over pooled connections -> Assert zero state bleed.
 
 ### 3.5 Layer 5: Mobile Client Security
-- **Secure Token Storage:** Tokens stored exclusively in Android Keystore (EncryptedSharedPreferences) and iOS Keychain.
+- **Android Backup & Migration Security (Cloud Backup & D2D Transfer Protection):**
+  - Oprino does not rely solely on `android:allowBackup="false"`. Defense-in-depth rules must be codified across all supported API levels in `AndroidManifest.xml`:
+    - `android:dataExtractionRules="@xml/data_extraction_rules"` (Android 12+ / API 31+)
+    - `android:fullBackupContent="@xml/backup_rules"` (Android 11 and below / API <= 30)
+  - **Android 12+ (`res/xml/data_extraction_rules.xml`):** Explicitly defines extraction policies governing both `<cloud-backup>` and `<device-transfer>`:
+    ```xml
+    <?xml version="1.0" encoding="utf-8"?>
+    <data-extraction-rules>
+        <cloud-backup>
+            <exclude domain="sharedpref" path="FlutterSecureStorage"/>
+            <exclude domain="sharedpref" path="oprino_auth_session.xml"/>
+            <exclude domain="sharedpref" path="oprino_installation.xml"/>
+            <exclude domain="database" path="oprino.sqlite"/>
+            <exclude domain="database" path="oprino.sqlite-wal"/>
+            <exclude domain="database" path="oprino.sqlite-shm"/>
+        </cloud-backup>
+        <device-transfer>
+            <exclude domain="sharedpref" path="FlutterSecureStorage"/>
+            <exclude domain="sharedpref" path="oprino_auth_session.xml"/>
+            <exclude domain="sharedpref" path="oprino_installation.xml"/>
+            <exclude domain="database" path="oprino.sqlite"/>
+            <exclude domain="database" path="oprino.sqlite-wal"/>
+            <exclude domain="database" path="oprino.sqlite-shm"/>
+        </device-transfer>
+    </data-extraction-rules>
+    ```
+  - **Android 11 and Below (`res/xml/backup_rules.xml`):** Explicit legacy backup rules specifying equivalent exclusions for Google Drive Auto Backup:
+    ```xml
+    <?xml version="1.0" encoding="utf-8"?>
+    <full-backup-content>
+        <exclude domain="sharedpref" path="FlutterSecureStorage"/>
+        <exclude domain="sharedpref" path="oprino_auth_session.xml"/>
+        <exclude domain="sharedpref" path="oprino_installation.xml"/>
+        <exclude domain="database" path="oprino.sqlite"/>
+        <exclude domain="database" path="oprino.sqlite-wal"/>
+        <exclude domain="database" path="oprino.sqlite-shm"/>
+    </full-backup-content>
+    ```
+  - Guarantees that neither Google Drive cloud backups nor cable/Wi-Fi Device-to-Device (D2D) migrations can restore invalidated tokens, clone installation identities, or leak cached customer data to a new device.
+- **Remote Wipe Semantics:** When an administrator revokes a device or session on the backend, the next application contact receives HTTP 401/403. The mobile client intercepts this response and immediately executes an application-scoped local wipe: clearing session credentials from secure storage and purging protected domain database tables. The architecture does not claim ungrounded OS-level deletion or immediate wipe while a device is permanently offline.
 - **Mock Location & Jailbreak Telemetry:**
   - Android: Detects `location.isFromMockProvider()` and test provider flags.
   - iOS: Detects simulated coordinates and root/jailbreak markers.
-  - Suspicious coordinates are tagged and raise operational exception alerts without disrupting field emergencies.
+  - Suspicious coordinates are tagged as an anomaly/risk for manager review (never automatically treated as proven fraud) and raise operational exception alerts without disrupting field emergencies.
 - **Local Database Encryption:** Client SQLite database encrypted using `SQLCipher` with an encryption key derived from hardware Keystore/Keychain primitives.
 
 ---

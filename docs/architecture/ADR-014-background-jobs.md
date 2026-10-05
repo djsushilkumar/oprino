@@ -37,7 +37,7 @@ Key requirements:
   - Native TypeScript ecosystem: 100% shared business logic, database models, and validation schemas with Fastify API.
   - Battle-tested performance: Capable of 10,000+ jobs/sec, far exceeding SMB platform demands.
   - Native support for retries with exponential backoff, rate limiting per tenant, job deduplication via `jobId`, parent-child job flows, and dead-letter queues.
-  - Lightweight operational footprint: Leverages the existing Redis cluster already deployed for cache/session management.
+  - Lightweight operational footprint: Leverages the managed Redis HA instance (Primary/Replica with persistence) already deployed for cache/session management.
 - **Cons:** Requires Redis persistence (AOF/RDB) configuration to prevent job loss during restarts.
 
 ### Alternative B: Temporal.io / Cadence (Orchestration Engine)
@@ -85,7 +85,7 @@ flowchart TD
         EMIT["Domain Event Dispatcher"]
     end
 
-    subgraph RedisBroker["Redis 7+ Cluster / Instance"]
+    subgraph RedisBroker["Managed Redis 7+ HA Instance (Primary/Replica)"]
         Q_NOTIF["Queue: notifications"]
         Q_REPORTS["Queue: report_generation"]
         Q_MAINT["Queue: maintenance_cron"]
@@ -101,7 +101,7 @@ flowchart TD
     end
 
     subgraph DataTier["Data Tier"]
-        PG[("PostgreSQL 16 + PostGIS")]
+        PG[("PostgreSQL 18 (or 17) + PostGIS 3.6.x (GA)")]
         S3[("S3 Storage (Reports/Exports)")]
     end
 
@@ -131,7 +131,7 @@ flowchart TD
 
 1. **Daily Location Partition Maintenance (02:00 UTC):**
    - Creates future 1-day or 7-day partitions for `employee_locations`.
-   - Identifies partitions older than the workspace's retention policy (default: 30 days per frozen policy; or 7/90/180 days) and issues `DROP TABLE employee_locations_YYYY_MM_DD` (ADR-004).
+   - Identifies partitions older than the workspace's retention policy (default: 30 days per frozen policy; or 7/90/180 days) and executes the security-definer procedure `telemetry.prune_expired_partitions()` ([`ADR-004`](file:///workspace/oprino/docs/architecture/ADR-004-database-geospatial.md), [`RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md)).
 2. **Auto-Punchout Engine (Every 15 minutes):**
    - Queries open attendance records where `shift_end_time + max_overtime_buffer < NOW()`.
    - Automatically punches out abandoned shifts with `punch_out_reason = 'AUTO_SYSTEM_SHIFT_LIMIT'`.

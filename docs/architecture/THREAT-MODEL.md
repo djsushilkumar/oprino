@@ -33,8 +33,8 @@ flowchart TD
     end
 
     subgraph Zone4["Trusted Data Zone (Internal Private VPC)"]
-        PG[("PostgreSQL 16 + PostGIS")]
-        REDIS[("Redis 7+ Cluster")]
+        PG[("PostgreSQL 18 (or 17) + PostGIS")]
+        REDIS[("Managed Redis 7+ HA")]
         S3[("Private S3 Object Storage")]
     end
 
@@ -58,9 +58,9 @@ flowchart TD
 | ID | STRIDE Category | Threat Description | Attack Surface | Severity | Mitigation Architecture | Residual Risk |
 |---|---|---|---|:---:|---|:---:|
 | **T-01** | **Spoofing** | Field worker uses mock GPS software (e.g., Fake GPS app) to fake presence at a customer site or punch in remotely. | Mobile GNSS Ingest | **High** | 1. Android `isFromMockProvider()` detection.<br>2. Accelerometer/speed correlation (detects instant teleportation).<br>3. Cell tower / Wi-Fi BSSID sanity validation.<br>4. Geofence violation flags. | Low (Flagged as suspicious) |
-| **T-02** | **Spoofing** | Attacker steals an expired access token or attempts session replay. | API Auth Endpoints | **Medium** | 1. 15-minute short JWT expiry.<br>2. Single-use refresh token rotation (submitting an old refresh token invalidates entire family).<br>3. Redis token revocation list. | Low |
+| **T-02** | **Spoofing** | Attacker steals an expired access token or attempts session replay. | API Auth Endpoints | **Medium** | 1. Opaque Better Auth session credential with sliding TTL.<br>2. Instant Redis session invalidation on logout/revocation.<br>3. Binding session to registered Oprino Installation ID. | Low |
 | **T-03** | **Tampering** | Employee roots phone, alters local SQLite `outbox_mutations` to change punch timestamps or task completion times. | Mobile Local SQLite | **Medium** | 1. SQLCipher local database encryption.<br>2. Server-side timestamp reconciliation (server checks delta between client timestamp and server arrival time).<br>3. Outlier timestamps flagged for audit. | Low |
-| **T-04** | **Tampering** | User attempts parameter tampering to modify an entity belonging to another company by altering `workspace_id` in request body. | Fastify REST API | **Critical** | 1. `workspace_id` extracted strictly from validated JWT, NEVER accepted from client body/query.<br>2. PostgreSQL RLS enforces tenant isolation at SQL layer. | Negligible |
+| **T-04** | **Tampering** | User attempts parameter tampering to modify an entity belonging to another company by altering `workspace_id` in request body. | Fastify REST API | **Critical** | 1. `workspace_id` extracted strictly from validated session, NEVER accepted from client body/query.<br>2. PostgreSQL RLS enforces tenant isolation at SQL layer. | Negligible |
 | **T-05** | **Repudiation** | Field worker denies completing a visit or claims manager modified their attendance record without consent. | Operational Audit | **Medium** | 1. Immutable append-only audit trail (`audit.system_audit_logs`).<br>2. Cryptographic SHA-256 photo hashing with burned-in timestamp watermark.<br>3. Manager regularizations require mandatory reason notes. | Negligible |
 | **T-06** | **Information Disclosure** | Off-duty employee location is accidentally recorded, stored, or displayed on the manager live map. | Mobile Tracking & Live Map Pipeline | **Critical** | 1. Native foreground service termination on punch-out.<br>2. Client-side local post-duty point deletion.<br>3. Server-side zero-trust attendance shift check (drops off-duty coordinates).<br>4. 30-day automated partition purge. | Negligible |
 | **T-07** | **Information Disclosure** | Peer employees view each other's live locations on mobile map without authorization. | Real-Time SSE / Mobile Map | **High** | 1. Phase 00 Sign-Off Rule: Peer location visibility is **OFF BY DEFAULT**.<br>2. SSE streams strictly enforce RBAC (`location:read:team` / `location:read:workspace`). | Negligible |
@@ -77,14 +77,15 @@ flowchart TD
 Field workers may attempt to use mock GPS applications on Android to pretend they are at a client facility:
 1. **OS Mock Detection:** The mobile background plugin evaluates `location.mock = true` or `isFromMockProvider`. If true, the coordinates are flagged with `telemetry_quality = 'MOCK_DETECTED'`.
 2. **Speed & Acceleration Invariant:** If a coordinate pair indicates displacement exceeding 160 km/h (or instant 5km jump in 10 seconds), the pipeline tags the point as `ANOMALY_TELEPORTATION`.
-3. **Operational Consequence:** The system **DOES NOT** crash or lock the worker out (which could disrupt legitimate field emergencies). Instead, it quietly flags the record and notifies the assigned manager via an Operational Exception Alert on their dashboard.
+3. **Operational Consequence:** The system **DOES NOT** crash or lock the worker out (which could disrupt legitimate field emergencies). Instead, it quietly flags the record as an anomaly/risk for manager review (not automatically treated as proven fraud) and notifies the assigned manager via an Operational Exception Alert on their dashboard.
 
 ### 3.2 Mitigating Cross-Tenant Data Leaks (T-04)
-The highest risk in SaaS is multi-tenant data leakage:
-1. **JWT as Single Source of Tenant Truth:** When a user logs in, the backend encodes verified `workspace_id` into the signed JWT.
-2. **Route Guard Enforcement:** Fastify authentication middleware decodes the JWT and binds `request.tenant = { workspaceId: decoded.workspace_id }`.
-3. **Repository Injection:** All ORM/SQL queries automatically inject `WHERE workspace_id = request.tenant.workspaceId`.
-4. **PostgreSQL RLS Fallback:** If a bug in custom SQL omits the tenant filter, PostgreSQL Row-Level Security automatically blocks cross-tenant reads or updates.
+The highest risk in SaaS is multi-tenant data leakage. The platform enforces the 5-stage zero-trust verification pipeline ([`ADR-005`](file:///workspace/oprino/docs/architecture/ADR-005-multitenancy.md), [`SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md)):
+1. **Authenticated Identity:** Verifies cryptographic signature of JWT or session cookie to resolve canonical `userId`.
+2. **Workspace Membership Verification:** Validates that user holds an active membership record in the target workspace in `workspace_memberships`.
+3. **Authorized Active Context:** Binds validated `workspace_id` to request scope; arbitrary client tenant claims are rejected.
+4. **Transaction-Scoped Tenant Context (`SET LOCAL`):** The backend opens a database transaction and executes `SET LOCAL app.current_workspace_id = 'verified_workspace_id'`, safely isolating pooled connections (PgBouncer) with zero cross-tenant session leaks.
+5. **PostgreSQL RLS Fallback:** As defense in depth, PostgreSQL Row-Level Security automatically restricts all table queries strictly to `current_setting('app.current_workspace_id')`.
 
 ---
 

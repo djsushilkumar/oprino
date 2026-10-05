@@ -38,3 +38,28 @@ Thumbs.db
 .expo/
 .expo-shared/
 .turbo/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Mobile Platform Artifacts
+.gradle/
+local.properties
+*.apk
+*.aab
+*.dex
+*.class
+*.ipa
+*.dSYM.zip
+*.dSYM
+Pods/
+
+# Build Tools & Generators
+*.jar
+!gradle-wrapper.jar
+
+# Local SQLite Databases
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
