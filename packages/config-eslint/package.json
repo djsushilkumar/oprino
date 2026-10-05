@@ -1,0 +1,18 @@
+{
+  "name": "@oprino/config-eslint",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "main": "base.js",
+  "exports": {
+    "./base": "./base.js",
+    "./next": "./next.js"
+  },
+  "files": [
+    "base.js",
+    "next.js"
+  ],
+  "devDependencies": {
+    "eslint": "^9.21.0"
+  }
+}

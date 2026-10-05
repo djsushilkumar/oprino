@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    container_name: oprino-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: oprino_admin
+      POSTGRES_PASSWORD: oprino_dev_password
+      POSTGRES_DB: oprino_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - oprino_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U oprino_admin -d oprino_db']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: oprino-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - oprino_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  oprino_postgres_data:
+  oprino_redis_data:

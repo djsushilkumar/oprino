@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="FlutterSecureStorage.xml"/>
+        <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml"/>
+        <exclude domain="sharedpref" path="oprino_auth_session.xml"/>
+        <exclude domain="sharedpref" path="oprino_installation.xml"/>
+        <exclude domain="database" path="oprino.sqlite"/>
+        <exclude domain="database" path="oprino.sqlite-wal"/>
+        <exclude domain="database" path="oprino.sqlite-shm"/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="FlutterSecureStorage.xml"/>
+        <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml"/>
+        <exclude domain="sharedpref" path="oprino_auth_session.xml"/>
+        <exclude domain="sharedpref" path="oprino_installation.xml"/>
+        <exclude domain="database" path="oprino.sqlite"/>
+        <exclude domain="database" path="oprino.sqlite-wal"/>
+        <exclude domain="database" path="oprino.sqlite-shm"/>
+    </device-transfer>
+</data-extraction-rules>

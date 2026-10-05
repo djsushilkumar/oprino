@@ -1,0 +1,44 @@
+@import '@oprino/tokens/css';
+
+:root {
+  --background: var(--oprino-color-neutral-paper);
+  --foreground: var(--oprino-color-brand-navy);
+  --primary: var(--oprino-color-brand-cobalt);
+  --secondary: var(--oprino-color-brand-ocean);
+  --accent: var(--oprino-color-brand-mint);
+  --border: var(--oprino-color-neutral-border);
+  --muted: var(--oprino-color-neutral-slate);
+  --card-bg: var(--oprino-color-neutral-white);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: var(--oprino-font-body);
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--oprino-font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

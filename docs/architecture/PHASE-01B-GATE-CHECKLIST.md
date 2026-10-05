@@ -7,6 +7,7 @@
 **Date:** October 2026  
 **Controlling Validation Report:** [`docs/architecture/PHASE-01B-VALIDATION-REPORT.md`](file:///workspace/oprino/docs/architecture/PHASE-01B-VALIDATION-REPORT.md)  
 **Governance Record:**
+
 - Phase 00: APPROVED & FROZEN
 - Phase 01A Flutter Architecture: APPROVED & FROZEN
 - Phase 01B Software/Architecture Validation: CONDITIONALLY CLOSED
@@ -28,6 +29,7 @@
 ## 2. Technical Validation Spike Gates
 
 ### Gate A: Background Location & Duty Privacy (Spike A)
+
 - [x] Software test harness created under [`research/spikes/spike_a_location/`](file:///workspace/oprino/research/spikes/spike_a_location/).
 - [x] Software punch-out stop dispatch latency measured (**16ms**).
 - [x] Post-duty breadcrumb purge algorithm verified (**100%** purged before transmission).
@@ -38,6 +40,7 @@
 - **Gate Status:** **PARTIAL / BLOCKED**
 
 ### Gate B: Drift Offline Persistence & Outbox (Spike B)
+
 - [x] Test project created under [`research/spikes/spike_b_drift/`](file:///workspace/oprino/research/spikes/spike_b_drift/).
 - [x] Native SQLite with WAL mode (`PRAGMA journal_mode = wal`) verified.
 - [x] Foreign keys enabled and verified (`PRAGMA foreign_keys = 1`).
@@ -51,6 +54,7 @@
 - **Gate Status:** **PASSED**
 
 ### Gate C: Flutter + Better Auth Integration (Spike C)
+
 - [x] Test service created under [`research/spikes/spike_c_auth/`](file:///workspace/oprino/research/spikes/spike_c_auth/).
 - [x] Better Auth Bearer plugin verified; opaque session token issued over TLS.
 - [x] Global `disableCSRFCheck: true` eliminated; native scheme validation (`Origin: oprino://app` in `trustedOrigins`) verified.
@@ -59,6 +63,7 @@
 - **Gate Status:** **PARTIAL**
 
 ### Gate D: OpenAPI 3.1 → Dart Code Generation (Spike D)
+
 - [x] Fastify Zod contract API created under [`research/spikes/spike_d_openapi/`](file:///workspace/oprino/research/spikes/spike_d_openapi/).
 - [x] Complete schema coverage tested: UUID, enums, nullable fields, arrays, pagination, nested objects, dates/timestamps, validation error schema, multipart upload, binary PDF streaming.
 - [x] OpenAPI spec exported and compiled to `dart-dio` client (`oprino_api`) using `openapi-generator-cli 7.9.0`.
@@ -68,6 +73,7 @@
 - **Gate Status:** **PASSED**
 
 ### Gate E: Secure Storage & Installation Identity (Spike E)
+
 - [x] Test project created under [`research/spikes/spike_e_security/`](file:///workspace/oprino/research/spikes/spike_e_security/).
 - [x] Cryptographically random Installation ID (`inst_` + UUIDv4) generated and verified.
 - [x] Namespace separation between `oprino_installation` and `oprino_auth_session` verified.
@@ -85,17 +91,21 @@
 ## 3. Architecture Validation Gate Evaluation
 
 ### Android Architecture Validation
+
 **FAIL / BLOCKED: Physical Samsung and Xiaomi Devices Not Attached to Workstation**  
 Software emulation, outbox persistence, Better Auth Bearer integration, and secure storage abstractions passed completely. However, zero physical devices are attached to ADB (`adb devices` is empty). Actual on-device validation of foreground/background tracking, aggressive OEM background killers (MIUI/HyperOS, Samsung One UI), Doze survival, physical GPS shutdown latency, and battery impact cannot be fabricated.
 
 ### iOS Architecture Validation
+
 **BLOCKED BY REQUIRED macOS/Xcode ENVIRONMENT**  
 Windows cannot execute native iOS builds or connect physical iPhones for profiling. All spike harnesses are structured so they can run on macOS, current stable Xcode, and a physical iPhone without modification.
 
 ### Scope Assessment for Remaining iOS Validation
+
 The remaining iOS validation is **A BLOCKER FOR MOBILE PRODUCTION RELEASE ONLY**, NOT for Phase 01C monorepo repository scaffolding.
 
 **Technical Reasoning:**
+
 1. **Unified Cross-Platform Core:** The Flutter architecture unifies Drift SQLite offline persistence, Better Auth integration, OpenAPI Dio API client generation, state management, and business logic across both platforms. Monorepo scaffolding, web dashboard development, Fastify modular monolith implementation, and Android mobile client work can proceed without blocking on macOS.
 2. **Vendor Plugin Parity:** `flutter_background_geolocation` wraps `TSLocationManager` on iOS, an established commercial library with first-class standard iOS background mode support (`UIBackgroundModes: location, fetch, processing`).
 3. **Android Represents the More Volatile Boundary:** Android OEM background power management (Samsung One UI battery optimization, Xiaomi MIUI/HyperOS aggressive autostart killers, and Doze mode) is architecturally more volatile than iOS standard background location services. Passing Android physical validation establishes high confidence in the offline/location architecture.

@@ -1,0 +1,13 @@
+Oprino-Brand-Kit/
+docs/
+research/
+dist/
+build/
+.next/
+.dart_tool/
+generated/
+*.lock
+pnpm-lock.yaml
+pubspec.lock
+AGENTS.md
+README.md

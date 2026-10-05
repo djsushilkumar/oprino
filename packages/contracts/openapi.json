@@ -1,0 +1,185 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Oprino Operations Engine API",
+    "version": "0.1.0",
+    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "http://10.0.2.2:3000",
+      "description": "Android Emulator Loopback"
+    },
+    {
+      "url": "http://127.0.0.1:3000",
+      "description": "Physical Android Reverse Loopback"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok", "degraded", "unhealthy"],
+            "example": "ok"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-05T12:00:00.000Z"
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "database": {
+                "type": "string",
+                "enum": ["connected", "disconnected", "unhealthy"],
+                "example": "connected"
+              },
+              "redis": {
+                "type": "string",
+                "enum": ["connected", "disconnected", "unhealthy"],
+                "example": "connected"
+              }
+            },
+            "required": ["database", "redis"],
+            "description": "Subsystem connectivity health"
+          }
+        },
+        "required": ["status", "timestamp", "services"]
+      },
+      "SystemArchitectureInfo": {
+        "type": "object",
+        "properties": {
+          "framework": {
+            "type": "string",
+            "example": "Fastify + TypeScript"
+          },
+          "database": {
+            "type": "string",
+            "example": "PostgreSQL 18 + PostGIS 3.6"
+          },
+          "mobile": {
+            "type": "string",
+            "example": "Flutter 3.47 Stable"
+          },
+          "auth": {
+            "type": "string",
+            "example": "Better Auth"
+          }
+        },
+        "required": ["framework", "database", "mobile", "auth"]
+      },
+      "VersionResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "oprino-api"
+          },
+          "version": {
+            "type": "string",
+            "example": "0.1.0"
+          },
+          "environment": {
+            "type": "string",
+            "example": "production"
+          },
+          "gitCommit": {
+            "type": "string",
+            "example": "5fc3468"
+          },
+          "architecture": {
+            "$ref": "#/components/schemas/SystemArchitectureInfo"
+          }
+        },
+        "required": ["name", "version", "environment", "architecture"]
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "example": 400
+          },
+          "error": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid request payload"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": ["statusCode", "error", "message"]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Returns the operational health status of the API and backing datastores",
+        "tags": ["System"],
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "System is operational",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "System or a dependent service is degraded or unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/version": {
+      "get": {
+        "summary": "System Version Information",
+        "description": "Returns build version, active environment, and architecture metadata",
+        "tags": ["System"],
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "description": "Version metadata successfully retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

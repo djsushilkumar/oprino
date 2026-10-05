@@ -10,6 +10,7 @@
 **Target Reference Baseline:** Flutter 3.47 Stable (Verified & Active)  
 **Connected Hardware:** `adb devices -l` = 0 physical devices attached (No Samsung or Xiaomi/Redmi hardware connected); iOS physically blocked by missing macOS/Xcode  
 **Controlling Documents:**
+
 - [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)
 - [`docs/architecture/ADR/README.md`](file:///workspace/oprino/docs/architecture/ADR/README.md)
 - [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md)
@@ -23,21 +24,22 @@
 Phase 01B was authorized to experimentally validate high-risk architectural assumptions across background location, offline outbox synchronization, Better Auth session handling, OpenAPI Dart code generation, and installation identity governance before beginning Phase 01C monorepo scaffolding.
 
 While logic, schemas, and software state machines passed in host unit test environments (Node.js 26, Dart 3.13.5, Fastify 5, Drift 2.23, Better Auth 1.7), **physical device evidence is absent on this workstation**. Specifically:
+
 1. No physical Android devices (Samsung, Xiaomi/Redmi, Oppo, Vivo) are connected via ADB to measure physical GPS hardware shutdown latency, Doze survival, OEM background killing, or battery impact.
 2. iOS validation is **BLOCKED BY REQUIRED macOS/Xcode ENVIRONMENT** (Windows cannot execute native iOS builds or connect iPhones for profiling).
 3. Pursuant to the strict Phase 01B mandate, **measurements are never fabricated**.
 
 Therefore, pursuant to the strict Phase 01B entry criteria, **Phase 01B cannot be marked PASS, and Phase 01C cannot begin**.
 
-| Spike | Domain | Test Category | Status | Verdict & Key Finding |
-|---|---|---|:---:|---|
-| **Spike A** | Background Location & Duty Privacy | Host Simulation / Unit Test | **PASS** | Software stop dispatch: 16ms; post-duty queue purge: 100% verified; automatic watchdog cutoff: verified; ingest filter: verified. |
-| **Spike A** | Background Location & Duty Privacy | Physical OEM Device Bench | **BLOCKED** | **Zero physical Android (Samsung, Xiaomi) devices attached.** GPS/native location-service shutdown latency is an unverified physical-device measurement target and must be measured during device testing. |
-| **Spike B** | Drift Offline Database + Outbox | Host SQLite Execution | **PASS** | Native SQLite WAL mode verified; transactions and outbox mutations verified; duplicate replay rejected via unique constraint; crash survival verified; GPS isolated from domain outbox. |
-| **Spike C** | Flutter + Better Auth | Fastify + Dart Client | **PASS** | Dart Dio client verified with Bearer token, namespaced storage, device registration, workspace switch, revocation rejection, and replay protection. |
-| **Spike C** | Flutter + Better Auth | Mobile Device Execution | **BLOCKED** | CSRF protection verified with `oprino://app` in `trustedOrigins` (global CSRF disable eliminated). Physical device deployment pending physical device connection. |
-| **Spike D** | OpenAPI 3.1 → Dart | Pipeline & E2E Test | **PASS** | Fastify Zod contracts generated and compiled to `dart-dio` client (72 outputs); live E2E tests against running server passed; UUID, enums, nullable, arrays, multipart, and PDF streams verified. |
-| **Spike E** | Secure Storage & Installation Identity | Host Dart Execution | **PASS** | Cryptographically random UUIDv4 Installation ID verified; namespace separation (`oprino_installation` vs `oprino_auth_session`) confirmed; cold boot survival confirmed; remote wipe verified. |
+| Spike       | Domain                                 | Test Category                   |   Status    | Verdict & Key Finding                                                                                                                                                                                                                 |
+| ----------- | -------------------------------------- | ------------------------------- | :---------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Spike A** | Background Location & Duty Privacy     | Host Simulation / Unit Test     |  **PASS**   | Software stop dispatch: 16ms; post-duty queue purge: 100% verified; automatic watchdog cutoff: verified; ingest filter: verified.                                                                                                     |
+| **Spike A** | Background Location & Duty Privacy     | Physical OEM Device Bench       | **BLOCKED** | **Zero physical Android (Samsung, Xiaomi) devices attached.** GPS/native location-service shutdown latency is an unverified physical-device measurement target and must be measured during device testing.                            |
+| **Spike B** | Drift Offline Database + Outbox        | Host SQLite Execution           |  **PASS**   | Native SQLite WAL mode verified; transactions and outbox mutations verified; duplicate replay rejected via unique constraint; crash survival verified; GPS isolated from domain outbox.                                               |
+| **Spike C** | Flutter + Better Auth                  | Fastify + Dart Client           |  **PASS**   | Dart Dio client verified with Bearer token, namespaced storage, device registration, workspace switch, revocation rejection, and replay protection.                                                                                   |
+| **Spike C** | Flutter + Better Auth                  | Mobile Device Execution         | **BLOCKED** | CSRF protection verified with `oprino://app` in `trustedOrigins` (global CSRF disable eliminated). Physical device deployment pending physical device connection.                                                                     |
+| **Spike D** | OpenAPI 3.1 → Dart                     | Pipeline & E2E Test             |  **PASS**   | Fastify Zod contracts generated and compiled to `dart-dio` client (72 outputs); live E2E tests against running server passed; UUID, enums, nullable, arrays, multipart, and PDF streams verified.                                     |
+| **Spike E** | Secure Storage & Installation Identity | Host Dart Execution             |  **PASS**   | Cryptographically random UUIDv4 Installation ID verified; namespace separation (`oprino_installation` vs `oprino_auth_session`) confirmed; cold boot survival confirmed; remote wipe verified.                                        |
 | **Spike E** | Secure Storage & Installation Identity | Android Keystore & Backup Rules | **PARTIAL** | Defense-in-depth XML backup exclusion rules codified for both Android 12+ (`dataExtractionRules`) and Android 11- (`fullBackupContent`) across cloud backup and D2D migration. Physical Keystore execution pending physical hardware. |
 
 ---
@@ -45,8 +47,9 @@ Therefore, pursuant to the strict Phase 01B entry criteria, **Phase 01B cannot b
 ## 2. Detailed Spike Analysis & Testing Categories
 
 ### SPIKE A — Flutter Background Location & Duty Privacy
+
 - **Host Unit Test Results (PASS):**
-  - **Punch-Out Stop Dispatch Latency:** Measured at **16ms** for the software controller to issue the stop command to the native service adapter. *(Note: This represents software dispatch latency only; it is NOT physical GPS hardware shutdown latency).*
+  - **Punch-Out Stop Dispatch Latency:** Measured at **16ms** for the software controller to issue the stop command to the native service adapter. _(Note: This represents software dispatch latency only; it is NOT physical GPS hardware shutdown latency)._
   - **Post-Duty Queue Purge:** 100% of breadcrumbs timestamped at or after punch-out were immediately purged from the local transmission queue before syncing.
   - **Automatic Duty Deadline Watchdog:** Automated device-side safety cutoff timer triggered on boundary expiration, halting location acquisition and transitioning state to `expired`.
   - **Server Ingest Filtering:** Coordinates timestamped prior to shift start or after punch-out were strictly dropped by the ingest validation gate.
@@ -58,6 +61,7 @@ Therefore, pursuant to the strict Phase 01B entry criteria, **Phase 01B cannot b
   - **Apple iPhone (iOS):** Untested on physical silicon. Background suspended location updates and Significant Location Change wakeups unverified on physical hardware.
 
 ### SPIKE B — Drift Offline Database + Outbox
+
 - **Host Execution Results (PASS):**
   - Executed real Native SQLite on disk (`NativeDatabase(dbFile)`) using Dart 3.5.4, `package:drift` 2.23.1, and `package:sqlite3` 2.9.4.
   - Confirmed `PRAGMA journal_mode = wal;` and `PRAGMA foreign_keys = 1;`.
@@ -69,6 +73,7 @@ Therefore, pursuant to the strict Phase 01B entry criteria, **Phase 01B cannot b
   - Confirmed strict structural isolation: continuous GPS breadcrumbs throw `StateError` if inserted into domain outbox.
 
 ### SPIKE C — Flutter + Better Auth
+
 - **Host Execution Results (PASS):**
   - Fastify 5.12.5 + Better Auth 1.7.7 running on `127.0.0.1:3088` with `node:sqlite`.
   - **Security Rule Compliance:** `advanced.disableCSRFCheck: true` has been **completely eliminated**. CSRF and origin validation remain active.
@@ -87,6 +92,7 @@ Therefore, pursuant to the strict Phase 01B entry criteria, **Phase 01B cannot b
   - Mobile client tested on host Dart VM; compiled Android APK / iOS IPA execution on physical devices pending.
 
 ### SPIKE D — OpenAPI 3.1 → Dart
+
 - **Host Execution Results (PASS):**
   - Built Fastify + Zod API covering UUID, enums, nullable fields, arrays, pagination, nested objects, dates/timestamps, validation error schemas, multipart photo upload, and binary PDF streaming.
   - Exported OpenAPI spec and compiled via `openapi-generator-cli 7.9.0` with `dart-dio` generator (72 outputs generated in 19.8s).
@@ -94,6 +100,7 @@ Therefore, pursuant to the strict Phase 01B entry criteria, **Phase 01B cannot b
   - Verified strongly-typed Dart enum deserialization (`ListTasks200ResponseItemsInnerStatusEnum.PENDING`) and DateTime parsing.
 
 ### SPIKE E — Secure Storage & Installation Identity
+
 - **Host Execution Results (PASS):**
   - Validated cryptographically random Installation ID generation (`inst_` + UUIDv4).
   - Validated namespace separation between `oprino_installation` and `oprino_auth_session`.
@@ -122,17 +129,21 @@ Therefore, pursuant to the strict Phase 01B entry criteria, **Phase 01B cannot b
 ## 4. Gate Evaluation & Dual Status
 
 ### Android Architecture Validation
+
 **FAIL / BLOCKED: Physical Samsung and Xiaomi Devices Not Attached to Workstation**  
 Software simulation, outbox persistence, Better Auth Bearer integration, and secure storage abstractions passed completely. However, zero physical devices are attached to ADB. Actual on-device validation of foreground/background tracking, aggressive OEM background killers (MIUI/HyperOS, Samsung One UI), Doze survival, hardware GPS shutdown latency, and battery drain cannot be fabricated.
 
 ### iOS Architecture Validation
+
 **BLOCKED BY REQUIRED macOS/Xcode ENVIRONMENT**  
 Windows cannot execute native iOS builds or connect physical iPhones for profiling. All spike harnesses are structured so they can run on macOS, current stable Xcode, and a physical iPhone without modification.
 
 ### Scope Assessment for Remaining iOS Validation
+
 The remaining iOS validation is **A BLOCKER FOR MOBILE PRODUCTION RELEASE ONLY**, NOT for Phase 01C monorepo repository scaffolding.
 
 **Technical Reasoning:**
+
 1. **Unified Cross-Platform Core:** The Flutter architecture unifies Drift SQLite offline persistence, Better Auth integration, OpenAPI Dio API client generation, state management, and business logic across both platforms. Monorepo scaffolding, web dashboard development, Fastify modular monolith implementation, and Android mobile client work can proceed without blocking on macOS.
 2. **Vendor Plugin Parity:** `flutter_background_geolocation` wraps `TSLocationManager` on iOS, an established commercial library with first-class standard iOS background mode support (`UIBackgroundModes: location, fetch, processing`).
 3. **Android Represents the More Volatile Boundary:** Android OEM background power management (Samsung One UI battery optimization, Xiaomi MIUI/HyperOS aggressive autostart killers, and Doze mode) is architecturally more volatile than iOS standard background location services. Passing Android physical validation establishes high confidence in the offline/location architecture.
@@ -145,6 +156,7 @@ The remaining iOS validation is **A BLOCKER FOR MOBILE PRODUCTION RELEASE ONLY**
 By stakeholder executive determination, software-level, cryptographic, schema, and API generation validation objectives for Phase 01B have concluded successfully. Multi-device physical Android OEM fleet profiling (Samsung One UI, Xiaomi HyperOS) and physical iOS Keychain/background testing are formally **DEFERRED** to the mobile release-validation gate, remaining mandatory before beta/production mobile release.
 
 **Governance Record:**
+
 - **Phase 00:** APPROVED & FROZEN
 - **Phase 01A Flutter Architecture:** APPROVED & FROZEN
 - **Phase 01B Software/Architecture Validation:** CONDITIONALLY CLOSED

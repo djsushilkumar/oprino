@@ -1,0 +1,77 @@
+name: Oprino Monorepo CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-web-and-services:
+    name: Lint, Typecheck, Test & Build (TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Tokens & Contracts
+        run: pnpm turbo generate
+
+      - name: Lint
+        run: pnpm turbo lint
+
+      - name: Typecheck
+        run: pnpm turbo typecheck
+
+      - name: Test
+        run: pnpm turbo test
+
+      - name: Build Web & Services
+        run: pnpm turbo build
+
+  validate-mobile:
+    name: Flutter Analyze, Test & Android Baseline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: 'stable'
+          cache: true
+
+      - name: Mobile Flutter Dependencies
+        run: |
+          cd apps/mobile
+          flutter pub get
+
+      - name: Flutter Analyze
+        run: |
+          cd apps/mobile
+          flutter analyze
+
+      - name: Flutter Test
+        run: |
+          cd apps/mobile
+          flutter test

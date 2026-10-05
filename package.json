@@ -1,0 +1,28 @@
+{
+  "name": "oprino-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "eslint .",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "generate": "turbo generate",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

@@ -4,7 +4,7 @@
 **Category:** Multi-Industry Task Management + Workforce Management + Field Operations SaaS for SMBs  
 **Target Market:** SMBs with 5–500 employees (optimized primarily for 10–200 employees)  
 **Date of Handoff:** October 2026  
-**Repository State:** Baseline Planning & Reconciled Technical Architecture  
+**Repository State:** Baseline Planning & Reconciled Technical Architecture
 
 ---
 
@@ -13,19 +13,24 @@
 - **Phase 00 (Product Planning, Scoping & Brand Freeze):** **APPROVED & FROZEN** by stakeholder sign-off.
 - **Phase 01A (Technical Architecture Research & ADR Freeze):** **APPROVED & FROZEN**.
 - **Phase 01B (Technical Validation Spikes):** **CONDITIONALLY CLOSED** (Physical OEM mobile validation formally deferred to mobile release gate).
-- **Pre-Phase-01C Repository Cleanup:** **IN PROGRESS**.
-- **Phase 01C (Production Monorepo Scaffolding):** **AUTHORIZED** (to commence immediately upon repository cleanup clearance).
+- **Pre-Phase-01C Repository Cleanup:** **COMPLETED**.
+- **Phase 01C (Production Monorepo Scaffolding):** **COMPLETED & VERIFIED** ([`docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md`](file:///workspace/oprino/docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md)).
+- **Next Milestone Gate:** **READY FOR CORE V1 IMPLEMENTATION** (Awaiting explicit stakeholder authorization).
 
 ---
 
 ## 2. Controlling Authorities
 
 ### Primary Product Authority:
+
 The single, authoritative source of truth for all product requirements, feature classifications, business rules, and non-goals is:
+
 - [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)
 
 ### Primary Technical Architecture Authority:
+
 The system architecture, component topologies, and physical designs are governed by:
+
 - [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md)
 - [`docs/architecture/ADR/README.md`](file:///workspace/oprino/docs/architecture/ADR/README.md) (Register of ADR-001 through ADR-020)
 - [`docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md`](file:///workspace/oprino/docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md)
@@ -37,12 +42,14 @@ The system architecture, component topologies, and physical designs are governed
 Before modifying code or configuration, Codex and all coding agents **MUST** read and understand:
 
 ### A. Product Baseline & Boundaries
+
 1. [`docs/product/V1-SCOPE.md`](file:///workspace/oprino/docs/product/V1-SCOPE.md) — Strict classification of MUST, SHOULD, LATER, and OUT-OF-SCOPE features for V1.
 2. [`docs/product/PRODUCT-DEFINITION.md`](file:///workspace/oprino/docs/product/PRODUCT-DEFINITION.md) — Core principles, target multi-industry SMB market, and explicit non-goals.
 3. [`docs/product/APP-SURFACES.md`](file:///workspace/oprino/docs/product/APP-SURFACES.md) — Surfaces: Unified Mobile App (Field & Manager modes) and Web Dashboard.
 4. [`docs/product/ROLES-AND-PERMISSIONS-PLAN.md`](file:///workspace/oprino/docs/product/ROLES-AND-PERMISSIONS-PLAN.md) — Default and custom RBAC permissions model.
 
 ### B. Core Architecture & Invariant Specifications
+
 5. [`docs/architecture/PRIVACY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/PRIVACY-ARCHITECTURE.md) — 3-boundary duty-hours controls, safe local deadline strategy, and off-duty privacy enforcement.
 6. [`docs/architecture/RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md) — 30-day default location retention, multi-tier deletion lifecycle, and least-privileged maintenance procedure.
 7. [`docs/architecture/LOCATION-PIPELINE.md`](file:///workspace/oprino/docs/architecture/LOCATION-PIPELINE.md) — Separation of domain SQLite vs. Transistor SDK native persistence; measurable SLO targets; device validation matrix.
@@ -52,6 +59,7 @@ Before modifying code or configuration, Codex and all coding agents **MUST** rea
 11. [`docs/architecture/INFRA-COST-MODEL.md`](file:///workspace/oprino/docs/architecture/INFRA-COST-MODEL.md) — Parameterized SMB infrastructure economics and margin targets.
 
 ### C. Authoritative Brand System
+
 12. [`docs/brand/OPRINO-BRAND-SYSTEM.md`](file:///workspace/oprino/docs/brand/OPRINO-BRAND-SYSTEM.md) — Canonical logo variations, color tokens, typography scales, and spacing units derived from `Oprino-Brand-Kit/`.
 
 ---
@@ -76,16 +84,20 @@ Before modifying code or configuration, Codex and all coding agents **MUST** rea
 
 ## 5. Next Intended Milestones & Next Gate
 
-The repository is currently at the boundary of Phase 01A and Phase 01B:
+The repository has completed Phase 01C Production Monorepo Scaffolding and Stabilization:
 
-1. **Current Gate:** **Stakeholder Technical Architecture Approval of Phase 01A (Flutter Baseline).**
-2. **Phase 01B (Spike Prototyping):** Isolated research spikes under `research/spikes/` validating:
-   - Spike 1: Flutter + Transistor Android OEM/Doze & iOS suspended background-location reliability and duty-boundary cutoff.
-   - Spike 2: Flutter Drift SQLite local persistence, cross-isolate concurrency, and offline mutation outbox sync.
-   - Spike 3: Flutter authentication against Better Auth REST endpoints via Dio AuthInterceptor and `flutter_secure_storage`.
-   - Spike 4: OpenAPI 3.1 schema export to Dart client generation compatibility (`openapi-generator-cli dart-dio`).
-   - Spike 5: Platform secure-storage lifecycle, device revocation handling, and biometric re-authentication.
-3. **Phase 01C (Monorepo Scaffolding):** Establishing the Turborepo/pnpm workspace, setting up package boundaries (`@oprino/contracts`, `@oprino/tokens`), and pinning the Active-LTS Node.js runtime.
+1. **Phase 00:** **APPROVED & FROZEN**.
+2. **Phase 01A (Flutter Technical Architecture):** **APPROVED & FROZEN**.
+3. **Phase 01B (Spikes & Validation):** **CONDITIONALLY CLOSED** (Physical OEM testing deferred to mobile release-validation gate).
+4. **Phase 01C (Production Monorepo Scaffolding & Stabilization):** **COMPLETED & VERIFIED**.
+   - Turborepo / pnpm 11 workspace operational
+   - Next.js 15 web app, Fastify API, BullMQ worker, PostgreSQL/PostGIS database layer
+   - Unified Flutter 3.47 mobile app with Drift SQLite offline outbox
+   - Canonical design token generator (Web CSS + Flutter Dart)
+   - Zod -> OpenAPI 3.1 -> Dart Dio API client pipeline
+   - Zero IDE diagnostic errors & zero CLI validation errors
+5. **Next Gate:** **READY FOR CORE V1 IMPLEMENTATION (Phase 02)**.
 
 > [!WARNING]
-> Do NOT begin Phase 01B or Phase 01C scaffolding until formal stakeholder approval for Phase 01A is recorded.
+> Do NOT begin Phase 02 Core V1 feature implementation until explicit stakeholder authorization is provided.
+

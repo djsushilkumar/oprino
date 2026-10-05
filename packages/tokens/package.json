@@ -1,0 +1,30 @@
+{
+  "name": "@oprino/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./css": "./dist/tokens.css",
+    "./dart": "./dist/oprino_tokens.dart"
+  },
+  "scripts": {
+    "build": "tsx scripts/build.ts && tsc",
+    "generate": "tsx scripts/build.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@oprino/config-eslint": "workspace:*",
+    "@oprino/config-typescript": "workspace:*",
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

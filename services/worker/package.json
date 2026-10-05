@@ -1,0 +1,32 @@
+{
+  "name": "@oprino/worker",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test dist/**/*.test.js || node --test --loader tsx src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@oprino/contracts": "workspace:*",
+    "@oprino/database": "workspace:*",
+    "bullmq": "^5.41.6",
+    "ioredis": "^5.6.0",
+    "pino": "^9.6.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@oprino/config-eslint": "workspace:*",
+    "@oprino/config-typescript": "workspace:*",
+    "@types/node": "^22.13.10",
+    "pino-pretty": "^13.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,8 +1,50 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "name": "Oprino Production",
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "files.watcherExclude": {
+      "**/research/**": true,
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/**": true,
+      "**/.turbo/**": true,
+      "**/dist/**": true,
+      "**/.next/**": true,
+      "**/build/**": true,
+      "**/.dart_tool/**": true,
+    },
+    "search.exclude": {
+      "**/research/archived-spikes/**": true,
+      "**/node_modules": true,
+      "**/.turbo": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/build": true,
+      "**/.dart_tool": true,
+    },
+    "java.import.exclusions": [
+      "**/research/**",
+      "**/archived-spikes/**",
+      "**/node_modules/**",
+      "**/.git/**",
+    ],
+    "java.project.resourceFilters": ["node_modules", ".git", ".turbo", "research"],
+    "java.compile.nullAnalysis.mode": "automatic",
+    "gradle.nestedProjects": false,
+    "gradle.projectExclusions": ["**/research/**", "**/archived-spikes/**"],
+    "dart.projectSearchPaths": ["apps/mobile", "generated/dart-api"],
+    "dart.analysisExcludedFolders": [
+      "research",
+      "research/archived-spikes",
+      ".turbo",
+      "node_modules",
+    ],
+    "typescript.tsserver.watchOptions": {
+      "excludeDirectories": ["**/node_modules", "**/dist", "**/.next", "**/build", "**/research"],
+    },
+  },
 }

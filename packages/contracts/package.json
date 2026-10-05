@@ -1,0 +1,36 @@
+{
+  "name": "@oprino/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./openapi.json": "./dist/openapi.json"
+  },
+  "scripts": {
+    "build": "tsc && pnpm export:openapi && pnpm generate:dart",
+    "export:openapi": "tsx scripts/export-openapi.ts",
+    "generate:dart": "tsx scripts/generate-dart-client.ts",
+    "generate": "pnpm export:openapi && pnpm generate:dart",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@oprino/config-eslint": "workspace:*",
+    "@oprino/config-typescript": "workspace:*",
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

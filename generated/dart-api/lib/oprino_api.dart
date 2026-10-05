@@ -1,0 +1,9 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// Generated from OpenAPI 3.1 specification by @oprino/contracts
+
+library oprino_api;
+
+export 'src/api_client.dart';
+export 'src/model/health_response.dart';
+export 'src/model/version_response.dart';
+export 'src/model/api_error.dart';
