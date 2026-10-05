@@ -1,13 +1,35 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { BrandLogo } from '../components/BrandLogo';
+import { getStoredToken } from '../lib/api';
 
 export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = getStoredToken();
+    if (token) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
   return (
-    <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <main
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#F8FAFC',
+      }}
+    >
       {/* Top Header */}
       <header
         style={{
-          borderBottom: '1px solid var(--border)',
-          backgroundColor: 'var(--card-bg)',
+          borderBottom: '1px solid #DDE5EF',
+          backgroundColor: '#FFFFFF',
           padding: '1rem 2rem',
           display: 'flex',
           alignItems: 'center',
@@ -15,45 +37,7 @@ export default function HomePage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {/* Oprino Vector Icon */}
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect width="32" height="32" rx="8" fill="#0F172A" />
-            <path
-              d="M16 6C11.58 6 8 9.58 8 14C8 19.5 16 26 16 26C16 26 24 19.5 24 14C24 9.58 20.42 6 16 6ZM14.2 18.2L10.8 14.8L12.2 13.4L14.2 15.4L19.8 9.8L21.2 11.2L14.2 18.2Z"
-              fill="url(#paint0_linear)"
-            />
-            <defs>
-              <linearGradient
-                id="paint0_linear"
-                x1="8"
-                y1="6"
-                x2="24"
-                y2="26"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#164CFF" />
-                <stop offset="0.5" stopColor="#087DE5" />
-                <stop offset="1" stopColor="#20BAAA" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <span
-            style={{
-              fontFamily: 'var(--oprino-font-display)',
-              fontSize: '1.25rem',
-              fontWeight: 800,
-              color: 'var(--oprino-color-brand-navy)',
-              letterSpacing: '-0.03em',
-            }}
-          >
-            oprino
-          </span>
+          <BrandLogo size={32} />
           <span
             style={{
               backgroundColor: '#E0F2FE',
@@ -64,138 +48,213 @@ export default function HomePage() {
               fontWeight: 600,
             }}
           >
-            Phase 01C Scaffolding
+            Phase 02A Foundation
           </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.875rem' }}>
-          <span style={{ color: 'var(--muted)' }}>Web Dashboard Baseline</span>
-          <div
+          <Link
+            href="/auth/signin"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              backgroundColor: '#DCFCE7',
-              color: '#15803D',
-              padding: '0.25rem 0.6rem',
-              borderRadius: '9999px',
-              fontSize: '0.75rem',
+              color: '#0F172A',
               fontWeight: 600,
+              padding: '0.5rem 1rem',
             }}
           >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: '#16A34A',
-                display: 'inline-block',
-              }}
-            />
-            Architecture Ready
-          </div>
+            Sign In
+          </Link>
+          <Link
+            href="/auth/signup"
+            style={{
+              backgroundColor: '#164CFF',
+              color: '#FFFFFF',
+              fontWeight: 600,
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+            }}
+          >
+            Get Started
+          </Link>
         </div>
       </header>
 
       {/* Main Content Area */}
       <div
-        style={{ flex: 1, padding: '2.5rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }}
+        style={{
+          flex: 1,
+          padding: '4rem 2rem',
+          maxWidth: '1000px',
+          margin: '0 auto',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+        }}
       >
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--foreground)' }}>
-            Oprino Production Monorepo
-          </h1>
-          <p style={{ color: 'var(--muted)', fontSize: '1rem' }}>
-            Production-grade modular monolith foundation connecting Next.js, Fastify, BullMQ,
-            PostgreSQL 18, and Flutter.
-          </p>
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            backgroundColor: '#DCFCE7',
+            color: '#15803D',
+            padding: '0.35rem 0.85rem',
+            borderRadius: '9999px',
+            fontSize: '0.8125rem',
+            fontWeight: 600,
+            marginBottom: '1.5rem',
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              backgroundColor: '#16A34A',
+              display: 'inline-block',
+            }}
+          />
+          Production Multi-Tenant Architecture Active
         </div>
 
-        {/* Foundation Grid */}
+        <h1
+          style={{
+            fontSize: '2.75rem',
+            fontWeight: 800,
+            color: '#0F172A',
+            letterSpacing: '-0.03em',
+            marginBottom: '1rem',
+            fontFamily: 'var(--oprino-font-display, "Outfit", sans-serif)',
+          }}
+        >
+          Workforce Operations SaaS Platform
+        </h1>
+
+        <p
+          style={{
+            fontSize: '1.125rem',
+            color: '#475569',
+            maxWidth: '640px',
+            lineHeight: 1.6,
+            marginBottom: '2.5rem',
+          }}
+        >
+          Phase 02A establishes production-grade identity, workspace onboarding, multi-workspace
+          membership, PostgreSQL Row-Level Security, and device governance.
+        </p>
+
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem' }}>
+          <Link
+            href="/auth/signup"
+            style={{
+              backgroundColor: '#164CFF',
+              color: '#FFFFFF',
+              fontWeight: 600,
+              padding: '0.875rem 1.75rem',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              boxShadow: '0 2px 4px rgba(22, 76, 255, 0.2)',
+            }}
+          >
+            Create Workspace &rarr;
+          </Link>
+          <Link
+            href="/auth/signin"
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#0F172A',
+              border: '1px solid #CBD5E1',
+              fontWeight: 600,
+              padding: '0.875rem 1.75rem',
+              borderRadius: '8px',
+              fontSize: '1rem',
+            }}
+          >
+            Sign In to Existing Workspace
+          </Link>
+        </div>
+
+        {/* Invariant Highlights */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '1.5rem',
-            marginBottom: '2rem',
+            width: '100%',
+            textAlign: 'left',
           }}
         >
-          {/* Card 1: Web App */}
           <div
             style={{
-              backgroundColor: 'var(--card-bg)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--oprino-radius-lg)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #DDE5EF',
+              borderRadius: '12px',
               padding: '1.5rem',
             }}
           >
             <div
-              style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}
+              style={{
+                fontWeight: 700,
+                color: '#0F172A',
+                marginBottom: '0.5rem',
+                fontSize: '1rem',
+              }}
             >
-              <span style={{ fontWeight: 600, fontSize: '1.125rem' }}>Next.js Web App</span>
-              <span style={{ fontSize: '0.75rem', color: '#164CFF', fontWeight: 600 }}>
-                apps/web
-              </span>
+              Multi-Tenant Isolation
             </div>
-            <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-              Next.js 15 App Router with TypeScript, server components, and compiled Oprino brand
-              design tokens.
+            <p style={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.5 }}>
+              Kernel-enforced PostgreSQL Row-Level Security with transaction-scoped tenant context.
+              Cross-tenant leakage is mathematically impossible.
             </p>
-            <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>
-              ✓ Compiled Cleanly
-            </div>
           </div>
 
-          {/* Card 2: Mobile App */}
           <div
             style={{
-              backgroundColor: 'var(--card-bg)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--oprino-radius-lg)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #DDE5EF',
+              borderRadius: '12px',
               padding: '1.5rem',
             }}
           >
             <div
-              style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}
+              style={{
+                fontWeight: 700,
+                color: '#0F172A',
+                marginBottom: '0.5rem',
+                fontSize: '1rem',
+              }}
             >
-              <span style={{ fontWeight: 600, fontSize: '1.125rem' }}>Flutter Mobile App</span>
-              <span style={{ fontSize: '0.75rem', color: '#164CFF', fontWeight: 600 }}>
-                apps/mobile
-              </span>
+              Duty-Hours Invariant
             </div>
-            <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-              Unified Flutter 3.47 app with Riverpod, Drift offline SQLite, GoRouter, and generated
-              OpenAPI Dio client.
+            <p style={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.5 }}>
+              Duty-hours-only tracking guarantee. Zero off-duty location collection. Peer location
+              visibility remains strictly OFF by default.
             </p>
-            <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>
-              ✓ TargetSdk 36 Baseline
-            </div>
           </div>
 
-          {/* Card 3: Fastify API */}
           <div
             style={{
-              backgroundColor: 'var(--card-bg)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--oprino-radius-lg)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #DDE5EF',
+              borderRadius: '12px',
               padding: '1.5rem',
             }}
           >
             <div
-              style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}
+              style={{
+                fontWeight: 700,
+                color: '#0F172A',
+                marginBottom: '0.5rem',
+                fontSize: '1rem',
+              }}
             >
-              <span style={{ fontWeight: 600, fontSize: '1.125rem' }}>Fastify Modular API</span>
-              <span style={{ fontSize: '0.75rem', color: '#164CFF', fontWeight: 600 }}>
-                services/api
-              </span>
+              Device Governance
             </div>
-            <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-              High-performance Fastify server with Zod contracts, Better Auth boundary, and OpenAPI
-              3.1 specification.
+            <p style={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.5 }}>
+              Hardware-independent Installation ID lifecycle with instantaneous server-side
+              revocation and client wipe.
             </p>
-            <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>
-              ✓ Health & Version Endpoints
-            </div>
           </div>
         </div>
       </div>

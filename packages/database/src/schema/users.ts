@@ -1,26 +1,78 @@
-import { pgTable, timestamp, varchar } from 'drizzle-orm/pg-core';
-import { workspaces } from './tenants.js';
+import { pgTable, uuid, varchar, text, boolean, timestamp } from 'drizzle-orm/pg-core';
 
+/**
+ * GLOBAL: Core Identity User Table
+ * Represents the human user across multiple workspaces.
+ */
 export const users = pgTable('users', {
-  id: varchar('id', { length: 36 }).primaryKey(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  image: text('image'),
   status: varchar('status', { length: 50 }).notNull().default('ACTIVE'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const memberships = pgTable('memberships', {
-  id: varchar('id', { length: 36 }).primaryKey(),
-  workspaceId: varchar('workspace_id', { length: 36 })
-    .notNull()
-    .references(() => workspaces.id, { onDelete: 'cascade' }),
-  userId: varchar('user_id', { length: 36 })
+/**
+ * GLOBAL: Better Auth Sessions Table
+ * Tracks active web/mobile sessions for an authenticated user.
+ */
+export const sessions = pgTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  role: varchar('role', { length: 50 }).notNull().default('FIELD_TECHNICIAN'),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  activeWorkspaceId: uuid('active_workspace_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * GLOBAL: Better Auth Accounts Table
+ * Stores authentication provider details and hashed credentials (Argon2id).
+ */
+export const accounts = pgTable('accounts', {
+  id: text('id').primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  idToken: text('id_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
+  scope: text('scope'),
+  password: text('password'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * GLOBAL: Better Auth Verifications Table
+ * Single-use tokens for email verification and password resets.
+ */
+export const verifications = pgTable('verifications', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export type User = typeof users.$inferSelect;
-export type Membership = typeof memberships.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;
+export type Account = typeof accounts.$inferSelect;
+export type NewAccount = typeof accounts.$inferInsert;
+export type Verification = typeof verifications.$inferSelect;
+export type NewVerification = typeof verifications.$inferInsert;

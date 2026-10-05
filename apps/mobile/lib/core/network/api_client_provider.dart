@@ -3,6 +3,7 @@ import 'package:oprino_api/oprino_api.dart';
 import '../config/app_config.dart';
 import '../storage/secure_storage_service.dart';
 import '../database/database.dart';
+import 'auth_interceptor.dart';
 
 final appConfigProvider = Provider<AppConfig>((ref) {
   return AppConfig.development;
@@ -18,7 +19,19 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   return db;
 });
 
+final authInterceptorProvider = Provider<AuthInterceptor>((ref) {
+  final storage = ref.watch(secureStorageProvider);
+  return AuthInterceptor(
+    storage: storage,
+  );
+});
+
 final apiClientProvider = Provider<OprinoApiClient>((ref) {
   final config = ref.watch(appConfigProvider);
-  return OprinoApiClient(baseUrl: config.apiBaseUrl);
+  final interceptor = ref.watch(authInterceptorProvider);
+
+  final client = OprinoApiClient(baseUrl: config.apiBaseUrl);
+  client.dio.interceptors.add(interceptor);
+
+  return client;
 });

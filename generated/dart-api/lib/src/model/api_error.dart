@@ -16,9 +16,9 @@ class ApiError implements Exception {
 
   factory ApiError.fromJson(Map<String, dynamic> json) {
     return ApiError(
-      statusCode: json['statusCode'] as int,
-      error: json['error'] as String,
-      message: json['message'] as String,
+      statusCode: json['statusCode'] as int? ?? 500,
+      error: json['error'] as String? ?? 'Error',
+      message: json['message'] as String? ?? 'An unexpected error occurred',
       details: json['details'] as List<dynamic>?,
     );
   }

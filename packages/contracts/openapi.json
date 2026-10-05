@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Oprino Operations Engine API",
-    "version": "0.1.0",
-    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform"
+    "version": "0.2.0",
+    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02A)"
   },
   "servers": [
     {
@@ -125,6 +125,485 @@
           }
         },
         "required": ["statusCode", "error", "message"]
+      },
+      "AuthUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "owner@oprino.com"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Acme Operations Manager"
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "example": true
+          },
+          "image": {
+            "type": ["string", "null"],
+            "example": "https://cdn.oprino.com/avatars/user1.png"
+          }
+        },
+        "required": ["id", "email", "name", "emailVerified"]
+      },
+      "SignUpRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "owner@oprino.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "SecurePassword123!"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Acme Owner"
+          }
+        },
+        "required": ["email", "password", "name"]
+      },
+      "SignInRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "owner@oprino.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "example": "SecurePassword123!"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "oprino_session_tok_abc123"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          },
+          "activeWorkspaceId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          }
+        },
+        "required": ["token", "user"]
+      },
+      "SignOutResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": ["success"]
+      },
+      "CreateWorkspaceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 255,
+            "example": "Acme Field Services"
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "acme-field-services"
+          }
+        },
+        "required": ["name"]
+      },
+      "WorkspaceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Acme Field Services"
+          },
+          "slug": {
+            "type": "string",
+            "example": "acme-field-services"
+          },
+          "status": {
+            "type": "string",
+            "example": "ACTIVE"
+          },
+          "role": {
+            "type": "string",
+            "example": "Owner/Admin"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["workspace.read", "workspace.manage", "members.read", "members.manage"]
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-05T12:00:00.000Z"
+          }
+        },
+        "required": ["id", "name", "slug", "status", "role", "permissions", "createdAt"]
+      },
+      "WorkspaceListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Acme Field Services"
+          },
+          "slug": {
+            "type": "string",
+            "example": "acme-field-services"
+          },
+          "status": {
+            "type": "string",
+            "example": "ACTIVE"
+          },
+          "membershipStatus": {
+            "type": "string",
+            "example": "active"
+          },
+          "roleName": {
+            "type": "string",
+            "example": "Owner/Admin"
+          }
+        },
+        "required": ["id", "name", "slug", "status", "membershipStatus", "roleName"]
+      },
+      "ListWorkspacesResponse": {
+        "type": "object",
+        "properties": {
+          "workspaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceListItem"
+            }
+          }
+        },
+        "required": ["workspaces"]
+      },
+      "SwitchWorkspaceRequest": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          }
+        },
+        "required": ["workspaceId"]
+      },
+      "SwitchWorkspaceResponse": {
+        "type": "object",
+        "properties": {
+          "activeWorkspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Acme Field Services"
+          },
+          "role": {
+            "type": "string",
+            "example": "Owner/Admin"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["workspace.read", "workspace.manage"]
+          }
+        },
+        "required": ["activeWorkspaceId", "name", "role", "permissions"]
+      },
+      "ActiveWorkspaceInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Acme Field Services"
+          },
+          "slug": {
+            "type": "string",
+            "example": "acme-field-services"
+          },
+          "status": {
+            "type": "string",
+            "example": "ACTIVE"
+          }
+        },
+        "required": ["id", "name", "slug", "status"]
+      },
+      "MembershipInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "m1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          }
+        },
+        "required": ["id", "status"]
+      },
+      "RoleInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "r1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Owner/Admin"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "InstallationInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "d1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "installationId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "i1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "isTrusted": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": ["id", "installationId", "status", "isTrusted"]
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          },
+          "activeWorkspace": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActiveWorkspaceInfo"
+              },
+              {
+                "type": ["object", "null"]
+              }
+            ]
+          },
+          "membership": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MembershipInfo"
+              },
+              {
+                "type": ["object", "null"]
+              }
+            ]
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoleInfo"
+              },
+              {
+                "type": ["object", "null"]
+              }
+            ]
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["workspace.read", "workspace.manage"]
+          },
+          "currentInstallation": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InstallationInfo"
+              },
+              {
+                "type": ["object", "null"]
+              }
+            ]
+          }
+        },
+        "required": ["user", "permissions"]
+      },
+      "RegisterDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "installationId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "i1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["android", "ios", "web"],
+            "example": "android"
+          },
+          "deviceModel": {
+            "type": "string",
+            "maxLength": 128,
+            "example": "Pixel 8"
+          },
+          "osVersion": {
+            "type": "string",
+            "maxLength": 64,
+            "example": "Android 15"
+          },
+          "appVersion": {
+            "type": "string",
+            "maxLength": 32,
+            "example": "1.0.0"
+          },
+          "pushToken": {
+            "type": "string",
+            "example": "fcm_token_sample_123"
+          }
+        },
+        "required": ["installationId", "platform"]
+      },
+      "DeviceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "d1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "installationId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "i1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "platform": {
+            "type": "string",
+            "example": "android"
+          },
+          "deviceModel": {
+            "type": ["string", "null"],
+            "example": "Pixel 8"
+          },
+          "osVersion": {
+            "type": ["string", "null"],
+            "example": "Android 15"
+          },
+          "appVersion": {
+            "type": ["string", "null"],
+            "example": "1.0.0"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "isTrusted": {
+            "type": "boolean",
+            "example": true
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "example": "2026-10-05T12:00:00.000Z"
+          }
+        },
+        "required": ["id", "installationId", "platform", "status", "isTrusted", "lastActiveAt"]
+      },
+      "ListDevicesResponse": {
+        "type": "object",
+        "properties": {
+          "devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceResponse"
+            }
+          }
+        },
+        "required": ["devices"]
+      },
+      "RevokeDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "installationId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "i1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          }
+        },
+        "required": ["installationId"]
+      },
+      "RevokeDeviceResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Device installation revoked successfully"
+          }
+        },
+        "required": ["success", "message"]
       }
     },
     "parameters": {}
@@ -173,6 +652,374 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/signup": {
+      "post": {
+        "summary": "User Registration",
+        "description": "Creates a new user identity and issues initial session credentials",
+        "tags": ["Auth"],
+        "operationId": "signUp",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation or conflict error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/signin": {
+      "post": {
+        "summary": "User Authentication",
+        "description": "Authenticates credentials and establishes session",
+        "tags": ["Auth"],
+        "operationId": "signIn",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/signout": {
+      "post": {
+        "summary": "User Sign Out",
+        "description": "Revokes the active session and clears session state",
+        "tags": ["Auth"],
+        "operationId": "signOut",
+        "responses": {
+          "200": {
+            "description": "Signed out successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignOutResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "summary": "Current Session Context",
+        "description": "Returns identity, active workspace, membership, role, permissions, and device state",
+        "tags": ["Identity"],
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "description": "Current session context retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/workspaces": {
+      "post": {
+        "summary": "Create Workspace",
+        "description": "Atomically provisions workspace, default roles, permissions, and owner membership",
+        "tags": ["Workspaces"],
+        "operationId": "createWorkspace",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workspace provisioned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid workspace parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Workspaces",
+        "description": "Returns all non-removed workspaces the authenticated user belongs to",
+        "tags": ["Workspaces"],
+        "operationId": "listWorkspaces",
+        "responses": {
+          "200": {
+            "description": "Workspaces list retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkspacesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/session/workspace": {
+      "post": {
+        "summary": "Switch Active Workspace",
+        "description": "Validates active membership and activates new workspace context for the session",
+        "tags": ["Workspaces"],
+        "operationId": "switchWorkspace",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchWorkspaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Active workspace context switched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwitchWorkspaceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - not an active member of target workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/register": {
+      "post": {
+        "summary": "Register Device Installation",
+        "description": "Registers or updates a client installation ID with hardware telemetry",
+        "tags": ["Devices"],
+        "operationId": "registerDevice",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device installation registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices": {
+      "get": {
+        "summary": "List User Devices",
+        "description": "Lists all registered installations for the current user",
+        "tags": ["Devices"],
+        "operationId": "listDevices",
+        "responses": {
+          "200": {
+            "description": "Registered installations list retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListDevicesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/revoke": {
+      "post": {
+        "summary": "Revoke Installation",
+        "description": "Revokes access for a specific device installation",
+        "tags": ["Devices"],
+        "operationId": "revokeDevice",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Installation revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeDeviceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
