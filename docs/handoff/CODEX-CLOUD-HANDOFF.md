@@ -18,7 +18,8 @@
 - **Phase 02A (Identity, Workspace & Multi-Tenant Foundation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md)).
 - **Phase 02B (Task & Attendance Domain Implementation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md)).
 - **Phase 02C (GPS Location Pipeline, Geofencing & Tracking Engine):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md)).
-- **Next Milestone Gate:** **READY FOR FIELD OPERATIONS, SIGNATURES ON GLASS & SCHEDULE DISPATCH (Phase 03)**.
+- **Phase 03 (Field Operations, Customer Sites, Visits & Proof of Work):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md)).
+- **Next Milestone Gate:** **READY FOR ADVANCED SCHEDULING, DISPATCH ROUTING & CONFLICT RESILIENCE (Phase 04)**.
 
 ---
 
@@ -125,5 +126,15 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
    - Web Live Radar Map (`/live-map`) with SVG coordinate space, SSE live streaming, worker inspector, and route scrubber.
    - Mobile `LocationService` with reactive Riverpod providers, synchronous unhook on punch out, and Attendance View status card.
    - Full quality gates passed: TypeScript, ESLint, API integration tests (57/57), Flutter analyze (0 err), Flutter tests (18/18), Dart API tests (10/10), and Next.js production build.
-8. **Next Gate:** **READY FOR FIELD OPERATIONS, SIGNATURES ON GLASS & SCHEDULE DISPATCH (Phase 03)**.
+8. **Phase 03 (Field Operations, Customer Sites, Visits & Proof of Work):** **COMPLETED & VERIFIED**.
+   - PostgreSQL RLS tenant isolation across `customers`, `customer_sites`, `visits`, and `task_proofs`.
+   - Separation of Tasks vs Physical Site Visits (0, 1, or multiple visits per task).
+   - Mandatory Checklist Item Completion invariant strictly enforced before task can transition to `COMPLETED`.
+   - Proof of Work Engine with geotagged watermarked photos, on-glass customer signatures, and supervisor verification queue (`VERIFIED` / `REJECTED`).
+   - ADR-012 Pre-signed direct S3/R2 upload architecture with tenant prefix key validation (`/${workspace_id}/proofs/...`).
+   - Offline-first Drift SQLite mobile schema (v3) with outbox queuing and optimistic local state.
+   - Next.js 15 Web management pages for Customers, Visits, and Tasks verification.
+   - Mobile `CustomerSignatureSheet` (raw pointer Listener stroke tracking) and `PhotoProofSheet` (geotagged live GPS watermarking).
+   - Full quality gates passed: TypeScript, ESLint, API integration tests (69/69), Flutter analyze (0 err), Flutter tests (22/22), Dart API tests (11/11), and Next.js production build.
+9. **Next Gate:** **READY FOR ADVANCED SCHEDULING, DISPATCH ROUTING & CONFLICT RESILIENCE (Phase 04)**.
 

@@ -11,6 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from './users.js';
 import { workspaces } from './tenants.js';
+import { customers, customerSites } from './customers.js';
 
 /**
  * TENANT-SCOPED: Tasks Table
@@ -26,6 +27,13 @@ export const tasks = pgTable('tasks', {
   status: varchar('status', { length: 50 }).notNull().default('ASSIGNED'),
   priority: varchar('priority', { length: 20 }).notNull().default('MEDIUM'),
   dueAt: timestamp('due_at', { withTimezone: true }),
+  customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+  siteId: uuid('site_id').references(() => customerSites.id, { onDelete: 'set null' }),
+  requiresSignature: boolean('requires_signature').notNull().default(false),
+  requiresPhotoProof: boolean('requires_photo_proof').notNull().default(false),
+  verifiedBy: uuid('verified_by').references(() => users.id, { onDelete: 'set null' }),
+  verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  verificationNotes: text('verification_notes'),
   createdBy: uuid('created_by')
     .notNull()
     .references(() => users.id, { onDelete: 'restrict' }),

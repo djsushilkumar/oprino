@@ -6,7 +6,6 @@ import '../database/database.dart';
 import '../network/api_client_provider.dart';
 import '../storage/secure_storage_service.dart';
 
-
 final syncServiceProvider = Provider<SyncService>((ref) {
   final db = ref.watch(databaseProvider);
   final client = ref.watch(apiClientProvider);
@@ -44,7 +43,6 @@ class SyncService {
     });
 
     await db.transaction(() async {
-      // 1. Insert into outbox
       await db.into(db.outboxMutations).insert(
             OutboxMutationsCompanion.insert(
               id: mutationId,
@@ -59,7 +57,6 @@ class SyncService {
             ),
           );
 
-      // 2. Optimistically update local attendance cache
       await db.into(db.cachedAttendance).insertOnConflictUpdate(
             CachedAttendanceCompanion.insert(
               id: 'active_state_$workspaceId',
@@ -71,7 +68,6 @@ class SyncService {
           );
     });
 
-    // Fire background sync attempt
     if (autoProcessOutbox) processOutbox().ignore();
     return idempotencyKey;
   }
@@ -149,7 +145,6 @@ class SyncService {
             ),
           );
 
-      // Optimistic update of local task
       await (db.update(db.cachedTasks)..where((t) => t.id.equals(taskId))).write(
         CachedTasksCompanion(
           status: Value(targetStatus),
@@ -174,7 +169,10 @@ class SyncService {
     final idempotencyKey = 'mut-chk-$mutationId';
     final now = DateTime.now();
 
-    final payload = jsonEncode({'isCompleted': isCompleted});
+    final payload = jsonEncode({
+      'taskId': taskId,
+      'isCompleted': isCompleted,
+    });
 
     await db.transaction(() async {
       await db.into(db.outboxMutations).insert(
@@ -203,6 +201,173 @@ class SyncService {
     return idempotencyKey;
   }
 
+  /// Queues Visit Check-in mutation with GPS coordinates.
+  Future<String> queueVisitCheckIn({
+    required String workspaceId,
+    required String visitId,
+    required double latitude,
+    required double longitude,
+    double? accuracy,
+    String? notes,
+  }) async {
+    final mutationId = SecureStorageService.generateUuidV4();
+    final idempotencyKey = 'mut-vis-in-$mutationId';
+    final now = DateTime.now();
+
+    final payload = jsonEncode({
+      'latitude': latitude,
+      'longitude': longitude,
+      'accuracy': accuracy,
+      'notes': notes,
+    });
+
+    await db.transaction(() async {
+      await db.into(db.outboxMutations).insert(
+            OutboxMutationsCompanion.insert(
+              id: mutationId,
+              workspaceId: workspaceId,
+              entityType: 'VISIT',
+              entityId: visitId,
+              mutationType: 'VISIT_CHECK_IN',
+              payload: payload,
+              idempotencyKey: idempotencyKey,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+
+      await (db.update(db.cachedVisits)..where((v) => v.id.equals(visitId))).write(
+        CachedVisitsCompanion(
+          status: const Value('IN_PROGRESS'),
+          checkInTime: Value(now),
+          checkInLat: Value(latitude),
+          checkInLng: Value(longitude),
+          updatedAt: Value(now),
+        ),
+      );
+    });
+
+    if (autoProcessOutbox) processOutbox().ignore();
+    return idempotencyKey;
+  }
+
+  /// Queues Visit Check-out mutation with GPS coordinates.
+  Future<String> queueVisitCheckOut({
+    required String workspaceId,
+    required String visitId,
+    required double latitude,
+    required double longitude,
+    double? accuracy,
+    String? notes,
+  }) async {
+    final mutationId = SecureStorageService.generateUuidV4();
+    final idempotencyKey = 'mut-vis-out-$mutationId';
+    final now = DateTime.now();
+
+    final payload = jsonEncode({
+      'latitude': latitude,
+      'longitude': longitude,
+      'accuracy': accuracy,
+      'notes': notes,
+    });
+
+    await db.transaction(() async {
+      await db.into(db.outboxMutations).insert(
+            OutboxMutationsCompanion.insert(
+              id: mutationId,
+              workspaceId: workspaceId,
+              entityType: 'VISIT',
+              entityId: visitId,
+              mutationType: 'VISIT_CHECK_OUT',
+              payload: payload,
+              idempotencyKey: idempotencyKey,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+
+      await (db.update(db.cachedVisits)..where((v) => v.id.equals(visitId))).write(
+        CachedVisitsCompanion(
+          status: const Value('COMPLETED'),
+          checkOutTime: Value(now),
+          checkOutLat: Value(latitude),
+          checkOutLng: Value(longitude),
+          updatedAt: Value(now),
+        ),
+      );
+    });
+
+    if (autoProcessOutbox) processOutbox().ignore();
+    return idempotencyKey;
+  }
+
+  /// Queues Proof of Work (Photo or Signature) upload confirmation.
+  Future<String> queueProofConfirmation({
+    required String workspaceId,
+    required String taskId,
+    String? visitId,
+    required String userId,
+    required String proofType,
+    required String fileKey,
+    String? fileUrl,
+    String? signerName,
+    String? signerPhone,
+    Map<String, dynamic>? watermarkMetadata,
+    String? notes,
+  }) async {
+    final mutationId = SecureStorageService.generateUuidV4();
+    final idempotencyKey = 'mut-proof-$mutationId';
+    final now = DateTime.now();
+
+    final payload = jsonEncode({
+      'taskId': taskId,
+      'visitId': visitId,
+      'proofType': proofType,
+      'fileKey': fileKey,
+      'signerName': signerName,
+      'signerPhone': signerPhone,
+      'watermarkMetadata': watermarkMetadata,
+      'notes': notes,
+    });
+
+    await db.transaction(() async {
+      await db.into(db.outboxMutations).insert(
+            OutboxMutationsCompanion.insert(
+              id: mutationId,
+              workspaceId: workspaceId,
+              entityType: 'PROOF',
+              entityId: mutationId,
+              mutationType: 'CONFIRM_PROOF',
+              payload: payload,
+              idempotencyKey: idempotencyKey,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+
+      await db.into(db.cachedTaskProofs).insertOnConflictUpdate(
+            CachedTaskProofsCompanion.insert(
+              id: mutationId,
+              workspaceId: workspaceId,
+              taskId: taskId,
+              visitId: Value(visitId),
+              userId: userId,
+              proofType: proofType,
+              fileKey: fileKey,
+              fileUrl: Value(fileUrl),
+              signerName: Value(signerName),
+              signerPhone: Value(signerPhone),
+              watermarkJson: Value(watermarkMetadata != null ? jsonEncode(watermarkMetadata) : null),
+              notes: Value(notes),
+              createdAt: now,
+            ),
+          );
+    });
+
+    if (autoProcessOutbox) processOutbox().ignore();
+    return idempotencyKey;
+  }
+
   // =========================================================================
   // SYNC ENGINE: PROCESS OUTBOX MUTATIONS
   // =========================================================================
@@ -216,7 +381,6 @@ class SyncService {
 
     for (final mutation in pending) {
       try {
-        // Mark as SYNCING
         await (db.update(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).write(
           OutboxMutationsCompanion(
             status: const Value('SYNCING'),
@@ -253,9 +417,6 @@ class SyncService {
             break;
 
           case 'CHECKLIST_UPDATE':
-            // EntityId is itemId
-            // Note: client.updateChecklistItem takes taskId, itemId, isCompleted
-            // We can parse or pass taskId in payload
             final taskId = data['taskId'] as String? ?? '';
             if (taskId.isNotEmpty) {
               await client.updateChecklistItem(
@@ -264,6 +425,39 @@ class SyncService {
                 isCompleted: data['isCompleted'] as bool,
               );
             }
+            break;
+
+          case 'VISIT_CHECK_IN':
+            await client.checkInVisit(
+              visitId: mutation.entityId,
+              latitude: (data['latitude'] as num).toDouble(),
+              longitude: (data['longitude'] as num).toDouble(),
+              accuracy: (data['accuracy'] as num?)?.toDouble(),
+              notes: data['notes'] as String?,
+            );
+            break;
+
+          case 'VISIT_CHECK_OUT':
+            await client.checkOutVisit(
+              visitId: mutation.entityId,
+              latitude: (data['latitude'] as num).toDouble(),
+              longitude: (data['longitude'] as num).toDouble(),
+              accuracy: (data['accuracy'] as num?)?.toDouble(),
+              notes: data['notes'] as String?,
+            );
+            break;
+
+          case 'CONFIRM_PROOF':
+            await client.confirmMediaUpload(
+              taskId: data['taskId'] as String,
+              visitId: data['visitId'] as String?,
+              proofType: data['proofType'] as String,
+              fileKey: data['fileKey'] as String,
+              signerName: data['signerName'] as String?,
+              signerPhone: data['signerPhone'] as String?,
+              watermarkMetadata: data['watermarkMetadata'] as Map<String, dynamic>?,
+              notes: data['notes'] as String?,
+            );
             break;
         }
 
@@ -301,6 +495,15 @@ class SyncService {
                   simplifiedStatus: task.simplifiedStatus,
                   priority: task.priority,
                   dueAt: Value(task.dueAt),
+                  customerId: Value(task.customerId),
+                  customerName: Value(task.customerName),
+                  siteId: Value(task.siteId),
+                  siteName: Value(task.siteName),
+                  requiresPhotoProof: Value(task.requiresPhotoProof),
+                  requiresSignature: Value(task.requiresSignature),
+                  verifierName: Value(task.verifierName),
+                  verifiedAt: Value(task.verifiedAt),
+                  verificationNotes: Value(task.verificationNotes),
                   version: Value(task.version),
                   createdAt: task.createdAt,
                   updatedAt: task.updatedAt,
@@ -345,6 +548,71 @@ class SyncService {
     }
   }
 
+  Future<void> syncDownVisits(String workspaceId) async {
+    try {
+      final res = await client.listVisits();
+      await db.transaction(() async {
+        for (final visit in res.visits) {
+          await db.into(db.cachedVisits).insertOnConflictUpdate(
+                CachedVisitsCompanion.insert(
+                  id: visit.id,
+                  workspaceId: visit.workspaceId,
+                  customerId: visit.customerId,
+                  customerName: Value(visit.customerName),
+                  siteId: Value(visit.siteId),
+                  siteName: Value(visit.siteName),
+                  taskId: Value(visit.taskId),
+                  userId: visit.userId,
+                  status: visit.status,
+                  scheduledAt: Value(visit.plannedAt),
+                  checkInTime: Value(visit.checkInTime),
+                  checkInLat: Value(visit.checkInLatitude),
+                  checkInLng: Value(visit.checkInLongitude),
+                  checkOutTime: Value(visit.checkOutTime),
+                  checkOutLat: Value(visit.checkOutLatitude),
+                  checkOutLng: Value(visit.checkOutLongitude),
+                  durationMinutes: Value(visit.durationMinutes),
+                  notes: Value(visit.notes),
+                  createdAt: visit.createdAt,
+                  updatedAt: visit.updatedAt,
+                ),
+              );
+        }
+      });
+    } catch (_) {
+      // Offline fallback
+    }
+  }
+
+  Future<void> syncDownTaskProofs(String taskId) async {
+    try {
+      final res = await client.listTaskProofs(taskId: taskId);
+      await db.transaction(() async {
+        for (final proof in res.proofs) {
+          await db.into(db.cachedTaskProofs).insertOnConflictUpdate(
+                CachedTaskProofsCompanion.insert(
+                  id: proof.id,
+                  workspaceId: proof.workspaceId,
+                  taskId: proof.taskId,
+                  visitId: Value(proof.visitId),
+                  userId: proof.userId,
+                  proofType: proof.proofType,
+                  fileKey: proof.fileKey,
+                  fileUrl: Value(proof.fileUrl),
+                  signerName: Value(proof.signerName),
+                  signerPhone: Value(proof.signerPhone),
+                  watermarkJson: Value(proof.watermarkMetadata != null ? jsonEncode(proof.watermarkMetadata) : null),
+                  notes: Value(proof.notes),
+                  createdAt: proof.createdAt,
+                ),
+              );
+        }
+      });
+    } catch (_) {
+      // Offline fallback
+    }
+  }
+
   // =========================================================================
   // STREAM WATCHERS FOR REACTIVE UI
   // =========================================================================
@@ -367,6 +635,20 @@ class SyncService {
     return (db.select(db.cachedAttendance)
           ..where((a) => a.id.equals('active_state_$workspaceId')))
         .watchSingleOrNull();
+  }
+
+  Stream<List<CachedVisit>> watchVisits(String workspaceId) {
+    return (db.select(db.cachedVisits)
+          ..where((v) => v.workspaceId.equals(workspaceId))
+          ..orderBy([(v) => OrderingTerm.desc(v.createdAt)]))
+        .watch();
+  }
+
+  Stream<List<CachedTaskProof>> watchTaskProofs(String taskId) {
+    return (db.select(db.cachedTaskProofs)
+          ..where((p) => p.taskId.equals(taskId))
+          ..orderBy([(p) => OrderingTerm.desc(p.createdAt)]))
+        .watch();
   }
 
   Stream<List<OutboxMutation>> watchPendingMutations() {

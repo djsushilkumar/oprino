@@ -8,9 +8,9 @@ part 'database.g.dart';
 class OutboxMutations extends Table {
   TextColumn get id => text()();
   TextColumn get workspaceId => text()();
-  TextColumn get entityType => text()(); // 'TASK', 'CHECKLIST', 'ATTENDANCE'
+  TextColumn get entityType => text()(); // 'TASK', 'CHECKLIST', 'ATTENDANCE', 'VISIT', 'PROOF'
   TextColumn get entityId => text()();
-  TextColumn get mutationType => text()(); // 'TRANSITION', 'CHECKLIST_UPDATE', 'PUNCH_IN', 'PUNCH_OUT'
+  TextColumn get mutationType => text()(); // 'TRANSITION', 'CHECKLIST_UPDATE', 'PUNCH_IN', 'PUNCH_OUT', 'VISIT_CHECK_IN', 'VISIT_CHECK_OUT', 'CONFIRM_PROOF'
   TextColumn get payload => text()();
   TextColumn get idempotencyKey => text().unique()();
   IntColumn get attemptCount => integer().withDefault(const Constant(0))();
@@ -33,6 +33,15 @@ class CachedTasks extends Table {
   TextColumn get simplifiedStatus => text()();
   TextColumn get priority => text()();
   DateTimeColumn get dueAt => dateTime().nullable()();
+  TextColumn get customerId => text().nullable()();
+  TextColumn get customerName => text().nullable()();
+  TextColumn get siteId => text().nullable()();
+  TextColumn get siteName => text().nullable()();
+  BoolColumn get requiresPhotoProof => boolean().withDefault(const Constant(false))();
+  BoolColumn get requiresSignature => boolean().withDefault(const Constant(false))();
+  TextColumn get verifierName => text().nullable()();
+  DateTimeColumn get verifiedAt => dateTime().nullable()();
+  TextColumn get verificationNotes => text().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -68,17 +77,66 @@ class CachedAttendance extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// OFFLINE CLIENT MODEL: Cached Field Visits
+class CachedVisits extends Table {
+  TextColumn get id => text()();
+  TextColumn get workspaceId => text()();
+  TextColumn get customerId => text()();
+  TextColumn get customerName => text().nullable()();
+  TextColumn get siteId => text().nullable()();
+  TextColumn get siteName => text().nullable()();
+  TextColumn get taskId => text().nullable()();
+  TextColumn get userId => text()();
+  TextColumn get status => text()(); // 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'
+  DateTimeColumn get scheduledAt => dateTime().nullable()();
+  DateTimeColumn get checkInTime => dateTime().nullable()();
+  RealColumn get checkInLat => real().nullable()();
+  RealColumn get checkInLng => real().nullable()();
+  DateTimeColumn get checkOutTime => dateTime().nullable()();
+  RealColumn get checkOutLat => real().nullable()();
+  RealColumn get checkOutLng => real().nullable()();
+  IntColumn get durationMinutes => integer().nullable()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// OFFLINE CLIENT MODEL: Cached Task Proofs
+class CachedTaskProofs extends Table {
+  TextColumn get id => text()();
+  TextColumn get workspaceId => text()();
+  TextColumn get taskId => text()();
+  TextColumn get visitId => text().nullable()();
+  TextColumn get userId => text()();
+  TextColumn get proofType => text()(); // 'PHOTO', 'SIGNATURE', 'DOCUMENT'
+  TextColumn get fileKey => text()();
+  TextColumn get fileUrl => text().nullable()();
+  TextColumn get signerName => text().nullable()();
+  TextColumn get signerPhone => text().nullable()();
+  TextColumn get watermarkJson => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   OutboxMutations,
   CachedTasks,
   CachedChecklistItems,
   CachedAttendance,
+  CachedVisits,
+  CachedTaskProofs,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -90,9 +148,21 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(cachedTasks);
             await m.createTable(cachedChecklistItems);
             await m.createTable(cachedAttendance);
-            // Add columns to outbox if needed
             await m.addColumn(outboxMutations, outboxMutations.lastError);
             await m.addColumn(outboxMutations, outboxMutations.updatedAt);
+          }
+          if (from < 3) {
+            await m.addColumn(cachedTasks, cachedTasks.customerId);
+            await m.addColumn(cachedTasks, cachedTasks.customerName);
+            await m.addColumn(cachedTasks, cachedTasks.siteId);
+            await m.addColumn(cachedTasks, cachedTasks.siteName);
+            await m.addColumn(cachedTasks, cachedTasks.requiresPhotoProof);
+            await m.addColumn(cachedTasks, cachedTasks.requiresSignature);
+            await m.addColumn(cachedTasks, cachedTasks.verifierName);
+            await m.addColumn(cachedTasks, cachedTasks.verifiedAt);
+            await m.addColumn(cachedTasks, cachedTasks.verificationNotes);
+            await m.createTable(cachedVisits);
+            await m.createTable(cachedTaskProofs);
           }
         },
       );

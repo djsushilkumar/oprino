@@ -1,9 +1,9 @@
-import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:oprino_mobile/main.dart';
 import 'package:oprino_mobile/core/database/database.dart';
@@ -42,6 +42,12 @@ class _TestSyncService extends SyncService {
   Future<void> syncDownTasks(String workspaceId) async {}
 
   @override
+  Future<void> syncDownVisits(String workspaceId) async {}
+
+  @override
+  Future<void> syncDownTaskProofs(String taskId) async {}
+
+  @override
   Future<void> processOutbox() async {}
 
   // Return simple in-memory streams to avoid Drift's internal polling timer
@@ -54,6 +60,12 @@ class _TestSyncService extends SyncService {
 
   @override
   Stream<List<CachedTask>> watchTasks(String workspaceId) => Stream.value([]);
+
+  @override
+  Stream<List<CachedVisit>> watchVisits(String workspaceId) => Stream.value([]);
+
+  @override
+  Stream<List<CachedTaskProof>> watchTaskProofs(String taskId) => Stream.value([]);
 }
 
 void main() {
@@ -192,7 +204,12 @@ void main() {
     expect(find.text('No assigned tasks'), findsOneWidget);
     expect(find.text('To Do'), findsOneWidget);
 
-    // Switch to Profile Tab (Tab 2)
+    // Switch to Visits Tab (Tab 2)
+    await tester.tap(find.text('Visits'));
+    await tester.pumpAndSettle();
+    expect(find.text('No customer site visits scheduled'), findsOneWidget);
+
+    // Switch to Profile Tab (Tab 3)
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
 
@@ -260,14 +277,50 @@ void main() {
       version: 1,
     );
 
-    final allMutationsStep2 = await testDb.select(testDb.outboxMutations).get();
-    expect(allMutationsStep2.length, equals(2));
-    expect(allMutationsStep2.any((m) => m.mutationType == 'PUNCH_IN'), isTrue);
-    expect(allMutationsStep2.any((m) => m.mutationType == 'TRANSITION'), isTrue);
-
     // Verify optimistic task update
     final localTask = await (testDb.select(testDb.cachedTasks)..where((t) => t.id.equals('task-100'))).getSingle();
     expect(localTask.status, equals('ACCEPTED'));
+
+    // 3. Insert cached visit and queue visit check-in
+    await testDb.into(testDb.cachedVisits).insert(
+          CachedVisitsCompanion.insert(
+            id: 'visit-100',
+            workspaceId: wsId,
+            customerId: 'c1111111-2222-3333-4444-555555555555',
+            customerName: const Value('Apex Facilities'),
+            userId: 'u1111111-2222-3333-4444-555555555555',
+            status: 'SCHEDULED',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+    await sync.queueVisitCheckIn(
+      workspaceId: wsId,
+      visitId: 'visit-100',
+      latitude: 37.7749,
+      longitude: -122.4194,
+    );
+
+    final localVisit = await (testDb.select(testDb.cachedVisits)..where((v) => v.id.equals('visit-100'))).getSingle();
+    expect(localVisit.status, equals('IN_PROGRESS'));
+
+    // 4. Queue offline proof confirmation
+    await sync.queueProofConfirmation(
+      workspaceId: wsId,
+      taskId: 'task-100',
+      userId: 'u1111111-2222-3333-4444-555555555555',
+      proofType: 'SIGNATURE',
+      fileKey: '$wsId/proofs/task-100/sig.png',
+      signerName: 'Alice Customer',
+    );
+
+    final allMutationsStep2 = await testDb.select(testDb.outboxMutations).get();
+    expect(allMutationsStep2.length, equals(4));
+    expect(allMutationsStep2.any((m) => m.mutationType == 'PUNCH_IN'), isTrue);
+    expect(allMutationsStep2.any((m) => m.mutationType == 'TRANSITION'), isTrue);
+    expect(allMutationsStep2.any((m) => m.mutationType == 'VISIT_CHECK_IN'), isTrue);
+    expect(allMutationsStep2.any((m) => m.mutationType == 'CONFIRM_PROOF'), isTrue);
 
     // 3. Verify sync engine processing (draining with simulated offline error)
     await sync.processOutbox();

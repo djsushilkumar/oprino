@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Oprino Operations Engine API",
-    "version": "0.3.0",
-    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02C)"
+    "version": "0.4.0",
+    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 03: Field Operations & Proof of Work)"
   },
   "servers": [
     {
@@ -1015,6 +1015,72 @@
             ],
             "example": "2026-10-06T18:00:00.000Z"
           },
+          "customerId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "c1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "customerName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Apex Facilities Management"
+          },
+          "siteId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "s1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "siteName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "North Logistics Depot"
+          },
+          "requiresSignature": {
+            "type": "boolean",
+            "default": false,
+            "example": true
+          },
+          "requiresPhotoProof": {
+            "type": "boolean",
+            "default": false,
+            "example": true
+          },
+          "verifiedBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "verifierName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Supervisor Bob"
+          },
+          "verifiedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verificationNotes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "createdBy": {
             "type": "string",
             "format": "uuid",
@@ -1103,6 +1169,22 @@
             "type": "string",
             "example": "2026-10-06T18:00:00.000Z"
           },
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requiresSignature": {
+            "type": "boolean",
+            "default": false
+          },
+          "requiresPhotoProof": {
+            "type": "boolean",
+            "default": false
+          },
           "assigneeIds": {
             "type": "array",
             "items": {
@@ -1162,6 +1244,26 @@
               "null"
             ],
             "example": "2026-10-07T12:00:00.000Z"
+          },
+          "customerId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "requiresSignature": {
+            "type": "boolean"
+          },
+          "requiresPhotoProof": {
+            "type": "boolean"
           },
           "assigneeIds": {
             "type": "array",
@@ -2136,6 +2238,919 @@
           "distanceMeters",
           "radiusMeters",
           "isInside"
+        ]
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "c1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Apex Facilities Management"
+          },
+          "companyName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Apex Group Corp"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "example": "facilities@apex.com"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "+1-555-0199"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Primary commercial client for HVAC servicing"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-08T09:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-10-08T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "name",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateCustomerRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "Apex Facilities Management"
+          },
+          "companyName": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "Apex Group Corp"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "facilities@apex.com"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 50,
+            "example": "+1-555-0199"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Key commercial account"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateCustomerRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "Apex Facilities Inc"
+          },
+          "companyName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ListCustomersResponse": {
+        "type": "object",
+        "properties": {
+          "customers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Customer"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "required": [
+          "customers",
+          "total"
+        ]
+      },
+      "CustomerSite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "s1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "c1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "customerName": {
+            "type": "string",
+            "example": "Apex Facilities Management"
+          },
+          "name": {
+            "type": "string",
+            "example": "North Logistics Depot"
+          },
+          "address": {
+            "type": "string",
+            "example": "742 Evergreen Terrace, Springfield"
+          },
+          "latitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 28.6139
+          },
+          "longitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 77.209
+          },
+          "geofenceRadiusMeters": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "example": 150
+          },
+          "contactName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "John Depot Lead"
+          },
+          "contactPhone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "+1-555-0288"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-08T09:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-10-08T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "customerId",
+          "name",
+          "address",
+          "geofenceRadiusMeters",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateCustomerSiteRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "North Logistics Depot"
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "example": "742 Evergreen Terrace, Springfield"
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 28.6139
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": 77.209
+          },
+          "geofenceRadiusMeters": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "default": 100,
+            "example": 100
+          },
+          "contactName": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "John Depot Lead"
+          },
+          "contactPhone": {
+            "type": "string",
+            "maxLength": 50,
+            "example": "+1-555-0288"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "address"
+        ]
+      },
+      "UpdateCustomerSiteRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1
+          },
+          "latitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -180,
+            "maximum": 180
+          },
+          "geofenceRadiusMeters": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "contactName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "contactPhone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ListCustomerSitesResponse": {
+        "type": "object",
+        "properties": {
+          "sites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerSite"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "required": [
+          "sites",
+          "total"
+        ]
+      },
+      "Visit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "v1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "c1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "customerName": {
+            "type": "string",
+            "example": "Apex Facilities Management"
+          },
+          "siteId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "s1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "siteName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "North Logistics Depot"
+          },
+          "taskId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "taskTitle": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Inspect HVAC Unit"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userName": {
+            "type": "string",
+            "example": "Jane Field Tech"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PLANNED",
+              "CHECKED_IN",
+              "CHECKED_OUT",
+              "CANCELLED"
+            ],
+            "example": "PLANNED"
+          },
+          "plannedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "2026-10-08T14:00:00.000Z"
+          },
+          "checkInTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "2026-10-08T14:05:00.000Z"
+          },
+          "checkOutTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "2026-10-08T15:20:00.000Z"
+          },
+          "checkInLatitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 28.6139
+          },
+          "checkInLongitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 77.209
+          },
+          "checkOutLatitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 28.6139
+          },
+          "checkOutLongitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 77.209
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "default": 0,
+            "example": 75
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Client signed paper receipt on site"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-08T09:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-10-08T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "customerId",
+          "userId",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateVisitRequest": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "c1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "siteId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "s1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "plannedAt": {
+            "type": "string",
+            "example": "2026-10-08T14:00:00.000Z"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Quarterly equipment audit"
+          }
+        },
+        "required": [
+          "customerId"
+        ]
+      },
+      "VisitCheckInRequest": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 28.6139
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": 77.209
+          },
+          "accuracy": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "example": 8.5
+          },
+          "notes": {
+            "type": "string",
+            "example": "Arrived at client reception"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "VisitCheckOutRequest": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 28.6139
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": 77.209
+          },
+          "accuracy": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "example": 8.5
+          },
+          "notes": {
+            "type": "string",
+            "example": "Inspection complete, customer signed"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "ListVisitsResponse": {
+        "type": "object",
+        "properties": {
+          "visits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Visit"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "required": [
+          "visits",
+          "total"
+        ]
+      },
+      "TaskProof": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "p1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "visitId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "v1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userName": {
+            "type": "string",
+            "example": "Jane Field Tech"
+          },
+          "proofType": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "SIGNATURE",
+              "DOCUMENT"
+            ],
+            "example": "PHOTO"
+          },
+          "fileKey": {
+            "type": "string",
+            "example": "workspace-1/proofs/2026/10/task-1/proof-1.jpg"
+          },
+          "fileUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "https://storage.oprino.com/proof-1.jpg"
+          },
+          "fileSizeBytes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "example": 284500
+          },
+          "mimeType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "image/jpeg"
+          },
+          "signerName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Alice Customer"
+          },
+          "signerPhone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "+1-555-0199"
+          },
+          "watermarkMetadata": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-08T15:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "taskId",
+          "userId",
+          "proofType",
+          "fileKey",
+          "createdAt"
+        ]
+      },
+      "MediaUploadUrlRequest": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "visitId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "v1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "proofType": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "SIGNATURE",
+              "DOCUMENT"
+            ],
+            "example": "PHOTO"
+          },
+          "fileName": {
+            "type": "string",
+            "minLength": 1,
+            "example": "ac_compressor_replaced.jpg"
+          },
+          "mimeType": {
+            "type": "string",
+            "minLength": 1,
+            "example": "image/jpeg"
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "example": 320000
+          }
+        },
+        "required": [
+          "taskId",
+          "proofType",
+          "fileName",
+          "mimeType"
+        ]
+      },
+      "MediaUploadUrlResponse": {
+        "type": "object",
+        "properties": {
+          "uploadUrl": {
+            "type": "string",
+            "example": "https://s3.us-east-1.amazonaws.com/oprino-proofs/upload?..."
+          },
+          "fileKey": {
+            "type": "string",
+            "example": "workspace-1/proofs/2026/10/task-1/photo-abc.jpg"
+          },
+          "expiresInSeconds": {
+            "type": "integer",
+            "example": 600
+          }
+        },
+        "required": [
+          "uploadUrl",
+          "fileKey",
+          "expiresInSeconds"
+        ]
+      },
+      "ConfirmMediaUploadRequest": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "visitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proofType": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "SIGNATURE",
+              "DOCUMENT"
+            ],
+            "example": "PHOTO"
+          },
+          "fileKey": {
+            "type": "string",
+            "minLength": 1,
+            "example": "workspace-1/proofs/2026/10/task-1/photo-abc.jpg"
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "example": 320000
+          },
+          "mimeType": {
+            "type": "string",
+            "example": "image/jpeg"
+          },
+          "signerName": {
+            "type": "string",
+            "example": "Alice Customer"
+          },
+          "signerPhone": {
+            "type": "string",
+            "example": "+1-555-0199"
+          },
+          "watermarkMetadata": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "notes": {
+            "type": "string",
+            "example": "Compressor valve replaced and pressure tested."
+          }
+        },
+        "required": [
+          "taskId",
+          "proofType",
+          "fileKey"
+        ]
+      },
+      "ListTaskProofsResponse": {
+        "type": "object",
+        "properties": {
+          "proofs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskProof"
+            }
+          }
+        },
+        "required": [
+          "proofs"
+        ]
+      },
+      "VerifyTaskRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "VERIFY",
+              "REJECT"
+            ],
+            "example": "VERIFY"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Photos confirmed, customer signature present."
+          }
+        },
+        "required": [
+          "action"
         ]
       }
     },
@@ -3679,6 +4694,607 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customers": {
+      "post": {
+        "summary": "Create Customer Account",
+        "description": "Provisions a new client or account within the active workspace",
+        "tags": [
+          "Customers"
+        ],
+        "operationId": "createCustomer",
+        "requestBody": {
+          "description": "Customer creation payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Customers",
+        "description": "Lists all customer accounts in the workspace",
+        "tags": [
+          "Customers"
+        ],
+        "operationId": "listCustomers",
+        "responses": {
+          "200": {
+            "description": "Customers directory",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCustomersResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customers/{id}": {
+      "get": {
+        "summary": "Get Customer Details",
+        "description": "Retrieves a single customer record",
+        "tags": [
+          "Customers"
+        ],
+        "operationId": "getCustomerById",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Customer",
+        "description": "Updates customer details",
+        "tags": [
+          "Customers"
+        ],
+        "operationId": "updateCustomer",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "description": "Update payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customers/{customerId}/sites": {
+      "post": {
+        "summary": "Create Customer Site",
+        "description": "Adds a physical client facility or work site to a customer",
+        "tags": [
+          "Customers"
+        ],
+        "operationId": "createCustomerSite",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "customerId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "description": "Site creation payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerSiteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer site created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerSite"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Customer Sites",
+        "description": "Lists all physical sites for a specific customer",
+        "tags": [
+          "Customers"
+        ],
+        "operationId": "listCustomerSites",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "customerId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of customer sites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCustomerSitesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/visits": {
+      "post": {
+        "summary": "Create / Schedule Site Visit",
+        "description": "Schedules a physical site stop for a field employee",
+        "tags": [
+          "Visits"
+        ],
+        "operationId": "createVisit",
+        "requestBody": {
+          "description": "Visit creation payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVisitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Visit scheduled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Visit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Visits",
+        "description": "Lists site visits filtered by status or user",
+        "tags": [
+          "Visits"
+        ],
+        "operationId": "listVisits",
+        "responses": {
+          "200": {
+            "description": "List of site visits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListVisitsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/visits/{id}": {
+      "get": {
+        "summary": "Get Visit Details",
+        "description": "Retrieves visit record by ID",
+        "tags": [
+          "Visits"
+        ],
+        "operationId": "getVisitById",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visit record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Visit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Visit not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/visits/{id}/check-in": {
+      "post": {
+        "summary": "Record Site Check-In",
+        "description": "Captures arrival timestamp and GPS coordinates at client site",
+        "tags": [
+          "Visits"
+        ],
+        "operationId": "checkInVisit",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "description": "Check-in coordinates",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitCheckInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Check-in recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Visit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid visit state or coordinates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/visits/{id}/check-out": {
+      "post": {
+        "summary": "Record Site Check-Out",
+        "description": "Captures departure timestamp, GPS coordinates, and calculates duration",
+        "tags": [
+          "Visits"
+        ],
+        "operationId": "checkOutVisit",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "description": "Check-out coordinates and notes",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitCheckOutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Check-out recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Visit"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/media/upload-url": {
+      "post": {
+        "summary": "Generate Pre-Signed S3 Upload URL",
+        "description": "Generates a short-lived pre-signed PUT URL for direct client binary upload",
+        "tags": [
+          "Media & Proof of Work"
+        ],
+        "operationId": "requestMediaUploadUrl",
+        "requestBody": {
+          "description": "Upload metadata",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaUploadUrlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pre-signed S3 upload URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadUrlResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/media/confirm": {
+      "post": {
+        "summary": "Confirm Proof of Work Upload",
+        "description": "Records verified proof-of-work item (photo or customer digital signature)",
+        "tags": [
+          "Media & Proof of Work"
+        ],
+        "operationId": "confirmMediaUpload",
+        "requestBody": {
+          "description": "Proof confirmation details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmMediaUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Proof confirmed and saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskProof"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{taskId}/proofs": {
+      "get": {
+        "summary": "List Proof of Work for Task",
+        "description": "Retrieves all photos and signatures submitted for a task",
+        "tags": [
+          "Media & Proof of Work"
+        ],
+        "operationId": "listTaskProofs",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of task proofs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTaskProofsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{id}/verify": {
+      "post": {
+        "summary": "Verify or Reject Task Proof of Work",
+        "description": "Manager approval or rejection of completed task proof of work",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "verifyTask",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "description": "Verification review action and notes",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task verification status updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
                 }
               }
             }

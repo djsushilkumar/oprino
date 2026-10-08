@@ -1,11 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { TaskService } from '../services/task.service.js';
+import type { MediaService } from '../services/media.service.js';
 import type { createAuthMiddleware } from '../middleware/auth.js';
 import { PERMISSIONS } from '../auth/permissions.js';
 import {
   CreateTaskRequestSchema,
   UpdateTaskRequestSchema,
   TaskTransitionRequestSchema,
+  VerifyTaskRequestSchema,
   CreateChecklistItemRequestSchema,
   UpdateChecklistItemRequestSchema,
   CreateTaskCommentRequestSchema,
@@ -13,11 +15,12 @@ import {
 
 export interface TaskRoutesOptions {
   taskService: TaskService;
+  mediaService?: MediaService;
   authMiddleware: ReturnType<typeof createAuthMiddleware>;
 }
 
 export const taskRoutes: FastifyPluginAsync<TaskRoutesOptions> = async (app, options) => {
-  const { taskService, authMiddleware } = options;
+  const { taskService, mediaService, authMiddleware } = options;
 
   // POST /v1/tasks - Create Task
   app.post(
@@ -336,4 +339,78 @@ export const taskRoutes: FastifyPluginAsync<TaskRoutesOptions> = async (app, opt
       }
     },
   );
+
+  // POST /v1/tasks/:taskId/verify - Verify or reject task (Manager/Supervisor queue)
+  app.post(
+    '/v1/tasks/:taskId/verify',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.TASKS_VERIFY),
+      ],
+    },
+    async (req, reply) => {
+      const { taskId } = req.params as { taskId: string };
+      const parsed = VerifyTaskRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid verification payload',
+          details: parsed.error.issues,
+        });
+      }
+
+      try {
+        const task = await taskService.verifyTask(
+          req.workspaceId!,
+          taskId,
+          req.user!.id,
+          parsed.data.action,
+          parsed.data.notes,
+        );
+        return reply.status(200).send(task);
+      } catch (err: any) {
+        req.log.error(err, 'Failed to verify task');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
+          message: err.message || 'Failed to verify task',
+        });
+      }
+    },
+  );
+
+  // GET /v1/tasks/:taskId/proofs - List proofs of work for task
+  app.get(
+    '/v1/tasks/:taskId/proofs',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.TASKS_READ),
+      ],
+    },
+    async (req, reply) => {
+      const { taskId } = req.params as { taskId: string };
+      try {
+        if (!mediaService) {
+          return reply.status(200).send({ proofs: [] });
+        }
+        const result = await mediaService.listTaskProofs(req.workspaceId!, taskId);
+        return reply.status(200).send(result);
+      } catch (err: any) {
+        req.log.error(err, 'Failed to list task proofs');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: 'Internal Server Error',
+          message: err.message || 'Failed to list task proofs',
+        });
+      }
+    },
+  );
 };
+

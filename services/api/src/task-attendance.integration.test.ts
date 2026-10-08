@@ -380,6 +380,27 @@ describe('Phase 02B: Task & Attendance Core Domain Integration & Security Tests'
     assert.strictEqual(res4.statusCode, 200);
     assert.strictEqual(res4.json().status, 'IN_PROGRESS');
 
+    // Complete all checklist items (mandatory completion invariant)
+    const currentTaskDetails = await app.inject({
+      method: 'GET',
+      url: `/v1/tasks/${createdTaskId}`,
+      headers: {
+        authorization: `Bearer ${tokenEmployeeA}`,
+        'x-workspace-id': workspaceAId,
+      },
+    });
+    for (const item of currentTaskDetails.json().checklist) {
+      await app.inject({
+        method: 'PATCH',
+        url: `/v1/tasks/${createdTaskId}/checklist/${item.id}`,
+        headers: {
+          authorization: `Bearer ${tokenEmployeeA}`,
+          'x-workspace-id': workspaceAId,
+        },
+        payload: { isCompleted: true },
+      });
+    }
+
     // 5. IN_PROGRESS -> COMPLETED (version 5 -> 6)
     const res5 = await app.inject({
       method: 'POST',

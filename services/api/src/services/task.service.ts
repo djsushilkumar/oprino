@@ -6,6 +6,9 @@ import {
   taskChecklistItems,
   taskComments,
   taskActivity,
+  taskProofs,
+  customers,
+  customerSites,
   workspaceMemberships,
   users,
 } from '@oprino/database/schema';
@@ -42,6 +45,10 @@ export interface CreateTaskDto {
   description?: string;
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   dueAt?: string;
+  customerId?: string;
+  siteId?: string;
+  requiresSignature?: boolean;
+  requiresPhotoProof?: boolean;
   assigneeIds?: string[];
   checklist?: string[];
 }
@@ -51,6 +58,10 @@ export interface UpdateTaskDto {
   description?: string | null;
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   dueAt?: string | null;
+  customerId?: string | null;
+  siteId?: string | null;
+  requiresSignature?: boolean;
+  requiresPhotoProof?: boolean;
   assigneeIds?: string[];
   version: number;
 }
@@ -125,6 +136,10 @@ export class TaskService {
           status: 'ASSIGNED',
           priority: input.priority ?? 'MEDIUM',
           dueAt: input.dueAt ? new Date(input.dueAt) : null,
+          customerId: input.customerId ?? null,
+          siteId: input.siteId ?? null,
+          requiresSignature: input.requiresSignature ?? false,
+          requiresPhotoProof: input.requiresPhotoProof ?? false,
           createdBy: creatorId,
           version: 1,
         })
@@ -185,15 +200,28 @@ export class TaskService {
       .select({
         task: tasks,
         creatorName: users.name,
+        customerName: customers.name,
+        siteName: customerSites.name,
       })
       .from(tasks)
       .leftJoin(users, eq(tasks.createdBy, users.id))
+      .leftJoin(customers, eq(tasks.customerId, customers.id))
+      .leftJoin(customerSites, eq(tasks.siteId, customerSites.id))
       .where(and(eq(tasks.workspaceId, workspaceId), eq(tasks.id, taskId)));
 
     if (!task) {
       const error = new Error('Task not found');
       (error as any).statusCode = 404;
       throw error;
+    }
+
+    let verifierName: string | null = null;
+    if (task.task.verifiedBy) {
+      const [verifier] = await tx
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.id, task.task.verifiedBy));
+      verifierName = verifier?.name ?? null;
     }
 
     // Load assignees
@@ -259,6 +287,16 @@ export class TaskService {
       simplifiedStatus: mapToSimplifiedStatus(task.task.status),
       priority: task.task.priority,
       dueAt: task.task.dueAt ? task.task.dueAt.toISOString() : null,
+      customerId: task.task.customerId,
+      customerName: task.customerName ?? null,
+      siteId: task.task.siteId,
+      siteName: task.siteName ?? null,
+      requiresSignature: task.task.requiresSignature,
+      requiresPhotoProof: task.task.requiresPhotoProof,
+      verifiedBy: task.task.verifiedBy,
+      verifierName,
+      verifiedAt: task.task.verifiedAt ? task.task.verifiedAt.toISOString() : null,
+      verificationNotes: task.task.verificationNotes,
       createdBy: task.task.createdBy,
       creatorName: task.creatorName,
       version: task.task.version,
@@ -362,9 +400,13 @@ export class TaskService {
         .select({
           task: tasks,
           creatorName: users.name,
+          customerName: customers.name,
+          siteName: customerSites.name,
         })
         .from(tasks)
         .leftJoin(users, eq(tasks.createdBy, users.id))
+        .leftJoin(customers, eq(tasks.customerId, customers.id))
+        .leftJoin(customerSites, eq(tasks.siteId, customerSites.id))
         .where(and(...conditions))
         .orderBy(desc(tasks.createdAt));
 
@@ -415,6 +457,15 @@ export class TaskService {
         simplifiedStatus: mapToSimplifiedStatus(r.task.status),
         priority: r.task.priority,
         dueAt: r.task.dueAt ? r.task.dueAt.toISOString() : null,
+        customerId: r.task.customerId,
+        customerName: r.customerName ?? null,
+        siteId: r.task.siteId,
+        siteName: r.siteName ?? null,
+        requiresSignature: r.task.requiresSignature,
+        requiresPhotoProof: r.task.requiresPhotoProof,
+        verifiedBy: r.task.verifiedBy,
+        verifiedAt: r.task.verifiedAt ? r.task.verifiedAt.toISOString() : null,
+        verificationNotes: r.task.verificationNotes,
         createdBy: r.task.createdBy,
         creatorName: r.creatorName,
         version: r.task.version,
@@ -473,6 +524,10 @@ export class TaskService {
       if (input.description !== undefined) updates.description = input.description;
       if (input.priority !== undefined) updates.priority = input.priority;
       if (input.dueAt !== undefined) updates.dueAt = input.dueAt ? new Date(input.dueAt) : null;
+      if (input.customerId !== undefined) updates.customerId = input.customerId;
+      if (input.siteId !== undefined) updates.siteId = input.siteId;
+      if (input.requiresSignature !== undefined) updates.requiresSignature = input.requiresSignature;
+      if (input.requiresPhotoProof !== undefined) updates.requiresPhotoProof = input.requiresPhotoProof;
 
       await tx
         .update(tasks)
@@ -587,6 +642,66 @@ export class TaskService {
           const error = new Error('Permission denied: tasks.complete required to complete task');
           (error as any).statusCode = 403;
           throw error;
+        }
+
+        // Invariant: Mandatory checklist completion
+        const incompleteItems = await tx
+          .select({ id: taskChecklistItems.id })
+          .from(taskChecklistItems)
+          .where(
+            and(
+              eq(taskChecklistItems.workspaceId, workspaceId),
+              eq(taskChecklistItems.taskId, taskId),
+              eq(taskChecklistItems.isCompleted, false),
+            ),
+          );
+
+        if (incompleteItems.length > 0) {
+          const error = new Error('Cannot complete task: all checklist items must be completed');
+          (error as any).statusCode = 400;
+          throw error;
+        }
+
+        // Invariant: Mandatory photo proof
+        if (current.requiresPhotoProof) {
+          const [photoProof] = await tx
+            .select({ id: taskProofs.id })
+            .from(taskProofs)
+            .where(
+              and(
+                eq(taskProofs.workspaceId, workspaceId),
+                eq(taskProofs.taskId, taskId),
+                eq(taskProofs.proofType, 'PHOTO'),
+              ),
+            )
+            .limit(1);
+
+          if (!photoProof) {
+            const error = new Error('Cannot complete task: mandatory photo proof is required');
+            (error as any).statusCode = 400;
+            throw error;
+          }
+        }
+
+        // Invariant: Mandatory on-glass customer digital signature
+        if (current.requiresSignature) {
+          const [sigProof] = await tx
+            .select({ id: taskProofs.id })
+            .from(taskProofs)
+            .where(
+              and(
+                eq(taskProofs.workspaceId, workspaceId),
+                eq(taskProofs.taskId, taskId),
+                eq(taskProofs.proofType, 'SIGNATURE'),
+              ),
+            )
+            .limit(1);
+
+          if (!sigProof) {
+            const error = new Error('Cannot complete task: mandatory customer signature is required');
+            (error as any).statusCode = 400;
+            throw error;
+          }
         }
       }
 
@@ -754,4 +869,88 @@ export class TaskService {
       };
     });
   }
+
+  /**
+   * Manager / Supervisor verification queue action (VERIFY or REJECT).
+   */
+  async verifyTask(
+    workspaceId: string,
+    taskId: string,
+    verifierId: string,
+    action: 'VERIFY' | 'REJECT',
+    notes?: string,
+  ) {
+    return this.db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
+
+      const [current] = await tx
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.workspaceId, workspaceId), eq(tasks.id, taskId)));
+
+      if (!current) {
+        const error = new Error('Task not found');
+        (error as any).statusCode = 404;
+        throw error;
+      }
+
+      if (current.status !== 'COMPLETED' && current.status !== 'VERIFIED') {
+        const error = new Error(
+          `Cannot verify/reject task with status ${current.status}. Task must be in COMPLETED status.`,
+        );
+        (error as any).statusCode = 400;
+        throw error;
+      }
+
+      if (action === 'VERIFY') {
+        await tx
+          .update(tasks)
+          .set({
+            status: 'VERIFIED',
+            verifiedBy: verifierId,
+            verifiedAt: new Date(),
+            verificationNotes: notes ?? null,
+            version: current.version + 1,
+            updatedAt: new Date(),
+          })
+          .where(and(eq(tasks.workspaceId, workspaceId), eq(tasks.id, taskId)));
+
+        await tx.insert(taskActivity).values({
+          workspaceId,
+          taskId,
+          actorId: verifierId,
+          action: 'task.verified',
+          fromStatus: current.status,
+          toStatus: 'VERIFIED',
+          details: { notes },
+        });
+      } else {
+        // REJECT sends back to IN_PROGRESS so field technician can remediate
+        await tx
+          .update(tasks)
+          .set({
+            status: 'IN_PROGRESS',
+            verifiedBy: null,
+            verifiedAt: null,
+            verificationNotes: notes ?? 'Rejected by manager',
+            version: current.version + 1,
+            updatedAt: new Date(),
+          })
+          .where(and(eq(tasks.workspaceId, workspaceId), eq(tasks.id, taskId)));
+
+        await tx.insert(taskActivity).values({
+          workspaceId,
+          taskId,
+          actorId: verifierId,
+          action: 'task.rejected',
+          fromStatus: current.status,
+          toStatus: 'IN_PROGRESS',
+          details: { notes },
+        });
+      }
+
+      return this.getTaskByIdInternal(tx, workspaceId, taskId);
+    });
+  }
 }
+

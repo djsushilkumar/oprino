@@ -184,6 +184,16 @@ class TaskResponse {
   final String simplifiedStatus;
   final String priority;
   final DateTime? dueAt;
+  final String? customerId;
+  final String? customerName;
+  final String? siteId;
+  final String? siteName;
+  final bool requiresSignature;
+  final bool requiresPhotoProof;
+  final String? verifiedBy;
+  final String? verifierName;
+  final DateTime? verifiedAt;
+  final String? verificationNotes;
   final String createdBy;
   final String? creatorName;
   final int version;
@@ -203,6 +213,16 @@ class TaskResponse {
     required this.simplifiedStatus,
     required this.priority,
     this.dueAt,
+    this.customerId,
+    this.customerName,
+    this.siteId,
+    this.siteName,
+    this.requiresSignature = false,
+    this.requiresPhotoProof = false,
+    this.verifiedBy,
+    this.verifierName,
+    this.verifiedAt,
+    this.verificationNotes,
     required this.createdBy,
     this.creatorName,
     required this.version,
@@ -224,6 +244,16 @@ class TaskResponse {
       simplifiedStatus: json['simplifiedStatus'] as String? ?? 'TO_DO',
       priority: json['priority'] as String? ?? 'MEDIUM',
       dueAt: json['dueAt'] != null ? DateTime.parse(json['dueAt'] as String) : null,
+      customerId: json['customerId'] as String?,
+      customerName: json['customerName'] as String?,
+      siteId: json['siteId'] as String?,
+      siteName: json['siteName'] as String?,
+      requiresSignature: json['requiresSignature'] as bool? ?? false,
+      requiresPhotoProof: json['requiresPhotoProof'] as bool? ?? false,
+      verifiedBy: json['verifiedBy'] as String?,
+      verifierName: json['verifierName'] as String?,
+      verifiedAt: json['verifiedAt'] != null ? DateTime.parse(json['verifiedAt'] as String) : null,
+      verificationNotes: json['verificationNotes'] as String?,
       createdBy: json['createdBy'] as String,
       creatorName: json['creatorName'] as String?,
       version: json['version'] as int? ?? 1,
@@ -253,6 +283,16 @@ class TaskResponse {
         'simplifiedStatus': simplifiedStatus,
         'priority': priority,
         if (dueAt != null) 'dueAt': dueAt!.toIso8601String(),
+        if (customerId != null) 'customerId': customerId,
+        if (customerName != null) 'customerName': customerName,
+        if (siteId != null) 'siteId': siteId,
+        if (siteName != null) 'siteName': siteName,
+        'requiresSignature': requiresSignature,
+        'requiresPhotoProof': requiresPhotoProof,
+        if (verifiedBy != null) 'verifiedBy': verifiedBy,
+        if (verifierName != null) 'verifierName': verifierName,
+        if (verifiedAt != null) 'verifiedAt': verifiedAt!.toIso8601String(),
+        if (verificationNotes != null) 'verificationNotes': verificationNotes,
         'createdBy': createdBy,
         if (creatorName != null) 'creatorName': creatorName,
         'version': version,
@@ -262,6 +302,25 @@ class TaskResponse {
         'activities': activities.map((e) => e.toJson()).toList(),
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
+      };
+}
+
+class VerifyTaskRequest {
+  final String action;
+  final String? notes;
+
+  const VerifyTaskRequest({required this.action, this.notes});
+
+  factory VerifyTaskRequest.fromJson(Map<String, dynamic> json) {
+    return VerifyTaskRequest(
+      action: json['action'] as String,
+      notes: json['notes'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'action': action,
+        if (notes != null) 'notes': notes,
       };
 }
 

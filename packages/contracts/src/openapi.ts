@@ -45,6 +45,7 @@ import {
   UpdateChecklistItemRequestSchema,
   CreateTaskCommentRequestSchema,
   ListTasksResponseSchema,
+  VerifyTaskRequestSchema,
 } from './schemas/task.js';
 import {
   AttendanceShiftSchema,
@@ -70,6 +71,30 @@ import {
   CheckGeofenceProximityRequestSchema,
   CheckGeofenceProximityResponseSchema,
 } from './schemas/telemetry.js';
+import {
+  CustomerSchema,
+  CreateCustomerRequestSchema,
+  UpdateCustomerRequestSchema,
+  ListCustomersResponseSchema,
+  CustomerSiteSchema,
+  CreateCustomerSiteRequestSchema,
+  UpdateCustomerSiteRequestSchema,
+  ListCustomerSitesResponseSchema,
+} from './schemas/customer.js';
+import {
+  VisitSchema,
+  CreateVisitRequestSchema,
+  VisitCheckInRequestSchema,
+  VisitCheckOutRequestSchema,
+  ListVisitsResponseSchema,
+} from './schemas/visit.js';
+import {
+  TaskProofSchema,
+  MediaUploadUrlRequestSchema,
+  MediaUploadUrlResponseSchema,
+  ConfirmMediaUploadRequestSchema,
+  ListTaskProofsResponseSchema,
+} from './schemas/proof.js';
 
 export const registry = new OpenAPIRegistry();
 
@@ -144,6 +169,32 @@ registry.register('CreateGeofenceRequest', CreateGeofenceRequestSchema);
 registry.register('ListGeofencesResponse', ListGeofencesResponseSchema);
 registry.register('CheckGeofenceProximityRequest', CheckGeofenceProximityRequestSchema);
 registry.register('CheckGeofenceProximityResponse', CheckGeofenceProximityResponseSchema);
+
+// Register Customers & Sites Components (Phase 03)
+registry.register('Customer', CustomerSchema);
+registry.register('CreateCustomerRequest', CreateCustomerRequestSchema);
+registry.register('UpdateCustomerRequest', UpdateCustomerRequestSchema);
+registry.register('ListCustomersResponse', ListCustomersResponseSchema);
+registry.register('CustomerSite', CustomerSiteSchema);
+registry.register('CreateCustomerSiteRequest', CreateCustomerSiteRequestSchema);
+registry.register('UpdateCustomerSiteRequest', UpdateCustomerSiteRequestSchema);
+registry.register('ListCustomerSitesResponse', ListCustomerSitesResponseSchema);
+
+// Register Physical Site Visits Components (Phase 03)
+registry.register('Visit', VisitSchema);
+registry.register('CreateVisitRequest', CreateVisitRequestSchema);
+registry.register('VisitCheckInRequest', VisitCheckInRequestSchema);
+registry.register('VisitCheckOutRequest', VisitCheckOutRequestSchema);
+registry.register('ListVisitsResponse', ListVisitsResponseSchema);
+
+// Register Proof of Work & Media Components (Phase 03)
+registry.register('TaskProof', TaskProofSchema);
+registry.register('MediaUploadUrlRequest', MediaUploadUrlRequestSchema);
+registry.register('MediaUploadUrlResponse', MediaUploadUrlResponseSchema);
+registry.register('ConfirmMediaUploadRequest', ConfirmMediaUploadRequestSchema);
+registry.register('ListTaskProofsResponse', ListTaskProofsResponseSchema);
+registry.register('VerifyTaskRequest', VerifyTaskRequestSchema);
+
 
 // ---------------------------------------------------------------------------
 // Path Definitions
@@ -1011,6 +1062,350 @@ registry.registerPath({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Phase 03: Customers & Sites Paths
+// ---------------------------------------------------------------------------
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/customers',
+  summary: 'Create Customer Account',
+  description: 'Provisions a new client or account within the active workspace',
+  tags: ['Customers'],
+  operationId: 'createCustomer',
+  request: {
+    body: {
+      description: 'Customer creation payload',
+      content: { 'application/json': { schema: CreateCustomerRequestSchema } },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Customer created successfully',
+      content: { 'application/json': { schema: CustomerSchema } },
+    },
+    400: {
+      description: 'Validation error',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/customers',
+  summary: 'List Customers',
+  description: 'Lists all customer accounts in the workspace',
+  tags: ['Customers'],
+  operationId: 'listCustomers',
+  responses: {
+    200: {
+      description: 'Customers directory',
+      content: { 'application/json': { schema: ListCustomersResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/customers/{id}',
+  summary: 'Get Customer Details',
+  description: 'Retrieves a single customer record',
+  tags: ['Customers'],
+  operationId: 'getCustomerById',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: 'Customer details',
+      content: { 'application/json': { schema: CustomerSchema } },
+    },
+    404: {
+      description: 'Customer not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'patch',
+  path: '/v1/customers/{id}',
+  summary: 'Update Customer',
+  description: 'Updates customer details',
+  tags: ['Customers'],
+  operationId: 'updateCustomer',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      description: 'Update payload',
+      content: { 'application/json': { schema: UpdateCustomerRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Customer updated',
+      content: { 'application/json': { schema: CustomerSchema } },
+    },
+    404: {
+      description: 'Customer not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/customers/{customerId}/sites',
+  summary: 'Create Customer Site',
+  description: 'Adds a physical client facility or work site to a customer',
+  tags: ['Customers'],
+  operationId: 'createCustomerSite',
+  request: {
+    params: z.object({ customerId: z.string().uuid() }),
+    body: {
+      description: 'Site creation payload',
+      content: { 'application/json': { schema: CreateCustomerSiteRequestSchema } },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Customer site created',
+      content: { 'application/json': { schema: CustomerSiteSchema } },
+    },
+    404: {
+      description: 'Customer not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/customers/{customerId}/sites',
+  summary: 'List Customer Sites',
+  description: 'Lists all physical sites for a specific customer',
+  tags: ['Customers'],
+  operationId: 'listCustomerSites',
+  request: {
+    params: z.object({ customerId: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: 'List of customer sites',
+      content: { 'application/json': { schema: ListCustomerSitesResponseSchema } },
+    },
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Phase 03: Physical Site Visits Paths
+// ---------------------------------------------------------------------------
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/visits',
+  summary: 'Create / Schedule Site Visit',
+  description: 'Schedules a physical site stop for a field employee',
+  tags: ['Visits'],
+  operationId: 'createVisit',
+  request: {
+    body: {
+      description: 'Visit creation payload',
+      content: { 'application/json': { schema: CreateVisitRequestSchema } },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Visit scheduled',
+      content: { 'application/json': { schema: VisitSchema } },
+    },
+    400: {
+      description: 'Validation error',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/visits',
+  summary: 'List Visits',
+  description: 'Lists site visits filtered by status or user',
+  tags: ['Visits'],
+  operationId: 'listVisits',
+  responses: {
+    200: {
+      description: 'List of site visits',
+      content: { 'application/json': { schema: ListVisitsResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/visits/{id}',
+  summary: 'Get Visit Details',
+  description: 'Retrieves visit record by ID',
+  tags: ['Visits'],
+  operationId: 'getVisitById',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: 'Visit record',
+      content: { 'application/json': { schema: VisitSchema } },
+    },
+    404: {
+      description: 'Visit not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/visits/{id}/check-in',
+  summary: 'Record Site Check-In',
+  description: 'Captures arrival timestamp and GPS coordinates at client site',
+  tags: ['Visits'],
+  operationId: 'checkInVisit',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      description: 'Check-in coordinates',
+      content: { 'application/json': { schema: VisitCheckInRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Check-in recorded',
+      content: { 'application/json': { schema: VisitSchema } },
+    },
+    400: {
+      description: 'Invalid visit state or coordinates',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/visits/{id}/check-out',
+  summary: 'Record Site Check-Out',
+  description: 'Captures departure timestamp, GPS coordinates, and calculates duration',
+  tags: ['Visits'],
+  operationId: 'checkOutVisit',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      description: 'Check-out coordinates and notes',
+      content: { 'application/json': { schema: VisitCheckOutRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Check-out recorded',
+      content: { 'application/json': { schema: VisitSchema } },
+    },
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Phase 03: Proof of Work & Media Paths (ADR-012)
+// ---------------------------------------------------------------------------
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/media/upload-url',
+  summary: 'Generate Pre-Signed S3 Upload URL',
+  description: 'Generates a short-lived pre-signed PUT URL for direct client binary upload',
+  tags: ['Media & Proof of Work'],
+  operationId: 'requestMediaUploadUrl',
+  request: {
+    body: {
+      description: 'Upload metadata',
+      content: { 'application/json': { schema: MediaUploadUrlRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Pre-signed S3 upload URL',
+      content: { 'application/json': { schema: MediaUploadUrlResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/media/confirm',
+  summary: 'Confirm Proof of Work Upload',
+  description: 'Records verified proof-of-work item (photo or customer digital signature)',
+  tags: ['Media & Proof of Work'],
+  operationId: 'confirmMediaUpload',
+  request: {
+    body: {
+      description: 'Proof confirmation details',
+      content: { 'application/json': { schema: ConfirmMediaUploadRequestSchema } },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Proof confirmed and saved',
+      content: { 'application/json': { schema: TaskProofSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/tasks/{taskId}/proofs',
+  summary: 'List Proof of Work for Task',
+  description: 'Retrieves all photos and signatures submitted for a task',
+  tags: ['Media & Proof of Work'],
+  operationId: 'listTaskProofs',
+  request: {
+    params: z.object({ taskId: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: 'List of task proofs',
+      content: { 'application/json': { schema: ListTaskProofsResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/tasks/{id}/verify',
+  summary: 'Verify or Reject Task Proof of Work',
+  description: 'Manager approval or rejection of completed task proof of work',
+  tags: ['Tasks'],
+  operationId: 'verifyTask',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      description: 'Verification review action and notes',
+      content: { 'application/json': { schema: VerifyTaskRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Task verification status updated',
+      content: { 'application/json': { schema: TaskResponseSchema } },
+    },
+  },
+});
+
 export function generateOpenApiDocument(): Record<string, any> {
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
@@ -1018,9 +1413,9 @@ export function generateOpenApiDocument(): Record<string, any> {
     openapi: '3.1.0',
     info: {
       title: 'Oprino Operations Engine API',
-      version: '0.3.0',
+      version: '0.4.0',
       description:
-        'Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02C)',
+        'Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 03: Field Operations & Proof of Work)',
     },
     servers: [
       {
@@ -1038,3 +1433,4 @@ export function generateOpenApiDocument(): Record<string, any> {
     ],
   });
 }
+

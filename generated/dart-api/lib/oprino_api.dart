@@ -14,3 +14,6 @@ export 'src/model/device_models.dart';
 export 'src/model/task_models.dart';
 export 'src/model/attendance_models.dart';
 export 'src/model/telemetry_models.dart';
+export 'src/model/customer_models.dart';
+export 'src/model/visit_models.dart';
+export 'src/model/proof_models.dart';

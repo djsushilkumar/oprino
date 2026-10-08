@@ -32,6 +32,13 @@ export const PERMISSIONS = {
   LOCATION_RECORD: 'location.record',
   GEOFENCES_READ: 'geofences.read',
   GEOFENCES_MANAGE: 'geofences.manage',
+
+  // Phase 03: Field Operations, Customer Sites, Visits & Proof of Work
+  CUSTOMERS_READ: 'customers.read',
+  CUSTOMERS_MANAGE: 'customers.manage',
+  VISITS_READ: 'visits.read',
+  VISITS_MANAGE: 'visits.manage',
+  PROOFS_VERIFY: 'proofs.verify',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -74,6 +81,12 @@ export const DEFAULT_ROLE_TEMPLATES: Record<string, DefaultRoleTemplate> = {
       PERMISSIONS.LOCATION_RECORD,
       PERMISSIONS.GEOFENCES_READ,
       PERMISSIONS.GEOFENCES_MANAGE,
+      // Field Operations (Phase 03)
+      PERMISSIONS.CUSTOMERS_READ,
+      PERMISSIONS.CUSTOMERS_MANAGE,
+      PERMISSIONS.VISITS_READ,
+      PERMISSIONS.VISITS_MANAGE,
+      PERMISSIONS.PROOFS_VERIFY,
     ],
   },
   MANAGER: {
@@ -103,6 +116,12 @@ export const DEFAULT_ROLE_TEMPLATES: Record<string, DefaultRoleTemplate> = {
       PERMISSIONS.LOCATION_RECORD,
       PERMISSIONS.GEOFENCES_READ,
       PERMISSIONS.GEOFENCES_MANAGE,
+      // Field Operations (Phase 03)
+      PERMISSIONS.CUSTOMERS_READ,
+      PERMISSIONS.CUSTOMERS_MANAGE,
+      PERMISSIONS.VISITS_READ,
+      PERMISSIONS.VISITS_MANAGE,
+      PERMISSIONS.PROOFS_VERIFY,
     ],
   },
   EMPLOYEE: {
@@ -122,6 +141,10 @@ export const DEFAULT_ROLE_TEMPLATES: Record<string, DefaultRoleTemplate> = {
       // Location & Geofencing (Peer visibility is OFF by default!)
       PERMISSIONS.LOCATION_RECORD,
       PERMISSIONS.GEOFENCES_READ,
+      // Field Operations (Phase 03)
+      PERMISSIONS.CUSTOMERS_READ,
+      PERMISSIONS.VISITS_READ,
+      PERMISSIONS.VISITS_MANAGE,
     ],
   },
 };

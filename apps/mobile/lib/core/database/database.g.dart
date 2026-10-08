@@ -807,6 +807,111 @@ class $CachedTasksTable extends CachedTasks
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _customerIdMeta = const VerificationMeta(
+    'customerId',
+  );
+  @override
+  late final GeneratedColumn<String> customerId = GeneratedColumn<String>(
+    'customer_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customerNameMeta = const VerificationMeta(
+    'customerName',
+  );
+  @override
+  late final GeneratedColumn<String> customerName = GeneratedColumn<String>(
+    'customer_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _siteIdMeta = const VerificationMeta('siteId');
+  @override
+  late final GeneratedColumn<String> siteId = GeneratedColumn<String>(
+    'site_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _siteNameMeta = const VerificationMeta(
+    'siteName',
+  );
+  @override
+  late final GeneratedColumn<String> siteName = GeneratedColumn<String>(
+    'site_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _requiresPhotoProofMeta =
+      const VerificationMeta('requiresPhotoProof');
+  @override
+  late final GeneratedColumn<bool> requiresPhotoProof = GeneratedColumn<bool>(
+    'requires_photo_proof',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("requires_photo_proof" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _requiresSignatureMeta = const VerificationMeta(
+    'requiresSignature',
+  );
+  @override
+  late final GeneratedColumn<bool> requiresSignature = GeneratedColumn<bool>(
+    'requires_signature',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("requires_signature" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _verifierNameMeta = const VerificationMeta(
+    'verifierName',
+  );
+  @override
+  late final GeneratedColumn<String> verifierName = GeneratedColumn<String>(
+    'verifier_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _verifiedAtMeta = const VerificationMeta(
+    'verifiedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> verifiedAt = GeneratedColumn<DateTime>(
+    'verified_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _verificationNotesMeta = const VerificationMeta(
+    'verificationNotes',
+  );
+  @override
+  late final GeneratedColumn<String> verificationNotes =
+      GeneratedColumn<String>(
+        'verification_notes',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _versionMeta = const VerificationMeta(
     'version',
   );
@@ -851,6 +956,15 @@ class $CachedTasksTable extends CachedTasks
     simplifiedStatus,
     priority,
     dueAt,
+    customerId,
+    customerName,
+    siteId,
+    siteName,
+    requiresPhotoProof,
+    requiresSignature,
+    verifierName,
+    verifiedAt,
+    verificationNotes,
     version,
     createdAt,
     updatedAt,
@@ -933,6 +1047,75 @@ class $CachedTasksTable extends CachedTasks
         dueAt.isAcceptableOrUnknown(data['due_at']!, _dueAtMeta),
       );
     }
+    if (data.containsKey('customer_id')) {
+      context.handle(
+        _customerIdMeta,
+        customerId.isAcceptableOrUnknown(data['customer_id']!, _customerIdMeta),
+      );
+    }
+    if (data.containsKey('customer_name')) {
+      context.handle(
+        _customerNameMeta,
+        customerName.isAcceptableOrUnknown(
+          data['customer_name']!,
+          _customerNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('site_id')) {
+      context.handle(
+        _siteIdMeta,
+        siteId.isAcceptableOrUnknown(data['site_id']!, _siteIdMeta),
+      );
+    }
+    if (data.containsKey('site_name')) {
+      context.handle(
+        _siteNameMeta,
+        siteName.isAcceptableOrUnknown(data['site_name']!, _siteNameMeta),
+      );
+    }
+    if (data.containsKey('requires_photo_proof')) {
+      context.handle(
+        _requiresPhotoProofMeta,
+        requiresPhotoProof.isAcceptableOrUnknown(
+          data['requires_photo_proof']!,
+          _requiresPhotoProofMeta,
+        ),
+      );
+    }
+    if (data.containsKey('requires_signature')) {
+      context.handle(
+        _requiresSignatureMeta,
+        requiresSignature.isAcceptableOrUnknown(
+          data['requires_signature']!,
+          _requiresSignatureMeta,
+        ),
+      );
+    }
+    if (data.containsKey('verifier_name')) {
+      context.handle(
+        _verifierNameMeta,
+        verifierName.isAcceptableOrUnknown(
+          data['verifier_name']!,
+          _verifierNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('verified_at')) {
+      context.handle(
+        _verifiedAtMeta,
+        verifiedAt.isAcceptableOrUnknown(data['verified_at']!, _verifiedAtMeta),
+      );
+    }
+    if (data.containsKey('verification_notes')) {
+      context.handle(
+        _verificationNotesMeta,
+        verificationNotes.isAcceptableOrUnknown(
+          data['verification_notes']!,
+          _verificationNotesMeta,
+        ),
+      );
+    }
     if (data.containsKey('version')) {
       context.handle(
         _versionMeta,
@@ -996,6 +1179,42 @@ class $CachedTasksTable extends CachedTasks
         DriftSqlType.dateTime,
         data['${effectivePrefix}due_at'],
       ),
+      customerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_id'],
+      ),
+      customerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_name'],
+      ),
+      siteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}site_id'],
+      ),
+      siteName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}site_name'],
+      ),
+      requiresPhotoProof: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}requires_photo_proof'],
+      )!,
+      requiresSignature: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}requires_signature'],
+      )!,
+      verifierName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}verifier_name'],
+      ),
+      verifiedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}verified_at'],
+      ),
+      verificationNotes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}verification_notes'],
+      ),
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}version'],
@@ -1026,6 +1245,15 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
   final String simplifiedStatus;
   final String priority;
   final DateTime? dueAt;
+  final String? customerId;
+  final String? customerName;
+  final String? siteId;
+  final String? siteName;
+  final bool requiresPhotoProof;
+  final bool requiresSignature;
+  final String? verifierName;
+  final DateTime? verifiedAt;
+  final String? verificationNotes;
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -1038,6 +1266,15 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
     required this.simplifiedStatus,
     required this.priority,
     this.dueAt,
+    this.customerId,
+    this.customerName,
+    this.siteId,
+    this.siteName,
+    required this.requiresPhotoProof,
+    required this.requiresSignature,
+    this.verifierName,
+    this.verifiedAt,
+    this.verificationNotes,
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -1056,6 +1293,29 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
     map['priority'] = Variable<String>(priority);
     if (!nullToAbsent || dueAt != null) {
       map['due_at'] = Variable<DateTime>(dueAt);
+    }
+    if (!nullToAbsent || customerId != null) {
+      map['customer_id'] = Variable<String>(customerId);
+    }
+    if (!nullToAbsent || customerName != null) {
+      map['customer_name'] = Variable<String>(customerName);
+    }
+    if (!nullToAbsent || siteId != null) {
+      map['site_id'] = Variable<String>(siteId);
+    }
+    if (!nullToAbsent || siteName != null) {
+      map['site_name'] = Variable<String>(siteName);
+    }
+    map['requires_photo_proof'] = Variable<bool>(requiresPhotoProof);
+    map['requires_signature'] = Variable<bool>(requiresSignature);
+    if (!nullToAbsent || verifierName != null) {
+      map['verifier_name'] = Variable<String>(verifierName);
+    }
+    if (!nullToAbsent || verifiedAt != null) {
+      map['verified_at'] = Variable<DateTime>(verifiedAt);
+    }
+    if (!nullToAbsent || verificationNotes != null) {
+      map['verification_notes'] = Variable<String>(verificationNotes);
     }
     map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -1077,6 +1337,29 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
       dueAt: dueAt == null && nullToAbsent
           ? const Value.absent()
           : Value(dueAt),
+      customerId: customerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerId),
+      customerName: customerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerName),
+      siteId: siteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(siteId),
+      siteName: siteName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(siteName),
+      requiresPhotoProof: Value(requiresPhotoProof),
+      requiresSignature: Value(requiresSignature),
+      verifierName: verifierName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(verifierName),
+      verifiedAt: verifiedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(verifiedAt),
+      verificationNotes: verificationNotes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(verificationNotes),
       version: Value(version),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -1097,6 +1380,17 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
       simplifiedStatus: serializer.fromJson<String>(json['simplifiedStatus']),
       priority: serializer.fromJson<String>(json['priority']),
       dueAt: serializer.fromJson<DateTime?>(json['dueAt']),
+      customerId: serializer.fromJson<String?>(json['customerId']),
+      customerName: serializer.fromJson<String?>(json['customerName']),
+      siteId: serializer.fromJson<String?>(json['siteId']),
+      siteName: serializer.fromJson<String?>(json['siteName']),
+      requiresPhotoProof: serializer.fromJson<bool>(json['requiresPhotoProof']),
+      requiresSignature: serializer.fromJson<bool>(json['requiresSignature']),
+      verifierName: serializer.fromJson<String?>(json['verifierName']),
+      verifiedAt: serializer.fromJson<DateTime?>(json['verifiedAt']),
+      verificationNotes: serializer.fromJson<String?>(
+        json['verificationNotes'],
+      ),
       version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -1114,6 +1408,15 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
       'simplifiedStatus': serializer.toJson<String>(simplifiedStatus),
       'priority': serializer.toJson<String>(priority),
       'dueAt': serializer.toJson<DateTime?>(dueAt),
+      'customerId': serializer.toJson<String?>(customerId),
+      'customerName': serializer.toJson<String?>(customerName),
+      'siteId': serializer.toJson<String?>(siteId),
+      'siteName': serializer.toJson<String?>(siteName),
+      'requiresPhotoProof': serializer.toJson<bool>(requiresPhotoProof),
+      'requiresSignature': serializer.toJson<bool>(requiresSignature),
+      'verifierName': serializer.toJson<String?>(verifierName),
+      'verifiedAt': serializer.toJson<DateTime?>(verifiedAt),
+      'verificationNotes': serializer.toJson<String?>(verificationNotes),
       'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -1129,6 +1432,15 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
     String? simplifiedStatus,
     String? priority,
     Value<DateTime?> dueAt = const Value.absent(),
+    Value<String?> customerId = const Value.absent(),
+    Value<String?> customerName = const Value.absent(),
+    Value<String?> siteId = const Value.absent(),
+    Value<String?> siteName = const Value.absent(),
+    bool? requiresPhotoProof,
+    bool? requiresSignature,
+    Value<String?> verifierName = const Value.absent(),
+    Value<DateTime?> verifiedAt = const Value.absent(),
+    Value<String?> verificationNotes = const Value.absent(),
     int? version,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -1141,6 +1453,17 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
     simplifiedStatus: simplifiedStatus ?? this.simplifiedStatus,
     priority: priority ?? this.priority,
     dueAt: dueAt.present ? dueAt.value : this.dueAt,
+    customerId: customerId.present ? customerId.value : this.customerId,
+    customerName: customerName.present ? customerName.value : this.customerName,
+    siteId: siteId.present ? siteId.value : this.siteId,
+    siteName: siteName.present ? siteName.value : this.siteName,
+    requiresPhotoProof: requiresPhotoProof ?? this.requiresPhotoProof,
+    requiresSignature: requiresSignature ?? this.requiresSignature,
+    verifierName: verifierName.present ? verifierName.value : this.verifierName,
+    verifiedAt: verifiedAt.present ? verifiedAt.value : this.verifiedAt,
+    verificationNotes: verificationNotes.present
+        ? verificationNotes.value
+        : this.verificationNotes,
     version: version ?? this.version,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -1161,6 +1484,29 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
           : this.simplifiedStatus,
       priority: data.priority.present ? data.priority.value : this.priority,
       dueAt: data.dueAt.present ? data.dueAt.value : this.dueAt,
+      customerId: data.customerId.present
+          ? data.customerId.value
+          : this.customerId,
+      customerName: data.customerName.present
+          ? data.customerName.value
+          : this.customerName,
+      siteId: data.siteId.present ? data.siteId.value : this.siteId,
+      siteName: data.siteName.present ? data.siteName.value : this.siteName,
+      requiresPhotoProof: data.requiresPhotoProof.present
+          ? data.requiresPhotoProof.value
+          : this.requiresPhotoProof,
+      requiresSignature: data.requiresSignature.present
+          ? data.requiresSignature.value
+          : this.requiresSignature,
+      verifierName: data.verifierName.present
+          ? data.verifierName.value
+          : this.verifierName,
+      verifiedAt: data.verifiedAt.present
+          ? data.verifiedAt.value
+          : this.verifiedAt,
+      verificationNotes: data.verificationNotes.present
+          ? data.verificationNotes.value
+          : this.verificationNotes,
       version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -1178,6 +1524,15 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
           ..write('simplifiedStatus: $simplifiedStatus, ')
           ..write('priority: $priority, ')
           ..write('dueAt: $dueAt, ')
+          ..write('customerId: $customerId, ')
+          ..write('customerName: $customerName, ')
+          ..write('siteId: $siteId, ')
+          ..write('siteName: $siteName, ')
+          ..write('requiresPhotoProof: $requiresPhotoProof, ')
+          ..write('requiresSignature: $requiresSignature, ')
+          ..write('verifierName: $verifierName, ')
+          ..write('verifiedAt: $verifiedAt, ')
+          ..write('verificationNotes: $verificationNotes, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -1195,6 +1550,15 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
     simplifiedStatus,
     priority,
     dueAt,
+    customerId,
+    customerName,
+    siteId,
+    siteName,
+    requiresPhotoProof,
+    requiresSignature,
+    verifierName,
+    verifiedAt,
+    verificationNotes,
     version,
     createdAt,
     updatedAt,
@@ -1211,6 +1575,15 @@ class CachedTask extends DataClass implements Insertable<CachedTask> {
           other.simplifiedStatus == this.simplifiedStatus &&
           other.priority == this.priority &&
           other.dueAt == this.dueAt &&
+          other.customerId == this.customerId &&
+          other.customerName == this.customerName &&
+          other.siteId == this.siteId &&
+          other.siteName == this.siteName &&
+          other.requiresPhotoProof == this.requiresPhotoProof &&
+          other.requiresSignature == this.requiresSignature &&
+          other.verifierName == this.verifierName &&
+          other.verifiedAt == this.verifiedAt &&
+          other.verificationNotes == this.verificationNotes &&
           other.version == this.version &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -1225,6 +1598,15 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
   final Value<String> simplifiedStatus;
   final Value<String> priority;
   final Value<DateTime?> dueAt;
+  final Value<String?> customerId;
+  final Value<String?> customerName;
+  final Value<String?> siteId;
+  final Value<String?> siteName;
+  final Value<bool> requiresPhotoProof;
+  final Value<bool> requiresSignature;
+  final Value<String?> verifierName;
+  final Value<DateTime?> verifiedAt;
+  final Value<String?> verificationNotes;
   final Value<int> version;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -1238,6 +1620,15 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
     this.simplifiedStatus = const Value.absent(),
     this.priority = const Value.absent(),
     this.dueAt = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.customerName = const Value.absent(),
+    this.siteId = const Value.absent(),
+    this.siteName = const Value.absent(),
+    this.requiresPhotoProof = const Value.absent(),
+    this.requiresSignature = const Value.absent(),
+    this.verifierName = const Value.absent(),
+    this.verifiedAt = const Value.absent(),
+    this.verificationNotes = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -1252,6 +1643,15 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
     required String simplifiedStatus,
     required String priority,
     this.dueAt = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.customerName = const Value.absent(),
+    this.siteId = const Value.absent(),
+    this.siteName = const Value.absent(),
+    this.requiresPhotoProof = const Value.absent(),
+    this.requiresSignature = const Value.absent(),
+    this.verifierName = const Value.absent(),
+    this.verifiedAt = const Value.absent(),
+    this.verificationNotes = const Value.absent(),
     this.version = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -1273,6 +1673,15 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
     Expression<String>? simplifiedStatus,
     Expression<String>? priority,
     Expression<DateTime>? dueAt,
+    Expression<String>? customerId,
+    Expression<String>? customerName,
+    Expression<String>? siteId,
+    Expression<String>? siteName,
+    Expression<bool>? requiresPhotoProof,
+    Expression<bool>? requiresSignature,
+    Expression<String>? verifierName,
+    Expression<DateTime>? verifiedAt,
+    Expression<String>? verificationNotes,
     Expression<int>? version,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -1287,6 +1696,16 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
       if (simplifiedStatus != null) 'simplified_status': simplifiedStatus,
       if (priority != null) 'priority': priority,
       if (dueAt != null) 'due_at': dueAt,
+      if (customerId != null) 'customer_id': customerId,
+      if (customerName != null) 'customer_name': customerName,
+      if (siteId != null) 'site_id': siteId,
+      if (siteName != null) 'site_name': siteName,
+      if (requiresPhotoProof != null)
+        'requires_photo_proof': requiresPhotoProof,
+      if (requiresSignature != null) 'requires_signature': requiresSignature,
+      if (verifierName != null) 'verifier_name': verifierName,
+      if (verifiedAt != null) 'verified_at': verifiedAt,
+      if (verificationNotes != null) 'verification_notes': verificationNotes,
       if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -1303,6 +1722,15 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
     Value<String>? simplifiedStatus,
     Value<String>? priority,
     Value<DateTime?>? dueAt,
+    Value<String?>? customerId,
+    Value<String?>? customerName,
+    Value<String?>? siteId,
+    Value<String?>? siteName,
+    Value<bool>? requiresPhotoProof,
+    Value<bool>? requiresSignature,
+    Value<String?>? verifierName,
+    Value<DateTime?>? verifiedAt,
+    Value<String?>? verificationNotes,
     Value<int>? version,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -1317,6 +1745,15 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
       simplifiedStatus: simplifiedStatus ?? this.simplifiedStatus,
       priority: priority ?? this.priority,
       dueAt: dueAt ?? this.dueAt,
+      customerId: customerId ?? this.customerId,
+      customerName: customerName ?? this.customerName,
+      siteId: siteId ?? this.siteId,
+      siteName: siteName ?? this.siteName,
+      requiresPhotoProof: requiresPhotoProof ?? this.requiresPhotoProof,
+      requiresSignature: requiresSignature ?? this.requiresSignature,
+      verifierName: verifierName ?? this.verifierName,
+      verifiedAt: verifiedAt ?? this.verifiedAt,
+      verificationNotes: verificationNotes ?? this.verificationNotes,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -1351,6 +1788,33 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
     if (dueAt.present) {
       map['due_at'] = Variable<DateTime>(dueAt.value);
     }
+    if (customerId.present) {
+      map['customer_id'] = Variable<String>(customerId.value);
+    }
+    if (customerName.present) {
+      map['customer_name'] = Variable<String>(customerName.value);
+    }
+    if (siteId.present) {
+      map['site_id'] = Variable<String>(siteId.value);
+    }
+    if (siteName.present) {
+      map['site_name'] = Variable<String>(siteName.value);
+    }
+    if (requiresPhotoProof.present) {
+      map['requires_photo_proof'] = Variable<bool>(requiresPhotoProof.value);
+    }
+    if (requiresSignature.present) {
+      map['requires_signature'] = Variable<bool>(requiresSignature.value);
+    }
+    if (verifierName.present) {
+      map['verifier_name'] = Variable<String>(verifierName.value);
+    }
+    if (verifiedAt.present) {
+      map['verified_at'] = Variable<DateTime>(verifiedAt.value);
+    }
+    if (verificationNotes.present) {
+      map['verification_notes'] = Variable<String>(verificationNotes.value);
+    }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
@@ -1377,6 +1841,15 @@ class CachedTasksCompanion extends UpdateCompanion<CachedTask> {
           ..write('simplifiedStatus: $simplifiedStatus, ')
           ..write('priority: $priority, ')
           ..write('dueAt: $dueAt, ')
+          ..write('customerId: $customerId, ')
+          ..write('customerName: $customerName, ')
+          ..write('siteId: $siteId, ')
+          ..write('siteName: $siteName, ')
+          ..write('requiresPhotoProof: $requiresPhotoProof, ')
+          ..write('requiresSignature: $requiresSignature, ')
+          ..write('verifierName: $verifierName, ')
+          ..write('verifiedAt: $verifiedAt, ')
+          ..write('verificationNotes: $verificationNotes, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2292,6 +2765,1922 @@ class CachedAttendanceCompanion extends UpdateCompanion<CachedAttendanceData> {
   }
 }
 
+class $CachedVisitsTable extends CachedVisits
+    with TableInfo<$CachedVisitsTable, CachedVisit> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedVisitsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _workspaceIdMeta = const VerificationMeta(
+    'workspaceId',
+  );
+  @override
+  late final GeneratedColumn<String> workspaceId = GeneratedColumn<String>(
+    'workspace_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _customerIdMeta = const VerificationMeta(
+    'customerId',
+  );
+  @override
+  late final GeneratedColumn<String> customerId = GeneratedColumn<String>(
+    'customer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _customerNameMeta = const VerificationMeta(
+    'customerName',
+  );
+  @override
+  late final GeneratedColumn<String> customerName = GeneratedColumn<String>(
+    'customer_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _siteIdMeta = const VerificationMeta('siteId');
+  @override
+  late final GeneratedColumn<String> siteId = GeneratedColumn<String>(
+    'site_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _siteNameMeta = const VerificationMeta(
+    'siteName',
+  );
+  @override
+  late final GeneratedColumn<String> siteName = GeneratedColumn<String>(
+    'site_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scheduledAtMeta = const VerificationMeta(
+    'scheduledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> scheduledAt = GeneratedColumn<DateTime>(
+    'scheduled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkInTimeMeta = const VerificationMeta(
+    'checkInTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> checkInTime = GeneratedColumn<DateTime>(
+    'check_in_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkInLatMeta = const VerificationMeta(
+    'checkInLat',
+  );
+  @override
+  late final GeneratedColumn<double> checkInLat = GeneratedColumn<double>(
+    'check_in_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkInLngMeta = const VerificationMeta(
+    'checkInLng',
+  );
+  @override
+  late final GeneratedColumn<double> checkInLng = GeneratedColumn<double>(
+    'check_in_lng',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkOutTimeMeta = const VerificationMeta(
+    'checkOutTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> checkOutTime = GeneratedColumn<DateTime>(
+    'check_out_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkOutLatMeta = const VerificationMeta(
+    'checkOutLat',
+  );
+  @override
+  late final GeneratedColumn<double> checkOutLat = GeneratedColumn<double>(
+    'check_out_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkOutLngMeta = const VerificationMeta(
+    'checkOutLng',
+  );
+  @override
+  late final GeneratedColumn<double> checkOutLng = GeneratedColumn<double>(
+    'check_out_lng',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMinutesMeta = const VerificationMeta(
+    'durationMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> durationMinutes = GeneratedColumn<int>(
+    'duration_minutes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    workspaceId,
+    customerId,
+    customerName,
+    siteId,
+    siteName,
+    taskId,
+    userId,
+    status,
+    scheduledAt,
+    checkInTime,
+    checkInLat,
+    checkInLng,
+    checkOutTime,
+    checkOutLat,
+    checkOutLng,
+    durationMinutes,
+    notes,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_visits';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CachedVisit> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('workspace_id')) {
+      context.handle(
+        _workspaceIdMeta,
+        workspaceId.isAcceptableOrUnknown(
+          data['workspace_id']!,
+          _workspaceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_workspaceIdMeta);
+    }
+    if (data.containsKey('customer_id')) {
+      context.handle(
+        _customerIdMeta,
+        customerId.isAcceptableOrUnknown(data['customer_id']!, _customerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_customerIdMeta);
+    }
+    if (data.containsKey('customer_name')) {
+      context.handle(
+        _customerNameMeta,
+        customerName.isAcceptableOrUnknown(
+          data['customer_name']!,
+          _customerNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('site_id')) {
+      context.handle(
+        _siteIdMeta,
+        siteId.isAcceptableOrUnknown(data['site_id']!, _siteIdMeta),
+      );
+    }
+    if (data.containsKey('site_name')) {
+      context.handle(
+        _siteNameMeta,
+        siteName.isAcceptableOrUnknown(data['site_name']!, _siteNameMeta),
+      );
+    }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('scheduled_at')) {
+      context.handle(
+        _scheduledAtMeta,
+        scheduledAt.isAcceptableOrUnknown(
+          data['scheduled_at']!,
+          _scheduledAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('check_in_time')) {
+      context.handle(
+        _checkInTimeMeta,
+        checkInTime.isAcceptableOrUnknown(
+          data['check_in_time']!,
+          _checkInTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('check_in_lat')) {
+      context.handle(
+        _checkInLatMeta,
+        checkInLat.isAcceptableOrUnknown(
+          data['check_in_lat']!,
+          _checkInLatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('check_in_lng')) {
+      context.handle(
+        _checkInLngMeta,
+        checkInLng.isAcceptableOrUnknown(
+          data['check_in_lng']!,
+          _checkInLngMeta,
+        ),
+      );
+    }
+    if (data.containsKey('check_out_time')) {
+      context.handle(
+        _checkOutTimeMeta,
+        checkOutTime.isAcceptableOrUnknown(
+          data['check_out_time']!,
+          _checkOutTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('check_out_lat')) {
+      context.handle(
+        _checkOutLatMeta,
+        checkOutLat.isAcceptableOrUnknown(
+          data['check_out_lat']!,
+          _checkOutLatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('check_out_lng')) {
+      context.handle(
+        _checkOutLngMeta,
+        checkOutLng.isAcceptableOrUnknown(
+          data['check_out_lng']!,
+          _checkOutLngMeta,
+        ),
+      );
+    }
+    if (data.containsKey('duration_minutes')) {
+      context.handle(
+        _durationMinutesMeta,
+        durationMinutes.isAcceptableOrUnknown(
+          data['duration_minutes']!,
+          _durationMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedVisit map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedVisit(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      workspaceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}workspace_id'],
+      )!,
+      customerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_id'],
+      )!,
+      customerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_name'],
+      ),
+      siteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}site_id'],
+      ),
+      siteName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}site_name'],
+      ),
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      ),
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      scheduledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}scheduled_at'],
+      ),
+      checkInTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}check_in_time'],
+      ),
+      checkInLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}check_in_lat'],
+      ),
+      checkInLng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}check_in_lng'],
+      ),
+      checkOutTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}check_out_time'],
+      ),
+      checkOutLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}check_out_lat'],
+      ),
+      checkOutLng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}check_out_lng'],
+      ),
+      durationMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_minutes'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CachedVisitsTable createAlias(String alias) {
+    return $CachedVisitsTable(attachedDatabase, alias);
+  }
+}
+
+class CachedVisit extends DataClass implements Insertable<CachedVisit> {
+  final String id;
+  final String workspaceId;
+  final String customerId;
+  final String? customerName;
+  final String? siteId;
+  final String? siteName;
+  final String? taskId;
+  final String userId;
+  final String status;
+  final DateTime? scheduledAt;
+  final DateTime? checkInTime;
+  final double? checkInLat;
+  final double? checkInLng;
+  final DateTime? checkOutTime;
+  final double? checkOutLat;
+  final double? checkOutLng;
+  final int? durationMinutes;
+  final String? notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const CachedVisit({
+    required this.id,
+    required this.workspaceId,
+    required this.customerId,
+    this.customerName,
+    this.siteId,
+    this.siteName,
+    this.taskId,
+    required this.userId,
+    required this.status,
+    this.scheduledAt,
+    this.checkInTime,
+    this.checkInLat,
+    this.checkInLng,
+    this.checkOutTime,
+    this.checkOutLat,
+    this.checkOutLng,
+    this.durationMinutes,
+    this.notes,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['workspace_id'] = Variable<String>(workspaceId);
+    map['customer_id'] = Variable<String>(customerId);
+    if (!nullToAbsent || customerName != null) {
+      map['customer_name'] = Variable<String>(customerName);
+    }
+    if (!nullToAbsent || siteId != null) {
+      map['site_id'] = Variable<String>(siteId);
+    }
+    if (!nullToAbsent || siteName != null) {
+      map['site_name'] = Variable<String>(siteName);
+    }
+    if (!nullToAbsent || taskId != null) {
+      map['task_id'] = Variable<String>(taskId);
+    }
+    map['user_id'] = Variable<String>(userId);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || scheduledAt != null) {
+      map['scheduled_at'] = Variable<DateTime>(scheduledAt);
+    }
+    if (!nullToAbsent || checkInTime != null) {
+      map['check_in_time'] = Variable<DateTime>(checkInTime);
+    }
+    if (!nullToAbsent || checkInLat != null) {
+      map['check_in_lat'] = Variable<double>(checkInLat);
+    }
+    if (!nullToAbsent || checkInLng != null) {
+      map['check_in_lng'] = Variable<double>(checkInLng);
+    }
+    if (!nullToAbsent || checkOutTime != null) {
+      map['check_out_time'] = Variable<DateTime>(checkOutTime);
+    }
+    if (!nullToAbsent || checkOutLat != null) {
+      map['check_out_lat'] = Variable<double>(checkOutLat);
+    }
+    if (!nullToAbsent || checkOutLng != null) {
+      map['check_out_lng'] = Variable<double>(checkOutLng);
+    }
+    if (!nullToAbsent || durationMinutes != null) {
+      map['duration_minutes'] = Variable<int>(durationMinutes);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  CachedVisitsCompanion toCompanion(bool nullToAbsent) {
+    return CachedVisitsCompanion(
+      id: Value(id),
+      workspaceId: Value(workspaceId),
+      customerId: Value(customerId),
+      customerName: customerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerName),
+      siteId: siteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(siteId),
+      siteName: siteName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(siteName),
+      taskId: taskId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(taskId),
+      userId: Value(userId),
+      status: Value(status),
+      scheduledAt: scheduledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scheduledAt),
+      checkInTime: checkInTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkInTime),
+      checkInLat: checkInLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkInLat),
+      checkInLng: checkInLng == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkInLng),
+      checkOutTime: checkOutTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkOutTime),
+      checkOutLat: checkOutLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkOutLat),
+      checkOutLng: checkOutLng == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkOutLng),
+      durationMinutes: durationMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationMinutes),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory CachedVisit.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedVisit(
+      id: serializer.fromJson<String>(json['id']),
+      workspaceId: serializer.fromJson<String>(json['workspaceId']),
+      customerId: serializer.fromJson<String>(json['customerId']),
+      customerName: serializer.fromJson<String?>(json['customerName']),
+      siteId: serializer.fromJson<String?>(json['siteId']),
+      siteName: serializer.fromJson<String?>(json['siteName']),
+      taskId: serializer.fromJson<String?>(json['taskId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      status: serializer.fromJson<String>(json['status']),
+      scheduledAt: serializer.fromJson<DateTime?>(json['scheduledAt']),
+      checkInTime: serializer.fromJson<DateTime?>(json['checkInTime']),
+      checkInLat: serializer.fromJson<double?>(json['checkInLat']),
+      checkInLng: serializer.fromJson<double?>(json['checkInLng']),
+      checkOutTime: serializer.fromJson<DateTime?>(json['checkOutTime']),
+      checkOutLat: serializer.fromJson<double?>(json['checkOutLat']),
+      checkOutLng: serializer.fromJson<double?>(json['checkOutLng']),
+      durationMinutes: serializer.fromJson<int?>(json['durationMinutes']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'workspaceId': serializer.toJson<String>(workspaceId),
+      'customerId': serializer.toJson<String>(customerId),
+      'customerName': serializer.toJson<String?>(customerName),
+      'siteId': serializer.toJson<String?>(siteId),
+      'siteName': serializer.toJson<String?>(siteName),
+      'taskId': serializer.toJson<String?>(taskId),
+      'userId': serializer.toJson<String>(userId),
+      'status': serializer.toJson<String>(status),
+      'scheduledAt': serializer.toJson<DateTime?>(scheduledAt),
+      'checkInTime': serializer.toJson<DateTime?>(checkInTime),
+      'checkInLat': serializer.toJson<double?>(checkInLat),
+      'checkInLng': serializer.toJson<double?>(checkInLng),
+      'checkOutTime': serializer.toJson<DateTime?>(checkOutTime),
+      'checkOutLat': serializer.toJson<double?>(checkOutLat),
+      'checkOutLng': serializer.toJson<double?>(checkOutLng),
+      'durationMinutes': serializer.toJson<int?>(durationMinutes),
+      'notes': serializer.toJson<String?>(notes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  CachedVisit copyWith({
+    String? id,
+    String? workspaceId,
+    String? customerId,
+    Value<String?> customerName = const Value.absent(),
+    Value<String?> siteId = const Value.absent(),
+    Value<String?> siteName = const Value.absent(),
+    Value<String?> taskId = const Value.absent(),
+    String? userId,
+    String? status,
+    Value<DateTime?> scheduledAt = const Value.absent(),
+    Value<DateTime?> checkInTime = const Value.absent(),
+    Value<double?> checkInLat = const Value.absent(),
+    Value<double?> checkInLng = const Value.absent(),
+    Value<DateTime?> checkOutTime = const Value.absent(),
+    Value<double?> checkOutLat = const Value.absent(),
+    Value<double?> checkOutLng = const Value.absent(),
+    Value<int?> durationMinutes = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => CachedVisit(
+    id: id ?? this.id,
+    workspaceId: workspaceId ?? this.workspaceId,
+    customerId: customerId ?? this.customerId,
+    customerName: customerName.present ? customerName.value : this.customerName,
+    siteId: siteId.present ? siteId.value : this.siteId,
+    siteName: siteName.present ? siteName.value : this.siteName,
+    taskId: taskId.present ? taskId.value : this.taskId,
+    userId: userId ?? this.userId,
+    status: status ?? this.status,
+    scheduledAt: scheduledAt.present ? scheduledAt.value : this.scheduledAt,
+    checkInTime: checkInTime.present ? checkInTime.value : this.checkInTime,
+    checkInLat: checkInLat.present ? checkInLat.value : this.checkInLat,
+    checkInLng: checkInLng.present ? checkInLng.value : this.checkInLng,
+    checkOutTime: checkOutTime.present ? checkOutTime.value : this.checkOutTime,
+    checkOutLat: checkOutLat.present ? checkOutLat.value : this.checkOutLat,
+    checkOutLng: checkOutLng.present ? checkOutLng.value : this.checkOutLng,
+    durationMinutes: durationMinutes.present
+        ? durationMinutes.value
+        : this.durationMinutes,
+    notes: notes.present ? notes.value : this.notes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  CachedVisit copyWithCompanion(CachedVisitsCompanion data) {
+    return CachedVisit(
+      id: data.id.present ? data.id.value : this.id,
+      workspaceId: data.workspaceId.present
+          ? data.workspaceId.value
+          : this.workspaceId,
+      customerId: data.customerId.present
+          ? data.customerId.value
+          : this.customerId,
+      customerName: data.customerName.present
+          ? data.customerName.value
+          : this.customerName,
+      siteId: data.siteId.present ? data.siteId.value : this.siteId,
+      siteName: data.siteName.present ? data.siteName.value : this.siteName,
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      status: data.status.present ? data.status.value : this.status,
+      scheduledAt: data.scheduledAt.present
+          ? data.scheduledAt.value
+          : this.scheduledAt,
+      checkInTime: data.checkInTime.present
+          ? data.checkInTime.value
+          : this.checkInTime,
+      checkInLat: data.checkInLat.present
+          ? data.checkInLat.value
+          : this.checkInLat,
+      checkInLng: data.checkInLng.present
+          ? data.checkInLng.value
+          : this.checkInLng,
+      checkOutTime: data.checkOutTime.present
+          ? data.checkOutTime.value
+          : this.checkOutTime,
+      checkOutLat: data.checkOutLat.present
+          ? data.checkOutLat.value
+          : this.checkOutLat,
+      checkOutLng: data.checkOutLng.present
+          ? data.checkOutLng.value
+          : this.checkOutLng,
+      durationMinutes: data.durationMinutes.present
+          ? data.durationMinutes.value
+          : this.durationMinutes,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedVisit(')
+          ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
+          ..write('customerId: $customerId, ')
+          ..write('customerName: $customerName, ')
+          ..write('siteId: $siteId, ')
+          ..write('siteName: $siteName, ')
+          ..write('taskId: $taskId, ')
+          ..write('userId: $userId, ')
+          ..write('status: $status, ')
+          ..write('scheduledAt: $scheduledAt, ')
+          ..write('checkInTime: $checkInTime, ')
+          ..write('checkInLat: $checkInLat, ')
+          ..write('checkInLng: $checkInLng, ')
+          ..write('checkOutTime: $checkOutTime, ')
+          ..write('checkOutLat: $checkOutLat, ')
+          ..write('checkOutLng: $checkOutLng, ')
+          ..write('durationMinutes: $durationMinutes, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    workspaceId,
+    customerId,
+    customerName,
+    siteId,
+    siteName,
+    taskId,
+    userId,
+    status,
+    scheduledAt,
+    checkInTime,
+    checkInLat,
+    checkInLng,
+    checkOutTime,
+    checkOutLat,
+    checkOutLng,
+    durationMinutes,
+    notes,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedVisit &&
+          other.id == this.id &&
+          other.workspaceId == this.workspaceId &&
+          other.customerId == this.customerId &&
+          other.customerName == this.customerName &&
+          other.siteId == this.siteId &&
+          other.siteName == this.siteName &&
+          other.taskId == this.taskId &&
+          other.userId == this.userId &&
+          other.status == this.status &&
+          other.scheduledAt == this.scheduledAt &&
+          other.checkInTime == this.checkInTime &&
+          other.checkInLat == this.checkInLat &&
+          other.checkInLng == this.checkInLng &&
+          other.checkOutTime == this.checkOutTime &&
+          other.checkOutLat == this.checkOutLat &&
+          other.checkOutLng == this.checkOutLng &&
+          other.durationMinutes == this.durationMinutes &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
+  final Value<String> id;
+  final Value<String> workspaceId;
+  final Value<String> customerId;
+  final Value<String?> customerName;
+  final Value<String?> siteId;
+  final Value<String?> siteName;
+  final Value<String?> taskId;
+  final Value<String> userId;
+  final Value<String> status;
+  final Value<DateTime?> scheduledAt;
+  final Value<DateTime?> checkInTime;
+  final Value<double?> checkInLat;
+  final Value<double?> checkInLng;
+  final Value<DateTime?> checkOutTime;
+  final Value<double?> checkOutLat;
+  final Value<double?> checkOutLng;
+  final Value<int?> durationMinutes;
+  final Value<String?> notes;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const CachedVisitsCompanion({
+    this.id = const Value.absent(),
+    this.workspaceId = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.customerName = const Value.absent(),
+    this.siteId = const Value.absent(),
+    this.siteName = const Value.absent(),
+    this.taskId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.scheduledAt = const Value.absent(),
+    this.checkInTime = const Value.absent(),
+    this.checkInLat = const Value.absent(),
+    this.checkInLng = const Value.absent(),
+    this.checkOutTime = const Value.absent(),
+    this.checkOutLat = const Value.absent(),
+    this.checkOutLng = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedVisitsCompanion.insert({
+    required String id,
+    required String workspaceId,
+    required String customerId,
+    this.customerName = const Value.absent(),
+    this.siteId = const Value.absent(),
+    this.siteName = const Value.absent(),
+    this.taskId = const Value.absent(),
+    required String userId,
+    required String status,
+    this.scheduledAt = const Value.absent(),
+    this.checkInTime = const Value.absent(),
+    this.checkInLat = const Value.absent(),
+    this.checkInLng = const Value.absent(),
+    this.checkOutTime = const Value.absent(),
+    this.checkOutLat = const Value.absent(),
+    this.checkOutLng = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
+    this.notes = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       workspaceId = Value(workspaceId),
+       customerId = Value(customerId),
+       userId = Value(userId),
+       status = Value(status),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<CachedVisit> custom({
+    Expression<String>? id,
+    Expression<String>? workspaceId,
+    Expression<String>? customerId,
+    Expression<String>? customerName,
+    Expression<String>? siteId,
+    Expression<String>? siteName,
+    Expression<String>? taskId,
+    Expression<String>? userId,
+    Expression<String>? status,
+    Expression<DateTime>? scheduledAt,
+    Expression<DateTime>? checkInTime,
+    Expression<double>? checkInLat,
+    Expression<double>? checkInLng,
+    Expression<DateTime>? checkOutTime,
+    Expression<double>? checkOutLat,
+    Expression<double>? checkOutLng,
+    Expression<int>? durationMinutes,
+    Expression<String>? notes,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (workspaceId != null) 'workspace_id': workspaceId,
+      if (customerId != null) 'customer_id': customerId,
+      if (customerName != null) 'customer_name': customerName,
+      if (siteId != null) 'site_id': siteId,
+      if (siteName != null) 'site_name': siteName,
+      if (taskId != null) 'task_id': taskId,
+      if (userId != null) 'user_id': userId,
+      if (status != null) 'status': status,
+      if (scheduledAt != null) 'scheduled_at': scheduledAt,
+      if (checkInTime != null) 'check_in_time': checkInTime,
+      if (checkInLat != null) 'check_in_lat': checkInLat,
+      if (checkInLng != null) 'check_in_lng': checkInLng,
+      if (checkOutTime != null) 'check_out_time': checkOutTime,
+      if (checkOutLat != null) 'check_out_lat': checkOutLat,
+      if (checkOutLng != null) 'check_out_lng': checkOutLng,
+      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedVisitsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? workspaceId,
+    Value<String>? customerId,
+    Value<String?>? customerName,
+    Value<String?>? siteId,
+    Value<String?>? siteName,
+    Value<String?>? taskId,
+    Value<String>? userId,
+    Value<String>? status,
+    Value<DateTime?>? scheduledAt,
+    Value<DateTime?>? checkInTime,
+    Value<double?>? checkInLat,
+    Value<double?>? checkInLng,
+    Value<DateTime?>? checkOutTime,
+    Value<double?>? checkOutLat,
+    Value<double?>? checkOutLng,
+    Value<int?>? durationMinutes,
+    Value<String?>? notes,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return CachedVisitsCompanion(
+      id: id ?? this.id,
+      workspaceId: workspaceId ?? this.workspaceId,
+      customerId: customerId ?? this.customerId,
+      customerName: customerName ?? this.customerName,
+      siteId: siteId ?? this.siteId,
+      siteName: siteName ?? this.siteName,
+      taskId: taskId ?? this.taskId,
+      userId: userId ?? this.userId,
+      status: status ?? this.status,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
+      checkInTime: checkInTime ?? this.checkInTime,
+      checkInLat: checkInLat ?? this.checkInLat,
+      checkInLng: checkInLng ?? this.checkInLng,
+      checkOutTime: checkOutTime ?? this.checkOutTime,
+      checkOutLat: checkOutLat ?? this.checkOutLat,
+      checkOutLng: checkOutLng ?? this.checkOutLng,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (workspaceId.present) {
+      map['workspace_id'] = Variable<String>(workspaceId.value);
+    }
+    if (customerId.present) {
+      map['customer_id'] = Variable<String>(customerId.value);
+    }
+    if (customerName.present) {
+      map['customer_name'] = Variable<String>(customerName.value);
+    }
+    if (siteId.present) {
+      map['site_id'] = Variable<String>(siteId.value);
+    }
+    if (siteName.present) {
+      map['site_name'] = Variable<String>(siteName.value);
+    }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (scheduledAt.present) {
+      map['scheduled_at'] = Variable<DateTime>(scheduledAt.value);
+    }
+    if (checkInTime.present) {
+      map['check_in_time'] = Variable<DateTime>(checkInTime.value);
+    }
+    if (checkInLat.present) {
+      map['check_in_lat'] = Variable<double>(checkInLat.value);
+    }
+    if (checkInLng.present) {
+      map['check_in_lng'] = Variable<double>(checkInLng.value);
+    }
+    if (checkOutTime.present) {
+      map['check_out_time'] = Variable<DateTime>(checkOutTime.value);
+    }
+    if (checkOutLat.present) {
+      map['check_out_lat'] = Variable<double>(checkOutLat.value);
+    }
+    if (checkOutLng.present) {
+      map['check_out_lng'] = Variable<double>(checkOutLng.value);
+    }
+    if (durationMinutes.present) {
+      map['duration_minutes'] = Variable<int>(durationMinutes.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedVisitsCompanion(')
+          ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
+          ..write('customerId: $customerId, ')
+          ..write('customerName: $customerName, ')
+          ..write('siteId: $siteId, ')
+          ..write('siteName: $siteName, ')
+          ..write('taskId: $taskId, ')
+          ..write('userId: $userId, ')
+          ..write('status: $status, ')
+          ..write('scheduledAt: $scheduledAt, ')
+          ..write('checkInTime: $checkInTime, ')
+          ..write('checkInLat: $checkInLat, ')
+          ..write('checkInLng: $checkInLng, ')
+          ..write('checkOutTime: $checkOutTime, ')
+          ..write('checkOutLat: $checkOutLat, ')
+          ..write('checkOutLng: $checkOutLng, ')
+          ..write('durationMinutes: $durationMinutes, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CachedTaskProofsTable extends CachedTaskProofs
+    with TableInfo<$CachedTaskProofsTable, CachedTaskProof> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedTaskProofsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _workspaceIdMeta = const VerificationMeta(
+    'workspaceId',
+  );
+  @override
+  late final GeneratedColumn<String> workspaceId = GeneratedColumn<String>(
+    'workspace_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _visitIdMeta = const VerificationMeta(
+    'visitId',
+  );
+  @override
+  late final GeneratedColumn<String> visitId = GeneratedColumn<String>(
+    'visit_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _proofTypeMeta = const VerificationMeta(
+    'proofType',
+  );
+  @override
+  late final GeneratedColumn<String> proofType = GeneratedColumn<String>(
+    'proof_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileKeyMeta = const VerificationMeta(
+    'fileKey',
+  );
+  @override
+  late final GeneratedColumn<String> fileKey = GeneratedColumn<String>(
+    'file_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileUrlMeta = const VerificationMeta(
+    'fileUrl',
+  );
+  @override
+  late final GeneratedColumn<String> fileUrl = GeneratedColumn<String>(
+    'file_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _signerNameMeta = const VerificationMeta(
+    'signerName',
+  );
+  @override
+  late final GeneratedColumn<String> signerName = GeneratedColumn<String>(
+    'signer_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _signerPhoneMeta = const VerificationMeta(
+    'signerPhone',
+  );
+  @override
+  late final GeneratedColumn<String> signerPhone = GeneratedColumn<String>(
+    'signer_phone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _watermarkJsonMeta = const VerificationMeta(
+    'watermarkJson',
+  );
+  @override
+  late final GeneratedColumn<String> watermarkJson = GeneratedColumn<String>(
+    'watermark_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    workspaceId,
+    taskId,
+    visitId,
+    userId,
+    proofType,
+    fileKey,
+    fileUrl,
+    signerName,
+    signerPhone,
+    watermarkJson,
+    notes,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_task_proofs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CachedTaskProof> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('workspace_id')) {
+      context.handle(
+        _workspaceIdMeta,
+        workspaceId.isAcceptableOrUnknown(
+          data['workspace_id']!,
+          _workspaceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_workspaceIdMeta);
+    }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_taskIdMeta);
+    }
+    if (data.containsKey('visit_id')) {
+      context.handle(
+        _visitIdMeta,
+        visitId.isAcceptableOrUnknown(data['visit_id']!, _visitIdMeta),
+      );
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('proof_type')) {
+      context.handle(
+        _proofTypeMeta,
+        proofType.isAcceptableOrUnknown(data['proof_type']!, _proofTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_proofTypeMeta);
+    }
+    if (data.containsKey('file_key')) {
+      context.handle(
+        _fileKeyMeta,
+        fileKey.isAcceptableOrUnknown(data['file_key']!, _fileKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileKeyMeta);
+    }
+    if (data.containsKey('file_url')) {
+      context.handle(
+        _fileUrlMeta,
+        fileUrl.isAcceptableOrUnknown(data['file_url']!, _fileUrlMeta),
+      );
+    }
+    if (data.containsKey('signer_name')) {
+      context.handle(
+        _signerNameMeta,
+        signerName.isAcceptableOrUnknown(data['signer_name']!, _signerNameMeta),
+      );
+    }
+    if (data.containsKey('signer_phone')) {
+      context.handle(
+        _signerPhoneMeta,
+        signerPhone.isAcceptableOrUnknown(
+          data['signer_phone']!,
+          _signerPhoneMeta,
+        ),
+      );
+    }
+    if (data.containsKey('watermark_json')) {
+      context.handle(
+        _watermarkJsonMeta,
+        watermarkJson.isAcceptableOrUnknown(
+          data['watermark_json']!,
+          _watermarkJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedTaskProof map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedTaskProof(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      workspaceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}workspace_id'],
+      )!,
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      )!,
+      visitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visit_id'],
+      ),
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      proofType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}proof_type'],
+      )!,
+      fileKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_key'],
+      )!,
+      fileUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_url'],
+      ),
+      signerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}signer_name'],
+      ),
+      signerPhone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}signer_phone'],
+      ),
+      watermarkJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}watermark_json'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CachedTaskProofsTable createAlias(String alias) {
+    return $CachedTaskProofsTable(attachedDatabase, alias);
+  }
+}
+
+class CachedTaskProof extends DataClass implements Insertable<CachedTaskProof> {
+  final String id;
+  final String workspaceId;
+  final String taskId;
+  final String? visitId;
+  final String userId;
+  final String proofType;
+  final String fileKey;
+  final String? fileUrl;
+  final String? signerName;
+  final String? signerPhone;
+  final String? watermarkJson;
+  final String? notes;
+  final DateTime createdAt;
+  const CachedTaskProof({
+    required this.id,
+    required this.workspaceId,
+    required this.taskId,
+    this.visitId,
+    required this.userId,
+    required this.proofType,
+    required this.fileKey,
+    this.fileUrl,
+    this.signerName,
+    this.signerPhone,
+    this.watermarkJson,
+    this.notes,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['workspace_id'] = Variable<String>(workspaceId);
+    map['task_id'] = Variable<String>(taskId);
+    if (!nullToAbsent || visitId != null) {
+      map['visit_id'] = Variable<String>(visitId);
+    }
+    map['user_id'] = Variable<String>(userId);
+    map['proof_type'] = Variable<String>(proofType);
+    map['file_key'] = Variable<String>(fileKey);
+    if (!nullToAbsent || fileUrl != null) {
+      map['file_url'] = Variable<String>(fileUrl);
+    }
+    if (!nullToAbsent || signerName != null) {
+      map['signer_name'] = Variable<String>(signerName);
+    }
+    if (!nullToAbsent || signerPhone != null) {
+      map['signer_phone'] = Variable<String>(signerPhone);
+    }
+    if (!nullToAbsent || watermarkJson != null) {
+      map['watermark_json'] = Variable<String>(watermarkJson);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CachedTaskProofsCompanion toCompanion(bool nullToAbsent) {
+    return CachedTaskProofsCompanion(
+      id: Value(id),
+      workspaceId: Value(workspaceId),
+      taskId: Value(taskId),
+      visitId: visitId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(visitId),
+      userId: Value(userId),
+      proofType: Value(proofType),
+      fileKey: Value(fileKey),
+      fileUrl: fileUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fileUrl),
+      signerName: signerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(signerName),
+      signerPhone: signerPhone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(signerPhone),
+      watermarkJson: watermarkJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(watermarkJson),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CachedTaskProof.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedTaskProof(
+      id: serializer.fromJson<String>(json['id']),
+      workspaceId: serializer.fromJson<String>(json['workspaceId']),
+      taskId: serializer.fromJson<String>(json['taskId']),
+      visitId: serializer.fromJson<String?>(json['visitId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      proofType: serializer.fromJson<String>(json['proofType']),
+      fileKey: serializer.fromJson<String>(json['fileKey']),
+      fileUrl: serializer.fromJson<String?>(json['fileUrl']),
+      signerName: serializer.fromJson<String?>(json['signerName']),
+      signerPhone: serializer.fromJson<String?>(json['signerPhone']),
+      watermarkJson: serializer.fromJson<String?>(json['watermarkJson']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'workspaceId': serializer.toJson<String>(workspaceId),
+      'taskId': serializer.toJson<String>(taskId),
+      'visitId': serializer.toJson<String?>(visitId),
+      'userId': serializer.toJson<String>(userId),
+      'proofType': serializer.toJson<String>(proofType),
+      'fileKey': serializer.toJson<String>(fileKey),
+      'fileUrl': serializer.toJson<String?>(fileUrl),
+      'signerName': serializer.toJson<String?>(signerName),
+      'signerPhone': serializer.toJson<String?>(signerPhone),
+      'watermarkJson': serializer.toJson<String?>(watermarkJson),
+      'notes': serializer.toJson<String?>(notes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  CachedTaskProof copyWith({
+    String? id,
+    String? workspaceId,
+    String? taskId,
+    Value<String?> visitId = const Value.absent(),
+    String? userId,
+    String? proofType,
+    String? fileKey,
+    Value<String?> fileUrl = const Value.absent(),
+    Value<String?> signerName = const Value.absent(),
+    Value<String?> signerPhone = const Value.absent(),
+    Value<String?> watermarkJson = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    DateTime? createdAt,
+  }) => CachedTaskProof(
+    id: id ?? this.id,
+    workspaceId: workspaceId ?? this.workspaceId,
+    taskId: taskId ?? this.taskId,
+    visitId: visitId.present ? visitId.value : this.visitId,
+    userId: userId ?? this.userId,
+    proofType: proofType ?? this.proofType,
+    fileKey: fileKey ?? this.fileKey,
+    fileUrl: fileUrl.present ? fileUrl.value : this.fileUrl,
+    signerName: signerName.present ? signerName.value : this.signerName,
+    signerPhone: signerPhone.present ? signerPhone.value : this.signerPhone,
+    watermarkJson: watermarkJson.present
+        ? watermarkJson.value
+        : this.watermarkJson,
+    notes: notes.present ? notes.value : this.notes,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  CachedTaskProof copyWithCompanion(CachedTaskProofsCompanion data) {
+    return CachedTaskProof(
+      id: data.id.present ? data.id.value : this.id,
+      workspaceId: data.workspaceId.present
+          ? data.workspaceId.value
+          : this.workspaceId,
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
+      visitId: data.visitId.present ? data.visitId.value : this.visitId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      proofType: data.proofType.present ? data.proofType.value : this.proofType,
+      fileKey: data.fileKey.present ? data.fileKey.value : this.fileKey,
+      fileUrl: data.fileUrl.present ? data.fileUrl.value : this.fileUrl,
+      signerName: data.signerName.present
+          ? data.signerName.value
+          : this.signerName,
+      signerPhone: data.signerPhone.present
+          ? data.signerPhone.value
+          : this.signerPhone,
+      watermarkJson: data.watermarkJson.present
+          ? data.watermarkJson.value
+          : this.watermarkJson,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedTaskProof(')
+          ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
+          ..write('taskId: $taskId, ')
+          ..write('visitId: $visitId, ')
+          ..write('userId: $userId, ')
+          ..write('proofType: $proofType, ')
+          ..write('fileKey: $fileKey, ')
+          ..write('fileUrl: $fileUrl, ')
+          ..write('signerName: $signerName, ')
+          ..write('signerPhone: $signerPhone, ')
+          ..write('watermarkJson: $watermarkJson, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    workspaceId,
+    taskId,
+    visitId,
+    userId,
+    proofType,
+    fileKey,
+    fileUrl,
+    signerName,
+    signerPhone,
+    watermarkJson,
+    notes,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedTaskProof &&
+          other.id == this.id &&
+          other.workspaceId == this.workspaceId &&
+          other.taskId == this.taskId &&
+          other.visitId == this.visitId &&
+          other.userId == this.userId &&
+          other.proofType == this.proofType &&
+          other.fileKey == this.fileKey &&
+          other.fileUrl == this.fileUrl &&
+          other.signerName == this.signerName &&
+          other.signerPhone == this.signerPhone &&
+          other.watermarkJson == this.watermarkJson &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt);
+}
+
+class CachedTaskProofsCompanion extends UpdateCompanion<CachedTaskProof> {
+  final Value<String> id;
+  final Value<String> workspaceId;
+  final Value<String> taskId;
+  final Value<String?> visitId;
+  final Value<String> userId;
+  final Value<String> proofType;
+  final Value<String> fileKey;
+  final Value<String?> fileUrl;
+  final Value<String?> signerName;
+  final Value<String?> signerPhone;
+  final Value<String?> watermarkJson;
+  final Value<String?> notes;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const CachedTaskProofsCompanion({
+    this.id = const Value.absent(),
+    this.workspaceId = const Value.absent(),
+    this.taskId = const Value.absent(),
+    this.visitId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.proofType = const Value.absent(),
+    this.fileKey = const Value.absent(),
+    this.fileUrl = const Value.absent(),
+    this.signerName = const Value.absent(),
+    this.signerPhone = const Value.absent(),
+    this.watermarkJson = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedTaskProofsCompanion.insert({
+    required String id,
+    required String workspaceId,
+    required String taskId,
+    this.visitId = const Value.absent(),
+    required String userId,
+    required String proofType,
+    required String fileKey,
+    this.fileUrl = const Value.absent(),
+    this.signerName = const Value.absent(),
+    this.signerPhone = const Value.absent(),
+    this.watermarkJson = const Value.absent(),
+    this.notes = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       workspaceId = Value(workspaceId),
+       taskId = Value(taskId),
+       userId = Value(userId),
+       proofType = Value(proofType),
+       fileKey = Value(fileKey),
+       createdAt = Value(createdAt);
+  static Insertable<CachedTaskProof> custom({
+    Expression<String>? id,
+    Expression<String>? workspaceId,
+    Expression<String>? taskId,
+    Expression<String>? visitId,
+    Expression<String>? userId,
+    Expression<String>? proofType,
+    Expression<String>? fileKey,
+    Expression<String>? fileUrl,
+    Expression<String>? signerName,
+    Expression<String>? signerPhone,
+    Expression<String>? watermarkJson,
+    Expression<String>? notes,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (workspaceId != null) 'workspace_id': workspaceId,
+      if (taskId != null) 'task_id': taskId,
+      if (visitId != null) 'visit_id': visitId,
+      if (userId != null) 'user_id': userId,
+      if (proofType != null) 'proof_type': proofType,
+      if (fileKey != null) 'file_key': fileKey,
+      if (fileUrl != null) 'file_url': fileUrl,
+      if (signerName != null) 'signer_name': signerName,
+      if (signerPhone != null) 'signer_phone': signerPhone,
+      if (watermarkJson != null) 'watermark_json': watermarkJson,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedTaskProofsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? workspaceId,
+    Value<String>? taskId,
+    Value<String?>? visitId,
+    Value<String>? userId,
+    Value<String>? proofType,
+    Value<String>? fileKey,
+    Value<String?>? fileUrl,
+    Value<String?>? signerName,
+    Value<String?>? signerPhone,
+    Value<String?>? watermarkJson,
+    Value<String?>? notes,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return CachedTaskProofsCompanion(
+      id: id ?? this.id,
+      workspaceId: workspaceId ?? this.workspaceId,
+      taskId: taskId ?? this.taskId,
+      visitId: visitId ?? this.visitId,
+      userId: userId ?? this.userId,
+      proofType: proofType ?? this.proofType,
+      fileKey: fileKey ?? this.fileKey,
+      fileUrl: fileUrl ?? this.fileUrl,
+      signerName: signerName ?? this.signerName,
+      signerPhone: signerPhone ?? this.signerPhone,
+      watermarkJson: watermarkJson ?? this.watermarkJson,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (workspaceId.present) {
+      map['workspace_id'] = Variable<String>(workspaceId.value);
+    }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
+    }
+    if (visitId.present) {
+      map['visit_id'] = Variable<String>(visitId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (proofType.present) {
+      map['proof_type'] = Variable<String>(proofType.value);
+    }
+    if (fileKey.present) {
+      map['file_key'] = Variable<String>(fileKey.value);
+    }
+    if (fileUrl.present) {
+      map['file_url'] = Variable<String>(fileUrl.value);
+    }
+    if (signerName.present) {
+      map['signer_name'] = Variable<String>(signerName.value);
+    }
+    if (signerPhone.present) {
+      map['signer_phone'] = Variable<String>(signerPhone.value);
+    }
+    if (watermarkJson.present) {
+      map['watermark_json'] = Variable<String>(watermarkJson.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedTaskProofsCompanion(')
+          ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
+          ..write('taskId: $taskId, ')
+          ..write('visitId: $visitId, ')
+          ..write('userId: $userId, ')
+          ..write('proofType: $proofType, ')
+          ..write('fileKey: $fileKey, ')
+          ..write('fileUrl: $fileUrl, ')
+          ..write('signerName: $signerName, ')
+          ..write('signerPhone: $signerPhone, ')
+          ..write('watermarkJson: $watermarkJson, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2304,6 +4693,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CachedAttendanceTable cachedAttendance = $CachedAttendanceTable(
     this,
   );
+  late final $CachedVisitsTable cachedVisits = $CachedVisitsTable(this);
+  late final $CachedTaskProofsTable cachedTaskProofs = $CachedTaskProofsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2313,6 +4706,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     cachedTasks,
     cachedChecklistItems,
     cachedAttendance,
+    cachedVisits,
+    cachedTaskProofs,
   ];
 }
 
@@ -2675,6 +5070,15 @@ typedef $$CachedTasksTableCreateCompanionBuilder =
       required String simplifiedStatus,
       required String priority,
       Value<DateTime?> dueAt,
+      Value<String?> customerId,
+      Value<String?> customerName,
+      Value<String?> siteId,
+      Value<String?> siteName,
+      Value<bool> requiresPhotoProof,
+      Value<bool> requiresSignature,
+      Value<String?> verifierName,
+      Value<DateTime?> verifiedAt,
+      Value<String?> verificationNotes,
       Value<int> version,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -2690,6 +5094,15 @@ typedef $$CachedTasksTableUpdateCompanionBuilder =
       Value<String> simplifiedStatus,
       Value<String> priority,
       Value<DateTime?> dueAt,
+      Value<String?> customerId,
+      Value<String?> customerName,
+      Value<String?> siteId,
+      Value<String?> siteName,
+      Value<bool> requiresPhotoProof,
+      Value<bool> requiresSignature,
+      Value<String?> verifierName,
+      Value<DateTime?> verifiedAt,
+      Value<String?> verificationNotes,
       Value<int> version,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -2742,6 +5155,51 @@ class $$CachedTasksTableFilterComposer
 
   ColumnFilters<DateTime> get dueAt => $composableBuilder(
     column: $table.dueAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get siteId => $composableBuilder(
+    column: $table.siteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get siteName => $composableBuilder(
+    column: $table.siteName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get requiresPhotoProof => $composableBuilder(
+    column: $table.requiresPhotoProof,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get requiresSignature => $composableBuilder(
+    column: $table.requiresSignature,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get verifierName => $composableBuilder(
+    column: $table.verifierName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get verifiedAt => $composableBuilder(
+    column: $table.verifiedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get verificationNotes => $composableBuilder(
+    column: $table.verificationNotes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2810,6 +5268,51 @@ class $$CachedTasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get siteId => $composableBuilder(
+    column: $table.siteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get siteName => $composableBuilder(
+    column: $table.siteName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get requiresPhotoProof => $composableBuilder(
+    column: $table.requiresPhotoProof,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get requiresSignature => $composableBuilder(
+    column: $table.requiresSignature,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get verifierName => $composableBuilder(
+    column: $table.verifierName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get verifiedAt => $composableBuilder(
+    column: $table.verifiedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get verificationNotes => $composableBuilder(
+    column: $table.verificationNotes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get version => $composableBuilder(
     column: $table.version,
     builder: (column) => ColumnOrderings(column),
@@ -2865,6 +5368,47 @@ class $$CachedTasksTableAnnotationComposer
   GeneratedColumn<DateTime> get dueAt =>
       $composableBuilder(column: $table.dueAt, builder: (column) => column);
 
+  GeneratedColumn<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get siteId =>
+      $composableBuilder(column: $table.siteId, builder: (column) => column);
+
+  GeneratedColumn<String> get siteName =>
+      $composableBuilder(column: $table.siteName, builder: (column) => column);
+
+  GeneratedColumn<bool> get requiresPhotoProof => $composableBuilder(
+    column: $table.requiresPhotoProof,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get requiresSignature => $composableBuilder(
+    column: $table.requiresSignature,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get verifierName => $composableBuilder(
+    column: $table.verifierName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get verifiedAt => $composableBuilder(
+    column: $table.verifiedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get verificationNotes => $composableBuilder(
+    column: $table.verificationNotes,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
@@ -2914,6 +5458,15 @@ class $$CachedTasksTableTableManager
                 Value<String> simplifiedStatus = const Value.absent(),
                 Value<String> priority = const Value.absent(),
                 Value<DateTime?> dueAt = const Value.absent(),
+                Value<String?> customerId = const Value.absent(),
+                Value<String?> customerName = const Value.absent(),
+                Value<String?> siteId = const Value.absent(),
+                Value<String?> siteName = const Value.absent(),
+                Value<bool> requiresPhotoProof = const Value.absent(),
+                Value<bool> requiresSignature = const Value.absent(),
+                Value<String?> verifierName = const Value.absent(),
+                Value<DateTime?> verifiedAt = const Value.absent(),
+                Value<String?> verificationNotes = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -2927,6 +5480,15 @@ class $$CachedTasksTableTableManager
                 simplifiedStatus: simplifiedStatus,
                 priority: priority,
                 dueAt: dueAt,
+                customerId: customerId,
+                customerName: customerName,
+                siteId: siteId,
+                siteName: siteName,
+                requiresPhotoProof: requiresPhotoProof,
+                requiresSignature: requiresSignature,
+                verifierName: verifierName,
+                verifiedAt: verifiedAt,
+                verificationNotes: verificationNotes,
                 version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -2942,6 +5504,15 @@ class $$CachedTasksTableTableManager
                 required String simplifiedStatus,
                 required String priority,
                 Value<DateTime?> dueAt = const Value.absent(),
+                Value<String?> customerId = const Value.absent(),
+                Value<String?> customerName = const Value.absent(),
+                Value<String?> siteId = const Value.absent(),
+                Value<String?> siteName = const Value.absent(),
+                Value<bool> requiresPhotoProof = const Value.absent(),
+                Value<bool> requiresSignature = const Value.absent(),
+                Value<String?> verifierName = const Value.absent(),
+                Value<DateTime?> verifiedAt = const Value.absent(),
+                Value<String?> verificationNotes = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -2955,6 +5526,15 @@ class $$CachedTasksTableTableManager
                 simplifiedStatus: simplifiedStatus,
                 priority: priority,
                 dueAt: dueAt,
+                customerId: customerId,
+                customerName: customerName,
+                siteId: siteId,
+                siteName: siteName,
+                requiresPhotoProof: requiresPhotoProof,
+                requiresSignature: requiresSignature,
+                verifierName: verifierName,
+                verifiedAt: verifiedAt,
+                verificationNotes: verificationNotes,
                 version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -3480,6 +6060,879 @@ typedef $$CachedAttendanceTableProcessedTableManager =
       CachedAttendanceData,
       PrefetchHooks Function()
     >;
+typedef $$CachedVisitsTableCreateCompanionBuilder =
+    CachedVisitsCompanion Function({
+      required String id,
+      required String workspaceId,
+      required String customerId,
+      Value<String?> customerName,
+      Value<String?> siteId,
+      Value<String?> siteName,
+      Value<String?> taskId,
+      required String userId,
+      required String status,
+      Value<DateTime?> scheduledAt,
+      Value<DateTime?> checkInTime,
+      Value<double?> checkInLat,
+      Value<double?> checkInLng,
+      Value<DateTime?> checkOutTime,
+      Value<double?> checkOutLat,
+      Value<double?> checkOutLng,
+      Value<int?> durationMinutes,
+      Value<String?> notes,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$CachedVisitsTableUpdateCompanionBuilder =
+    CachedVisitsCompanion Function({
+      Value<String> id,
+      Value<String> workspaceId,
+      Value<String> customerId,
+      Value<String?> customerName,
+      Value<String?> siteId,
+      Value<String?> siteName,
+      Value<String?> taskId,
+      Value<String> userId,
+      Value<String> status,
+      Value<DateTime?> scheduledAt,
+      Value<DateTime?> checkInTime,
+      Value<double?> checkInLat,
+      Value<double?> checkInLng,
+      Value<DateTime?> checkOutTime,
+      Value<double?> checkOutLat,
+      Value<double?> checkOutLng,
+      Value<int?> durationMinutes,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$CachedVisitsTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedVisitsTable> {
+  $$CachedVisitsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get siteId => $composableBuilder(
+    column: $table.siteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get siteName => $composableBuilder(
+    column: $table.siteName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get checkInTime => $composableBuilder(
+    column: $table.checkInTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkInLat => $composableBuilder(
+    column: $table.checkInLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkInLng => $composableBuilder(
+    column: $table.checkInLng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get checkOutTime => $composableBuilder(
+    column: $table.checkOutTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkOutLat => $composableBuilder(
+    column: $table.checkOutLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkOutLng => $composableBuilder(
+    column: $table.checkOutLng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CachedVisitsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedVisitsTable> {
+  $$CachedVisitsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get siteId => $composableBuilder(
+    column: $table.siteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get siteName => $composableBuilder(
+    column: $table.siteName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get checkInTime => $composableBuilder(
+    column: $table.checkInTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkInLat => $composableBuilder(
+    column: $table.checkInLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkInLng => $composableBuilder(
+    column: $table.checkInLng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get checkOutTime => $composableBuilder(
+    column: $table.checkOutTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkOutLat => $composableBuilder(
+    column: $table.checkOutLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkOutLng => $composableBuilder(
+    column: $table.checkOutLng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CachedVisitsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedVisitsTable> {
+  $$CachedVisitsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get siteId =>
+      $composableBuilder(column: $table.siteId, builder: (column) => column);
+
+  GeneratedColumn<String> get siteName =>
+      $composableBuilder(column: $table.siteName, builder: (column) => column);
+
+  GeneratedColumn<String> get taskId =>
+      $composableBuilder(column: $table.taskId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get checkInTime => $composableBuilder(
+    column: $table.checkInTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get checkInLat => $composableBuilder(
+    column: $table.checkInLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get checkInLng => $composableBuilder(
+    column: $table.checkInLng,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get checkOutTime => $composableBuilder(
+    column: $table.checkOutTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get checkOutLat => $composableBuilder(
+    column: $table.checkOutLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get checkOutLng => $composableBuilder(
+    column: $table.checkOutLng,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$CachedVisitsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CachedVisitsTable,
+          CachedVisit,
+          $$CachedVisitsTableFilterComposer,
+          $$CachedVisitsTableOrderingComposer,
+          $$CachedVisitsTableAnnotationComposer,
+          $$CachedVisitsTableCreateCompanionBuilder,
+          $$CachedVisitsTableUpdateCompanionBuilder,
+          (
+            CachedVisit,
+            BaseReferences<_$AppDatabase, $CachedVisitsTable, CachedVisit>,
+          ),
+          CachedVisit,
+          PrefetchHooks Function()
+        > {
+  $$CachedVisitsTableTableManager(_$AppDatabase db, $CachedVisitsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedVisitsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedVisitsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedVisitsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> workspaceId = const Value.absent(),
+                Value<String> customerId = const Value.absent(),
+                Value<String?> customerName = const Value.absent(),
+                Value<String?> siteId = const Value.absent(),
+                Value<String?> siteName = const Value.absent(),
+                Value<String?> taskId = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> scheduledAt = const Value.absent(),
+                Value<DateTime?> checkInTime = const Value.absent(),
+                Value<double?> checkInLat = const Value.absent(),
+                Value<double?> checkInLng = const Value.absent(),
+                Value<DateTime?> checkOutTime = const Value.absent(),
+                Value<double?> checkOutLat = const Value.absent(),
+                Value<double?> checkOutLng = const Value.absent(),
+                Value<int?> durationMinutes = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CachedVisitsCompanion(
+                id: id,
+                workspaceId: workspaceId,
+                customerId: customerId,
+                customerName: customerName,
+                siteId: siteId,
+                siteName: siteName,
+                taskId: taskId,
+                userId: userId,
+                status: status,
+                scheduledAt: scheduledAt,
+                checkInTime: checkInTime,
+                checkInLat: checkInLat,
+                checkInLng: checkInLng,
+                checkOutTime: checkOutTime,
+                checkOutLat: checkOutLat,
+                checkOutLng: checkOutLng,
+                durationMinutes: durationMinutes,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String workspaceId,
+                required String customerId,
+                Value<String?> customerName = const Value.absent(),
+                Value<String?> siteId = const Value.absent(),
+                Value<String?> siteName = const Value.absent(),
+                Value<String?> taskId = const Value.absent(),
+                required String userId,
+                required String status,
+                Value<DateTime?> scheduledAt = const Value.absent(),
+                Value<DateTime?> checkInTime = const Value.absent(),
+                Value<double?> checkInLat = const Value.absent(),
+                Value<double?> checkInLng = const Value.absent(),
+                Value<DateTime?> checkOutTime = const Value.absent(),
+                Value<double?> checkOutLat = const Value.absent(),
+                Value<double?> checkOutLng = const Value.absent(),
+                Value<int?> durationMinutes = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CachedVisitsCompanion.insert(
+                id: id,
+                workspaceId: workspaceId,
+                customerId: customerId,
+                customerName: customerName,
+                siteId: siteId,
+                siteName: siteName,
+                taskId: taskId,
+                userId: userId,
+                status: status,
+                scheduledAt: scheduledAt,
+                checkInTime: checkInTime,
+                checkInLat: checkInLat,
+                checkInLng: checkInLng,
+                checkOutTime: checkOutTime,
+                checkOutLat: checkOutLat,
+                checkOutLng: checkOutLng,
+                durationMinutes: durationMinutes,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CachedVisitsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CachedVisitsTable,
+      CachedVisit,
+      $$CachedVisitsTableFilterComposer,
+      $$CachedVisitsTableOrderingComposer,
+      $$CachedVisitsTableAnnotationComposer,
+      $$CachedVisitsTableCreateCompanionBuilder,
+      $$CachedVisitsTableUpdateCompanionBuilder,
+      (
+        CachedVisit,
+        BaseReferences<_$AppDatabase, $CachedVisitsTable, CachedVisit>,
+      ),
+      CachedVisit,
+      PrefetchHooks Function()
+    >;
+typedef $$CachedTaskProofsTableCreateCompanionBuilder =
+    CachedTaskProofsCompanion Function({
+      required String id,
+      required String workspaceId,
+      required String taskId,
+      Value<String?> visitId,
+      required String userId,
+      required String proofType,
+      required String fileKey,
+      Value<String?> fileUrl,
+      Value<String?> signerName,
+      Value<String?> signerPhone,
+      Value<String?> watermarkJson,
+      Value<String?> notes,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$CachedTaskProofsTableUpdateCompanionBuilder =
+    CachedTaskProofsCompanion Function({
+      Value<String> id,
+      Value<String> workspaceId,
+      Value<String> taskId,
+      Value<String?> visitId,
+      Value<String> userId,
+      Value<String> proofType,
+      Value<String> fileKey,
+      Value<String?> fileUrl,
+      Value<String?> signerName,
+      Value<String?> signerPhone,
+      Value<String?> watermarkJson,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$CachedTaskProofsTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedTaskProofsTable> {
+  $$CachedTaskProofsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get visitId => $composableBuilder(
+    column: $table.visitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get proofType => $composableBuilder(
+    column: $table.proofType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileKey => $composableBuilder(
+    column: $table.fileKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileUrl => $composableBuilder(
+    column: $table.fileUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get signerName => $composableBuilder(
+    column: $table.signerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get signerPhone => $composableBuilder(
+    column: $table.signerPhone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get watermarkJson => $composableBuilder(
+    column: $table.watermarkJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CachedTaskProofsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedTaskProofsTable> {
+  $$CachedTaskProofsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get visitId => $composableBuilder(
+    column: $table.visitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get proofType => $composableBuilder(
+    column: $table.proofType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileKey => $composableBuilder(
+    column: $table.fileKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileUrl => $composableBuilder(
+    column: $table.fileUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get signerName => $composableBuilder(
+    column: $table.signerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get signerPhone => $composableBuilder(
+    column: $table.signerPhone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get watermarkJson => $composableBuilder(
+    column: $table.watermarkJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CachedTaskProofsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedTaskProofsTable> {
+  $$CachedTaskProofsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taskId =>
+      $composableBuilder(column: $table.taskId, builder: (column) => column);
+
+  GeneratedColumn<String> get visitId =>
+      $composableBuilder(column: $table.visitId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get proofType =>
+      $composableBuilder(column: $table.proofType, builder: (column) => column);
+
+  GeneratedColumn<String> get fileKey =>
+      $composableBuilder(column: $table.fileKey, builder: (column) => column);
+
+  GeneratedColumn<String> get fileUrl =>
+      $composableBuilder(column: $table.fileUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get signerName => $composableBuilder(
+    column: $table.signerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get signerPhone => $composableBuilder(
+    column: $table.signerPhone,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get watermarkJson => $composableBuilder(
+    column: $table.watermarkJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$CachedTaskProofsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CachedTaskProofsTable,
+          CachedTaskProof,
+          $$CachedTaskProofsTableFilterComposer,
+          $$CachedTaskProofsTableOrderingComposer,
+          $$CachedTaskProofsTableAnnotationComposer,
+          $$CachedTaskProofsTableCreateCompanionBuilder,
+          $$CachedTaskProofsTableUpdateCompanionBuilder,
+          (
+            CachedTaskProof,
+            BaseReferences<
+              _$AppDatabase,
+              $CachedTaskProofsTable,
+              CachedTaskProof
+            >,
+          ),
+          CachedTaskProof,
+          PrefetchHooks Function()
+        > {
+  $$CachedTaskProofsTableTableManager(
+    _$AppDatabase db,
+    $CachedTaskProofsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedTaskProofsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedTaskProofsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedTaskProofsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> workspaceId = const Value.absent(),
+                Value<String> taskId = const Value.absent(),
+                Value<String?> visitId = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> proofType = const Value.absent(),
+                Value<String> fileKey = const Value.absent(),
+                Value<String?> fileUrl = const Value.absent(),
+                Value<String?> signerName = const Value.absent(),
+                Value<String?> signerPhone = const Value.absent(),
+                Value<String?> watermarkJson = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CachedTaskProofsCompanion(
+                id: id,
+                workspaceId: workspaceId,
+                taskId: taskId,
+                visitId: visitId,
+                userId: userId,
+                proofType: proofType,
+                fileKey: fileKey,
+                fileUrl: fileUrl,
+                signerName: signerName,
+                signerPhone: signerPhone,
+                watermarkJson: watermarkJson,
+                notes: notes,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String workspaceId,
+                required String taskId,
+                Value<String?> visitId = const Value.absent(),
+                required String userId,
+                required String proofType,
+                required String fileKey,
+                Value<String?> fileUrl = const Value.absent(),
+                Value<String?> signerName = const Value.absent(),
+                Value<String?> signerPhone = const Value.absent(),
+                Value<String?> watermarkJson = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CachedTaskProofsCompanion.insert(
+                id: id,
+                workspaceId: workspaceId,
+                taskId: taskId,
+                visitId: visitId,
+                userId: userId,
+                proofType: proofType,
+                fileKey: fileKey,
+                fileUrl: fileUrl,
+                signerName: signerName,
+                signerPhone: signerPhone,
+                watermarkJson: watermarkJson,
+                notes: notes,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CachedTaskProofsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CachedTaskProofsTable,
+      CachedTaskProof,
+      $$CachedTaskProofsTableFilterComposer,
+      $$CachedTaskProofsTableOrderingComposer,
+      $$CachedTaskProofsTableAnnotationComposer,
+      $$CachedTaskProofsTableCreateCompanionBuilder,
+      $$CachedTaskProofsTableUpdateCompanionBuilder,
+      (
+        CachedTaskProof,
+        BaseReferences<_$AppDatabase, $CachedTaskProofsTable, CachedTaskProof>,
+      ),
+      CachedTaskProof,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3492,4 +6945,8 @@ class $AppDatabaseManager {
       $$CachedChecklistItemsTableTableManager(_db, _db.cachedChecklistItems);
   $$CachedAttendanceTableTableManager get cachedAttendance =>
       $$CachedAttendanceTableTableManager(_db, _db.cachedAttendance);
+  $$CachedVisitsTableTableManager get cachedVisits =>
+      $$CachedVisitsTableTableManager(_db, _db.cachedVisits);
+  $$CachedTaskProofsTableTableManager get cachedTaskProofs =>
+      $$CachedTaskProofsTableTableManager(_db, _db.cachedTaskProofs);
 }

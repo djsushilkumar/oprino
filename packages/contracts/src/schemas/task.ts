@@ -80,6 +80,16 @@ export const TaskResponseSchema = z
     simplifiedStatus: SimplifiedTaskStatusEnum.openapi({ example: 'TO_DO' }),
     priority: TaskPriorityEnum.openapi({ example: 'HIGH' }),
     dueAt: z.string().nullable().optional().openapi({ example: '2026-10-06T18:00:00.000Z' }),
+    customerId: z.string().uuid().nullable().optional().openapi({ example: 'c1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    customerName: z.string().nullable().optional().openapi({ example: 'Apex Facilities Management' }),
+    siteId: z.string().uuid().nullable().optional().openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    siteName: z.string().nullable().optional().openapi({ example: 'North Logistics Depot' }),
+    requiresSignature: z.boolean().optional().default(false).openapi({ example: true }),
+    requiresPhotoProof: z.boolean().optional().default(false).openapi({ example: true }),
+    verifiedBy: z.string().uuid().nullable().optional(),
+    verifierName: z.string().nullable().optional().openapi({ example: 'Supervisor Bob' }),
+    verifiedAt: z.string().nullable().optional(),
+    verificationNotes: z.string().nullable().optional(),
     createdBy: z.string().uuid().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     creatorName: z.string().optional().openapi({ example: 'Supervisor Bob' }),
     version: z.number().int().openapi({ example: 1 }),
@@ -98,6 +108,10 @@ export const CreateTaskRequestSchema = z
     description: z.string().optional().openapi({ example: 'Annual filter change and motor inspection' }),
     priority: TaskPriorityEnum.optional().default('MEDIUM').openapi({ example: 'HIGH' }),
     dueAt: z.string().optional().openapi({ example: '2026-10-06T18:00:00.000Z' }),
+    customerId: z.string().uuid().optional(),
+    siteId: z.string().uuid().optional(),
+    requiresSignature: z.boolean().optional().default(false),
+    requiresPhotoProof: z.boolean().optional().default(false),
     assigneeIds: z.array(z.string().uuid()).optional().openapi({ example: ['u1b2c3d4-e5f6-7890-abcd-ef1234567890'] }),
     checklist: z.array(z.string().min(1).max(255)).optional().openapi({ example: ['Check air filter', 'Inspect wiring'] }),
   })
@@ -109,6 +123,10 @@ export const UpdateTaskRequestSchema = z
     description: z.string().nullable().optional().openapi({ example: 'Updated task scope' }),
     priority: TaskPriorityEnum.optional().openapi({ example: 'URGENT' }),
     dueAt: z.string().nullable().optional().openapi({ example: '2026-10-07T12:00:00.000Z' }),
+    customerId: z.string().uuid().nullable().optional(),
+    siteId: z.string().uuid().nullable().optional(),
+    requiresSignature: z.boolean().optional(),
+    requiresPhotoProof: z.boolean().optional(),
     assigneeIds: z.array(z.string().uuid()).optional(),
     version: z.number().int().openapi({ example: 1 }),
   })
@@ -121,6 +139,13 @@ export const TaskTransitionRequestSchema = z
     comment: z.string().optional().openapi({ example: 'Accepted task and heading to truck' }),
   })
   .openapi('TaskTransitionRequest');
+
+export const VerifyTaskRequestSchema = z
+  .object({
+    action: z.enum(['VERIFY', 'REJECT']).openapi({ example: 'VERIFY' }),
+    notes: z.string().optional().openapi({ example: 'Photos confirmed, customer signature present.' }),
+  })
+  .openapi('VerifyTaskRequest');
 
 export const CreateChecklistItemRequestSchema = z
   .object({
@@ -156,7 +181,9 @@ export type TaskResponse = z.infer<typeof TaskResponseSchema>;
 export type CreateTaskRequest = z.infer<typeof CreateTaskRequestSchema>;
 export type UpdateTaskRequest = z.infer<typeof UpdateTaskRequestSchema>;
 export type TaskTransitionRequest = z.infer<typeof TaskTransitionRequestSchema>;
+export type VerifyTaskRequest = z.infer<typeof VerifyTaskRequestSchema>;
 export type CreateChecklistItemRequest = z.infer<typeof CreateChecklistItemRequestSchema>;
 export type UpdateChecklistItemRequest = z.infer<typeof UpdateChecklistItemRequestSchema>;
 export type CreateTaskCommentRequest = z.infer<typeof CreateTaskCommentRequestSchema>;
 export type ListTasksResponse = z.infer<typeof ListTasksResponseSchema>;
+

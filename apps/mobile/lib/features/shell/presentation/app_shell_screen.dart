@@ -7,6 +7,7 @@ import '../../../core/database/database.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
 import '../../attendance/presentation/attendance_view.dart';
 import '../../tasks/presentation/tasks_view.dart';
+import '../../visits/presentation/visits_view.dart';
 
 class AppShellScreen extends ConsumerStatefulWidget {
   const AppShellScreen({super.key});
@@ -190,7 +191,10 @@ class _AppShellScreenState extends ConsumerState<AppShellScreen> {
           // Tab 1: Tasks
           const TasksView(),
 
-          // Tab 2: Profile & Workspace Governance
+          // Tab 2: Customer Site Visits
+          const VisitsView(),
+
+          // Tab 3: Profile & Workspace Governance
           SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -488,6 +492,7 @@ class _AppShellScreenState extends ConsumerState<AppShellScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         selectedItemColor: OprinoColors.cobalt,
@@ -500,6 +505,11 @@ class _AppShellScreenState extends ConsumerState<AppShellScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment),
             label: 'Tasks',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.location_on_outlined),
+            activeIcon: Icon(Icons.location_on),
+            label: 'Visits',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

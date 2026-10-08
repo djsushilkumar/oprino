@@ -768,6 +768,16 @@ class TaskResponse {
   final String simplifiedStatus;
   final String priority;
   final DateTime? dueAt;
+  final String? customerId;
+  final String? customerName;
+  final String? siteId;
+  final String? siteName;
+  final bool requiresSignature;
+  final bool requiresPhotoProof;
+  final String? verifiedBy;
+  final String? verifierName;
+  final DateTime? verifiedAt;
+  final String? verificationNotes;
   final String createdBy;
   final String? creatorName;
   final int version;
@@ -787,6 +797,16 @@ class TaskResponse {
     required this.simplifiedStatus,
     required this.priority,
     this.dueAt,
+    this.customerId,
+    this.customerName,
+    this.siteId,
+    this.siteName,
+    this.requiresSignature = false,
+    this.requiresPhotoProof = false,
+    this.verifiedBy,
+    this.verifierName,
+    this.verifiedAt,
+    this.verificationNotes,
     required this.createdBy,
     this.creatorName,
     required this.version,
@@ -808,6 +828,16 @@ class TaskResponse {
       simplifiedStatus: json['simplifiedStatus'] as String? ?? 'TO_DO',
       priority: json['priority'] as String? ?? 'MEDIUM',
       dueAt: json['dueAt'] != null ? DateTime.parse(json['dueAt'] as String) : null,
+      customerId: json['customerId'] as String?,
+      customerName: json['customerName'] as String?,
+      siteId: json['siteId'] as String?,
+      siteName: json['siteName'] as String?,
+      requiresSignature: json['requiresSignature'] as bool? ?? false,
+      requiresPhotoProof: json['requiresPhotoProof'] as bool? ?? false,
+      verifiedBy: json['verifiedBy'] as String?,
+      verifierName: json['verifierName'] as String?,
+      verifiedAt: json['verifiedAt'] != null ? DateTime.parse(json['verifiedAt'] as String) : null,
+      verificationNotes: json['verificationNotes'] as String?,
       createdBy: json['createdBy'] as String,
       creatorName: json['creatorName'] as String?,
       version: json['version'] as int? ?? 1,
@@ -837,6 +867,16 @@ class TaskResponse {
         'simplifiedStatus': simplifiedStatus,
         'priority': priority,
         if (dueAt != null) 'dueAt': dueAt!.toIso8601String(),
+        if (customerId != null) 'customerId': customerId,
+        if (customerName != null) 'customerName': customerName,
+        if (siteId != null) 'siteId': siteId,
+        if (siteName != null) 'siteName': siteName,
+        'requiresSignature': requiresSignature,
+        'requiresPhotoProof': requiresPhotoProof,
+        if (verifiedBy != null) 'verifiedBy': verifiedBy,
+        if (verifierName != null) 'verifierName': verifierName,
+        if (verifiedAt != null) 'verifiedAt': verifiedAt!.toIso8601String(),
+        if (verificationNotes != null) 'verificationNotes': verificationNotes,
         'createdBy': createdBy,
         if (creatorName != null) 'creatorName': creatorName,
         'version': version,
@@ -846,6 +886,25 @@ class TaskResponse {
         'activities': activities.map((e) => e.toJson()).toList(),
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
+      };
+}
+
+class VerifyTaskRequest {
+  final String action;
+  final String? notes;
+
+  const VerifyTaskRequest({required this.action, this.notes});
+
+  factory VerifyTaskRequest.fromJson(Map<String, dynamic> json) {
+    return VerifyTaskRequest(
+      action: json['action'] as String,
+      notes: json['notes'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'action': action,
+        if (notes != null) 'notes': notes,
       };
 }
 
@@ -1540,7 +1599,440 @@ class CheckGeofenceProximityResponse {
 `;
 fs.writeFileSync(path.resolve(modelDir, 'telemetry_models.dart'), telemetryModelsContent, 'utf-8');
 
-// 11. Generate ApiClient
+// 11. Customer Models (Phase 03)
+const customerModelsContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
+// Generated from OpenAPI 3.1 specification by @oprino/contracts
+
+class Customer {
+  final String id;
+  final String workspaceId;
+  final String name;
+  final String? companyName;
+  final String? email;
+  final String? phone;
+  final String? notes;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const Customer({
+    required this.id,
+    required this.workspaceId,
+    required this.name,
+    this.companyName,
+    this.email,
+    this.phone,
+    this.notes,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Customer.fromJson(Map<String, dynamic> json) {
+    return Customer(
+      id: json['id'] as String,
+      workspaceId: json['workspaceId'] as String,
+      name: json['name'] as String,
+      companyName: json['companyName'] as String?,
+      email: json['email'] as String?,
+      phone: json['phone'] as String?,
+      notes: json['notes'] as String?,
+      isActive: json['isActive'] as bool? ?? true,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'workspaceId': workspaceId,
+        'name': name,
+        if (companyName != null) 'companyName': companyName,
+        if (email != null) 'email': email,
+        if (phone != null) 'phone': phone,
+        if (notes != null) 'notes': notes,
+        'isActive': isActive,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+}
+
+class ListCustomersResponse {
+  final List<Customer> customers;
+  final int total;
+
+  const ListCustomersResponse({required this.customers, required this.total});
+
+  factory ListCustomersResponse.fromJson(Map<String, dynamic> json) {
+    return ListCustomersResponse(
+      customers: (json['customers'] as List<dynamic>)
+          .map((e) => Customer.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: json['total'] as int? ?? (json['customers'] as List<dynamic>).length,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'customers': customers.map((c) => c.toJson()).toList(),
+        'total': total,
+      };
+}
+
+class CustomerSite {
+  final String id;
+  final String workspaceId;
+  final String customerId;
+  final String? customerName;
+  final String name;
+  final String address;
+  final double? latitude;
+  final double? longitude;
+  final double geofenceRadiusMeters;
+  final String? contactName;
+  final String? contactPhone;
+  final String? notes;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const CustomerSite({
+    required this.id,
+    required this.workspaceId,
+    required this.customerId,
+    this.customerName,
+    required this.name,
+    required this.address,
+    this.latitude,
+    this.longitude,
+    this.geofenceRadiusMeters = 100.0,
+    this.contactName,
+    this.contactPhone,
+    this.notes,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory CustomerSite.fromJson(Map<String, dynamic> json) {
+    return CustomerSite(
+      id: json['id'] as String,
+      workspaceId: json['workspaceId'] as String,
+      customerId: json['customerId'] as String,
+      customerName: json['customerName'] as String?,
+      name: json['name'] as String,
+      address: json['address'] as String,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      geofenceRadiusMeters: (json['geofenceRadiusMeters'] as num?)?.toDouble() ?? 100.0,
+      contactName: json['contactName'] as String?,
+      contactPhone: json['contactPhone'] as String?,
+      notes: json['notes'] as String?,
+      isActive: json['isActive'] as bool? ?? true,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'workspaceId': workspaceId,
+        'customerId': customerId,
+        if (customerName != null) 'customerName': customerName,
+        'name': name,
+        'address': address,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        'geofenceRadiusMeters': geofenceRadiusMeters,
+        if (contactName != null) 'contactName': contactName,
+        if (contactPhone != null) 'contactPhone': contactPhone,
+        if (notes != null) 'notes': notes,
+        'isActive': isActive,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+}
+
+class ListCustomerSitesResponse {
+  final List<CustomerSite> sites;
+  final int total;
+
+  const ListCustomerSitesResponse({required this.sites, required this.total});
+
+  factory ListCustomerSitesResponse.fromJson(Map<String, dynamic> json) {
+    return ListCustomerSitesResponse(
+      sites: (json['sites'] as List<dynamic>)
+          .map((e) => CustomerSite.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: json['total'] as int? ?? (json['sites'] as List<dynamic>).length,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'sites': sites.map((s) => s.toJson()).toList(),
+        'total': total,
+      };
+}
+`;
+fs.writeFileSync(path.resolve(modelDir, 'customer_models.dart'), customerModelsContent, 'utf-8');
+
+// 12. Visit Models (Phase 03)
+const visitModelsContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
+// Generated from OpenAPI 3.1 specification by @oprino/contracts
+
+class Visit {
+  final String id;
+  final String workspaceId;
+  final String customerId;
+  final String? customerName;
+  final String? siteId;
+  final String? siteName;
+  final String? taskId;
+  final String? taskTitle;
+  final String userId;
+  final String? userName;
+  final String status;
+  final DateTime? plannedAt;
+  final DateTime? checkInTime;
+  final DateTime? checkOutTime;
+  final double? checkInLatitude;
+  final double? checkInLongitude;
+  final double? checkOutLatitude;
+  final double? checkOutLongitude;
+  final int durationMinutes;
+  final String? notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const Visit({
+    required this.id,
+    required this.workspaceId,
+    required this.customerId,
+    this.customerName,
+    this.siteId,
+    this.siteName,
+    this.taskId,
+    this.taskTitle,
+    required this.userId,
+    this.userName,
+    required this.status,
+    this.plannedAt,
+    this.checkInTime,
+    this.checkOutTime,
+    this.checkInLatitude,
+    this.checkInLongitude,
+    this.checkOutLatitude,
+    this.checkOutLongitude,
+    this.durationMinutes = 0,
+    this.notes,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Visit.fromJson(Map<String, dynamic> json) {
+    return Visit(
+      id: json['id'] as String,
+      workspaceId: json['workspaceId'] as String,
+      customerId: json['customerId'] as String,
+      customerName: json['customerName'] as String?,
+      siteId: json['siteId'] as String?,
+      siteName: json['siteName'] as String?,
+      taskId: json['taskId'] as String?,
+      taskTitle: json['taskTitle'] as String?,
+      userId: json['userId'] as String,
+      userName: json['userName'] as String?,
+      status: json['status'] as String,
+      plannedAt: json['plannedAt'] != null ? DateTime.parse(json['plannedAt'] as String) : null,
+      checkInTime: json['checkInTime'] != null ? DateTime.parse(json['checkInTime'] as String) : null,
+      checkOutTime: json['checkOutTime'] != null ? DateTime.parse(json['checkOutTime'] as String) : null,
+      checkInLatitude: (json['checkInLatitude'] as num?)?.toDouble(),
+      checkInLongitude: (json['checkInLongitude'] as num?)?.toDouble(),
+      checkOutLatitude: (json['checkOutLatitude'] as num?)?.toDouble(),
+      checkOutLongitude: (json['checkOutLongitude'] as num?)?.toDouble(),
+      durationMinutes: json['durationMinutes'] as int? ?? 0,
+      notes: json['notes'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'workspaceId': workspaceId,
+        'customerId': customerId,
+        if (customerName != null) 'customerName': customerName,
+        if (siteId != null) 'siteId': siteId,
+        if (siteName != null) 'siteName': siteName,
+        if (taskId != null) 'taskId': taskId,
+        if (taskTitle != null) 'taskTitle': taskTitle,
+        'userId': userId,
+        if (userName != null) 'userName': userName,
+        'status': status,
+        if (plannedAt != null) 'plannedAt': plannedAt!.toIso8601String(),
+        if (checkInTime != null) 'checkInTime': checkInTime!.toIso8601String(),
+        if (checkOutTime != null) 'checkOutTime': checkOutTime!.toIso8601String(),
+        if (checkInLatitude != null) 'checkInLatitude': checkInLatitude,
+        if (checkInLongitude != null) 'checkInLongitude': checkInLongitude,
+        if (checkOutLatitude != null) 'checkOutLatitude': checkOutLatitude,
+        if (checkOutLongitude != null) 'checkOutLongitude': checkOutLongitude,
+        'durationMinutes': durationMinutes,
+        if (notes != null) 'notes': notes,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+}
+
+class ListVisitsResponse {
+  final List<Visit> visits;
+  final int total;
+
+  const ListVisitsResponse({required this.visits, required this.total});
+
+  factory ListVisitsResponse.fromJson(Map<String, dynamic> json) {
+    return ListVisitsResponse(
+      visits: (json['visits'] as List<dynamic>)
+          .map((e) => Visit.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: json['total'] as int? ?? (json['visits'] as List<dynamic>).length,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'visits': visits.map((v) => v.toJson()).toList(),
+        'total': total,
+      };
+}
+`;
+fs.writeFileSync(path.resolve(modelDir, 'visit_models.dart'), visitModelsContent, 'utf-8');
+
+// 13. Proof Models (Phase 03)
+const proofModelsContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
+// Generated from OpenAPI 3.1 specification by @oprino/contracts
+
+class TaskProof {
+  final String id;
+  final String workspaceId;
+  final String taskId;
+  final String? visitId;
+  final String userId;
+  final String? userName;
+  final String proofType;
+  final String fileKey;
+  final String? fileUrl;
+  final int? fileSizeBytes;
+  final String? mimeType;
+  final String? signerName;
+  final String? signerPhone;
+  final Map<String, dynamic>? watermarkMetadata;
+  final String? notes;
+  final DateTime createdAt;
+
+  const TaskProof({
+    required this.id,
+    required this.workspaceId,
+    required this.taskId,
+    this.visitId,
+    required this.userId,
+    this.userName,
+    required this.proofType,
+    required this.fileKey,
+    this.fileUrl,
+    this.fileSizeBytes,
+    this.mimeType,
+    this.signerName,
+    this.signerPhone,
+    this.watermarkMetadata,
+    this.notes,
+    required this.createdAt,
+  });
+
+  factory TaskProof.fromJson(Map<String, dynamic> json) {
+    return TaskProof(
+      id: json['id'] as String,
+      workspaceId: json['workspaceId'] as String,
+      taskId: json['taskId'] as String,
+      visitId: json['visitId'] as String?,
+      userId: json['userId'] as String,
+      userName: json['userName'] as String?,
+      proofType: json['proofType'] as String,
+      fileKey: json['fileKey'] as String,
+      fileUrl: json['fileUrl'] as String?,
+      fileSizeBytes: json['fileSizeBytes'] as int?,
+      mimeType: json['mimeType'] as String?,
+      signerName: json['signerName'] as String?,
+      signerPhone: json['signerPhone'] as String?,
+      watermarkMetadata: json['watermarkMetadata'] as Map<String, dynamic>?,
+      notes: json['notes'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'workspaceId': workspaceId,
+        'taskId': taskId,
+        if (visitId != null) 'visitId': visitId,
+        'userId': userId,
+        if (userName != null) 'userName': userName,
+        'proofType': proofType,
+        'fileKey': fileKey,
+        if (fileUrl != null) 'fileUrl': fileUrl,
+        if (fileSizeBytes != null) 'fileSizeBytes': fileSizeBytes,
+        if (mimeType != null) 'mimeType': mimeType,
+        if (signerName != null) 'signerName': signerName,
+        if (signerPhone != null) 'signerPhone': signerPhone,
+        if (watermarkMetadata != null) 'watermarkMetadata': watermarkMetadata,
+        if (notes != null) 'notes': notes,
+        'createdAt': createdAt.toIso8601String(),
+      };
+}
+
+class MediaUploadUrlResponse {
+  final String uploadUrl;
+  final String fileKey;
+  final int expiresInSeconds;
+
+  const MediaUploadUrlResponse({
+    required this.uploadUrl,
+    required this.fileKey,
+    required this.expiresInSeconds,
+  });
+
+  factory MediaUploadUrlResponse.fromJson(Map<String, dynamic> json) {
+    return MediaUploadUrlResponse(
+      uploadUrl: json['uploadUrl'] as String,
+      fileKey: json['fileKey'] as String,
+      expiresInSeconds: json['expiresInSeconds'] as int? ?? 600,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'uploadUrl': uploadUrl,
+        'fileKey': fileKey,
+        'expiresInSeconds': expiresInSeconds,
+      };
+}
+
+class ListTaskProofsResponse {
+  final List<TaskProof> proofs;
+
+  const ListTaskProofsResponse({required this.proofs});
+
+  factory ListTaskProofsResponse.fromJson(Map<String, dynamic> json) {
+    return ListTaskProofsResponse(
+      proofs: (json['proofs'] as List<dynamic>)
+          .map((e) => TaskProof.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'proofs': proofs.map((p) => p.toJson()).toList(),
+      };
+}
+`;
+fs.writeFileSync(path.resolve(modelDir, 'proof_models.dart'), proofModelsContent, 'utf-8');
+
+// 14. Generate ApiClient
 const apiClientContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
 // Generated from OpenAPI 3.1 specification by @oprino/contracts
 
@@ -1555,6 +2047,9 @@ import 'model/device_models.dart';
 import 'model/task_models.dart';
 import 'model/attendance_models.dart';
 import 'model/telemetry_models.dart';
+import 'model/customer_models.dart';
+import 'model/visit_models.dart';
+import 'model/proof_models.dart';
 
 class OprinoApiClient {
   final Dio dio;
@@ -2152,6 +2647,287 @@ class OprinoApiClient {
     }
   }
 
+  // --- Customers & Customer Sites (Phase 03) ---
+
+  Future<Customer> createCustomer({
+    required String name,
+    String? companyName,
+    String? email,
+    String? phone,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/customers',
+        data: {
+          'name': name,
+          if (companyName != null) 'companyName': companyName,
+          if (email != null) 'email': email,
+          if (phone != null) 'phone': phone,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return Customer.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListCustomersResponse> listCustomers({int page = 1, int limit = 50}) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/customers',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+      return ListCustomersResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<CustomerSite> createCustomerSite({
+    required String customerId,
+    required String name,
+    required String address,
+    double? latitude,
+    double? longitude,
+    double geofenceRadiusMeters = 100.0,
+    String? contactName,
+    String? contactPhone,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/customers/$customerId/sites',
+        data: {
+          'name': name,
+          'address': address,
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
+          'geofenceRadiusMeters': geofenceRadiusMeters,
+          if (contactName != null) 'contactName': contactName,
+          if (contactPhone != null) 'contactPhone': contactPhone,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return CustomerSite.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListCustomerSitesResponse> listCustomerSites({required String customerId}) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/customers/$customerId/sites',
+      );
+      return ListCustomerSitesResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Visits (Phase 03) ---
+
+  Future<Visit> createVisit({
+    required String customerId,
+    String? siteId,
+    String? taskId,
+    String? userId,
+    String? plannedAt,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/visits',
+        data: {
+          'customerId': customerId,
+          if (siteId != null) 'siteId': siteId,
+          if (taskId != null) 'taskId': taskId,
+          if (userId != null) 'userId': userId,
+          if (plannedAt != null) 'plannedAt': plannedAt,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return Visit.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListVisitsResponse> listVisits({
+    String? status,
+    String? userId,
+    String? customerId,
+  }) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/visits',
+        queryParameters: {
+          if (status != null) 'status': status,
+          if (userId != null) 'userId': userId,
+          if (customerId != null) 'customerId': customerId,
+        },
+      );
+      return ListVisitsResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<Visit> checkInVisit({
+    required String visitId,
+    required double latitude,
+    required double longitude,
+    double? accuracy,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/visits/$visitId/check-in',
+        data: {
+          'latitude': latitude,
+          'longitude': longitude,
+          if (accuracy != null) 'accuracy': accuracy,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return Visit.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<Visit> checkOutVisit({
+    required String visitId,
+    required double latitude,
+    required double longitude,
+    double? accuracy,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/visits/$visitId/check-out',
+        data: {
+          'latitude': latitude,
+          'longitude': longitude,
+          if (accuracy != null) 'accuracy': accuracy,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return Visit.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Proof of Work & Media (Phase 03) ---
+
+  Future<MediaUploadUrlResponse> requestMediaUploadUrl({
+    required String taskId,
+    String? visitId,
+    required String proofType,
+    required String fileName,
+    required String mimeType,
+    int? fileSizeBytes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/upload-url',
+        data: {
+          'taskId': taskId,
+          if (visitId != null) 'visitId': visitId,
+          'proofType': proofType,
+          'fileName': fileName,
+          'mimeType': mimeType,
+          if (fileSizeBytes != null) 'fileSizeBytes': fileSizeBytes,
+        },
+      );
+      return MediaUploadUrlResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskProof> confirmMediaUpload({
+    required String taskId,
+    String? visitId,
+    required String proofType,
+    required String fileKey,
+    int? fileSizeBytes,
+    String? mimeType,
+    String? signerName,
+    String? signerPhone,
+    Map<String, dynamic>? watermarkMetadata,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/confirm',
+        data: {
+          'taskId': taskId,
+          if (visitId != null) 'visitId': visitId,
+          'proofType': proofType,
+          'fileKey': fileKey,
+          if (fileSizeBytes != null) 'fileSizeBytes': fileSizeBytes,
+          if (mimeType != null) 'mimeType': mimeType,
+          if (signerName != null) 'signerName': signerName,
+          if (signerPhone != null) 'signerPhone': signerPhone,
+          if (watermarkMetadata != null) 'watermarkMetadata': watermarkMetadata,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return TaskProof.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListTaskProofsResponse> listTaskProofs({required String taskId}) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/proofs',
+      );
+      return ListTaskProofsResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskResponse> verifyTask({
+    required String taskId,
+    required String action,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/verify',
+        data: {
+          'action': action,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
   void _handleDioException(DioException e) {
     if (e.response?.data is Map<String, dynamic>) {
       throw ApiError.fromJson(e.response!.data as Map<String, dynamic>);
@@ -2161,7 +2937,7 @@ class OprinoApiClient {
 `;
 fs.writeFileSync(path.resolve(srcDir, 'api_client.dart'), apiClientContent, 'utf-8');
 
-// 12. Generate Root Library Export
+// 15. Generate Root Library Export
 const oprinoApiContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
 // Generated from OpenAPI 3.1 specification by @oprino/contracts
 
@@ -2178,8 +2954,12 @@ export 'src/model/device_models.dart';
 export 'src/model/task_models.dart';
 export 'src/model/attendance_models.dart';
 export 'src/model/telemetry_models.dart';
+export 'src/model/customer_models.dart';
+export 'src/model/visit_models.dart';
+export 'src/model/proof_models.dart';
 `;
 fs.writeFileSync(path.resolve(libDir, 'oprino_api.dart'), oprinoApiContent, 'utf-8');
 
 console.log(`✓ Generated Dart API client from OpenAPI ${spec.openapi} into generated/dart-api`);
+
 

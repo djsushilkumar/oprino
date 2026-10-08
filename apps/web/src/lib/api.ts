@@ -35,6 +35,23 @@ import {
   type ListGeofencesResponse,
   type CheckGeofenceProximityRequest,
   type CheckGeofenceProximityResponse,
+  // Phase 03 Field Operations, Visits & Proofs
+  type Customer,
+  type CreateCustomerRequest,
+  type UpdateCustomerRequest,
+  type ListCustomersResponse,
+  type CustomerSite,
+  type CreateCustomerSiteRequest,
+  type UpdateCustomerSiteRequest,
+  type ListCustomerSitesResponse,
+  type Visit,
+  type CreateVisitRequest,
+  type VisitCheckInRequest,
+  type VisitCheckOutRequest,
+  type ListVisitsResponse,
+  type TaskProof,
+  type ListTaskProofsResponse,
+  type VerifyTaskRequest,
 } from '@oprino/contracts';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -300,6 +317,116 @@ export const webApi = {
     body: CheckGeofenceProximityRequest,
   ): Promise<CheckGeofenceProximityResponse> {
     return request<CheckGeofenceProximityResponse>('/v1/geofences/validate-proximity', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  // --- Phase 03: Customers & Customer Sites ---
+  async listCustomers(search?: string): Promise<ListCustomersResponse> {
+    const query = search ? `?search=${encodeURIComponent(search)}` : '';
+    return request<ListCustomersResponse>(`/v1/customers${query}`, { method: 'GET' });
+  },
+
+  async createCustomer(body: CreateCustomerRequest): Promise<Customer> {
+    return request<Customer>('/v1/customers', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async getCustomer(id: string): Promise<Customer> {
+    return request<Customer>(`/v1/customers/${id}`, { method: 'GET' });
+  },
+
+  async updateCustomer(id: string, body: UpdateCustomerRequest): Promise<Customer> {
+    return request<Customer>(`/v1/customers/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async listCustomerSites(customerId: string): Promise<ListCustomerSitesResponse> {
+    return request<ListCustomerSitesResponse>(`/v1/customers/${customerId}/sites`, {
+      method: 'GET',
+    });
+  },
+
+  async createCustomerSite(
+    customerId: string,
+    body: CreateCustomerSiteRequest,
+  ): Promise<CustomerSite> {
+    return request<CustomerSite>(`/v1/customers/${customerId}/sites`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async getCustomerSite(customerId: string, siteId: string): Promise<CustomerSite> {
+    return request<CustomerSite>(`/v1/customers/${customerId}/sites/${siteId}`, {
+      method: 'GET',
+    });
+  },
+
+  async updateCustomerSite(
+    customerId: string,
+    siteId: string,
+    body: UpdateCustomerSiteRequest,
+  ): Promise<CustomerSite> {
+    return request<CustomerSite>(`/v1/customers/${customerId}/sites/${siteId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
+
+  // --- Phase 03: Field Visits ---
+  async listVisits(filters?: {
+    status?: string;
+    userId?: string;
+    customerId?: string;
+    date?: string;
+  }): Promise<ListVisitsResponse> {
+    const params = new URLSearchParams();
+    if (filters?.status) params.set('status', filters.status);
+    if (filters?.userId) params.set('userId', filters.userId);
+    if (filters?.customerId) params.set('customerId', filters.customerId);
+    if (filters?.date) params.set('date', filters.date);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request<ListVisitsResponse>(`/v1/visits${qs}`, { method: 'GET' });
+  },
+
+  async createVisit(body: CreateVisitRequest): Promise<Visit> {
+    return request<Visit>('/v1/visits', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async getVisit(id: string): Promise<Visit> {
+    return request<Visit>(`/v1/visits/${id}`, { method: 'GET' });
+  },
+
+  async checkInVisit(id: string, body: VisitCheckInRequest): Promise<Visit> {
+    return request<Visit>(`/v1/visits/${id}/check-in`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async checkOutVisit(id: string, body: VisitCheckOutRequest): Promise<Visit> {
+    return request<Visit>(`/v1/visits/${id}/check-out`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  // --- Phase 03: Proof of Work & Verification ---
+  async listTaskProofs(taskId: string): Promise<ListTaskProofsResponse> {
+    return request<ListTaskProofsResponse>(`/v1/tasks/${taskId}/proofs`, { method: 'GET' });
+  },
+
+  async verifyTask(taskId: string, body: VerifyTaskRequest): Promise<TaskResponse> {
+    return request<TaskResponse>(`/v1/tasks/${taskId}/verify`, {
       method: 'POST',
       body: JSON.stringify(body),
     });

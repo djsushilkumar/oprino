@@ -20,6 +20,12 @@ import { taskRoutes } from './routes/tasks.js';
 import { attendanceRoutes } from './routes/attendance.js';
 import { telemetryRoutes } from './routes/telemetry.js';
 import { geofencesRoutes } from './routes/geofences.js';
+import { customerRoutes } from './routes/customers.js';
+import { visitRoutes } from './routes/visits.js';
+import { mediaRoutes } from './routes/media.js';
+import { CustomerService } from './services/customer.service.js';
+import { VisitService } from './services/visit.service.js';
+import { MediaService } from './services/media.service.js';
 import { TelemetryService } from './services/telemetry.service.js';
 import { PubSubService } from './services/pubsub.service.js';
 
@@ -36,6 +42,9 @@ export function buildServer(options?: {
   taskService: TaskService;
   attendanceService: AttendanceService;
   telemetryService: TelemetryService;
+  customerService: CustomerService;
+  visitService: VisitService;
+  mediaService: MediaService;
   pubsub: PubSubService;
 } {
   const env = validateEnv(options?.env);
@@ -66,6 +75,9 @@ export function buildServer(options?: {
   const taskService = new TaskService(dbClient.db);
   const attendanceService = new AttendanceService(dbClient.db);
   const telemetryService = new TelemetryService(dbClient.db, pubsub);
+  const customerService = new CustomerService(dbClient.db);
+  const visitService = new VisitService(dbClient.db);
+  const mediaService = new MediaService(dbClient.db, env.API_PUBLIC_URL);
   const authMiddleware = createAuthMiddleware(auth, deviceService, dbClient.db);
 
   // Close connections on Fastify shutdown
@@ -101,12 +113,17 @@ export function buildServer(options?: {
   app.register(deviceRoutes, { deviceService, authMiddleware });
 
   // Phase 02B Core Operational Routes
-  app.register(taskRoutes, { taskService, authMiddleware });
+  app.register(taskRoutes, { taskService, mediaService, authMiddleware });
   app.register(attendanceRoutes, { attendanceService, authMiddleware });
 
   // Phase 02C Location Telemetry & Geofencing Routes
   app.register(telemetryRoutes, { telemetryService, pubsub, authMiddleware });
   app.register(geofencesRoutes, { telemetryService, authMiddleware });
+
+  // Phase 03 Field Operations, Visits & Media Routes
+  app.register(customerRoutes, { customerService, authMiddleware });
+  app.register(visitRoutes, { visitService, authMiddleware });
+  app.register(mediaRoutes, { mediaService, authMiddleware });
 
   return {
     app,
@@ -117,6 +134,9 @@ export function buildServer(options?: {
     taskService,
     attendanceService,
     telemetryService,
+    customerService,
+    visitService,
+    mediaService,
     pubsub,
   };
 }

@@ -12,6 +12,9 @@ import 'model/device_models.dart';
 import 'model/task_models.dart';
 import 'model/attendance_models.dart';
 import 'model/telemetry_models.dart';
+import 'model/customer_models.dart';
+import 'model/visit_models.dart';
+import 'model/proof_models.dart';
 
 class OprinoApiClient {
   final Dio dio;
@@ -603,6 +606,287 @@ class OprinoApiClient {
         },
       );
       return CheckGeofenceProximityResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Customers & Customer Sites (Phase 03) ---
+
+  Future<Customer> createCustomer({
+    required String name,
+    String? companyName,
+    String? email,
+    String? phone,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/customers',
+        data: {
+          'name': name,
+          if (companyName != null) 'companyName': companyName,
+          if (email != null) 'email': email,
+          if (phone != null) 'phone': phone,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return Customer.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListCustomersResponse> listCustomers({int page = 1, int limit = 50}) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/customers',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+      return ListCustomersResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<CustomerSite> createCustomerSite({
+    required String customerId,
+    required String name,
+    required String address,
+    double? latitude,
+    double? longitude,
+    double geofenceRadiusMeters = 100.0,
+    String? contactName,
+    String? contactPhone,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/customers/$customerId/sites',
+        data: {
+          'name': name,
+          'address': address,
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
+          'geofenceRadiusMeters': geofenceRadiusMeters,
+          if (contactName != null) 'contactName': contactName,
+          if (contactPhone != null) 'contactPhone': contactPhone,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return CustomerSite.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListCustomerSitesResponse> listCustomerSites({required String customerId}) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/customers/$customerId/sites',
+      );
+      return ListCustomerSitesResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Visits (Phase 03) ---
+
+  Future<Visit> createVisit({
+    required String customerId,
+    String? siteId,
+    String? taskId,
+    String? userId,
+    String? plannedAt,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/visits',
+        data: {
+          'customerId': customerId,
+          if (siteId != null) 'siteId': siteId,
+          if (taskId != null) 'taskId': taskId,
+          if (userId != null) 'userId': userId,
+          if (plannedAt != null) 'plannedAt': plannedAt,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return Visit.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListVisitsResponse> listVisits({
+    String? status,
+    String? userId,
+    String? customerId,
+  }) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/visits',
+        queryParameters: {
+          if (status != null) 'status': status,
+          if (userId != null) 'userId': userId,
+          if (customerId != null) 'customerId': customerId,
+        },
+      );
+      return ListVisitsResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<Visit> checkInVisit({
+    required String visitId,
+    required double latitude,
+    required double longitude,
+    double? accuracy,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/visits/$visitId/check-in',
+        data: {
+          'latitude': latitude,
+          'longitude': longitude,
+          if (accuracy != null) 'accuracy': accuracy,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return Visit.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<Visit> checkOutVisit({
+    required String visitId,
+    required double latitude,
+    required double longitude,
+    double? accuracy,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/visits/$visitId/check-out',
+        data: {
+          'latitude': latitude,
+          'longitude': longitude,
+          if (accuracy != null) 'accuracy': accuracy,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return Visit.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Proof of Work & Media (Phase 03) ---
+
+  Future<MediaUploadUrlResponse> requestMediaUploadUrl({
+    required String taskId,
+    String? visitId,
+    required String proofType,
+    required String fileName,
+    required String mimeType,
+    int? fileSizeBytes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/upload-url',
+        data: {
+          'taskId': taskId,
+          if (visitId != null) 'visitId': visitId,
+          'proofType': proofType,
+          'fileName': fileName,
+          'mimeType': mimeType,
+          if (fileSizeBytes != null) 'fileSizeBytes': fileSizeBytes,
+        },
+      );
+      return MediaUploadUrlResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskProof> confirmMediaUpload({
+    required String taskId,
+    String? visitId,
+    required String proofType,
+    required String fileKey,
+    int? fileSizeBytes,
+    String? mimeType,
+    String? signerName,
+    String? signerPhone,
+    Map<String, dynamic>? watermarkMetadata,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/confirm',
+        data: {
+          'taskId': taskId,
+          if (visitId != null) 'visitId': visitId,
+          'proofType': proofType,
+          'fileKey': fileKey,
+          if (fileSizeBytes != null) 'fileSizeBytes': fileSizeBytes,
+          if (mimeType != null) 'mimeType': mimeType,
+          if (signerName != null) 'signerName': signerName,
+          if (signerPhone != null) 'signerPhone': signerPhone,
+          if (watermarkMetadata != null) 'watermarkMetadata': watermarkMetadata,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return TaskProof.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListTaskProofsResponse> listTaskProofs({required String taskId}) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/proofs',
+      );
+      return ListTaskProofsResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskResponse> verifyTask({
+    required String taskId,
+    required String action,
+    String? notes,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/verify',
+        data: {
+          'action': action,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return TaskResponse.fromJson(response.data!);
     } on DioException catch (e) {
       _handleDioException(e);
       rethrow;

@@ -18,6 +18,8 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
     { label: 'Overview', href: '/dashboard' },
     { label: 'Live Map', href: '/live-map' },
     { label: 'Tasks', href: '/tasks' },
+    { label: 'Visits', href: '/visits' },
+    { label: 'Customers', href: '/customers' },
     { label: 'Attendance', href: '/attendance' },
   ];
 

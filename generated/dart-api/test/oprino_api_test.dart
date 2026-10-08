@@ -254,6 +254,83 @@ void main() {
       expect(proxResp.isInside, isTrue);
       expect(proxResp.distanceMeters, equals(42.5));
     });
+
+    test('Customer, Site, Visit, and Proof models serialize and deserialize properly', () {
+      final customerJson = {
+        'id': 'c-1',
+        'workspaceId': 'w-1',
+        'name': 'Apex Facilities',
+        'companyName': 'Apex Group',
+        'email': 'apex@example.com',
+        'phone': '+1234567890',
+        'notes': 'Key client',
+        'isActive': true,
+        'createdAt': '2026-10-08T09:00:00.000Z',
+        'updatedAt': '2026-10-08T09:00:00.000Z',
+      };
+      final customer = Customer.fromJson(customerJson);
+      expect(customer.name, equals('Apex Facilities'));
+      expect(customer.toJson()['companyName'], equals('Apex Group'));
+
+      final siteJson = {
+        'id': 's-1',
+        'workspaceId': 'w-1',
+        'customerId': 'c-1',
+        'customerName': 'Apex Facilities',
+        'name': 'North Depot',
+        'address': '123 Main St',
+        'latitude': 28.6139,
+        'longitude': 77.2090,
+        'geofenceRadiusMeters': 120.0,
+        'contactName': 'Site Supervisor',
+        'contactPhone': '+1987654321',
+        'isActive': true,
+        'createdAt': '2026-10-08T09:00:00.000Z',
+        'updatedAt': '2026-10-08T09:00:00.000Z',
+      };
+      final site = CustomerSite.fromJson(siteJson);
+      expect(site.name, equals('North Depot'));
+      expect(site.geofenceRadiusMeters, equals(120.0));
+
+      final visitJson = {
+        'id': 'v-1',
+        'workspaceId': 'w-1',
+        'customerId': 'c-1',
+        'siteId': 's-1',
+        'userId': 'u-1',
+        'status': 'CHECKED_IN',
+        'plannedAt': '2026-10-08T10:00:00.000Z',
+        'checkInTime': '2026-10-08T10:05:00.000Z',
+        'checkInLatitude': 28.6139,
+        'checkInLongitude': 77.2090,
+        'durationMinutes': 0,
+        'notes': 'Arrived on site',
+        'createdAt': '2026-10-08T09:00:00.000Z',
+        'updatedAt': '2026-10-08T10:05:00.000Z',
+      };
+      final visit = Visit.fromJson(visitJson);
+      expect(visit.status, equals('CHECKED_IN'));
+      expect(visit.checkInLatitude, equals(28.6139));
+
+      final proofJson = {
+        'id': 'p-1',
+        'workspaceId': 'w-1',
+        'taskId': 't-1',
+        'visitId': 'v-1',
+        'userId': 'u-1',
+        'proofType': 'SIGNATURE',
+        'fileKey': 'workspace-1/proofs/task-1/sig.png',
+        'fileUrl': 'https://s3.local/sig.png',
+        'signerName': 'Alice Cust',
+        'watermarkMetadata': {'lat': 28.6139, 'lng': 77.2090},
+        'notes': 'Customer signed on glass',
+        'createdAt': '2026-10-08T11:00:00.000Z',
+      };
+      final proof = TaskProof.fromJson(proofJson);
+      expect(proof.proofType, equals('SIGNATURE'));
+      expect(proof.signerName, equals('Alice Cust'));
+      expect(proof.watermarkMetadata?['lat'], equals(28.6139));
+    });
   });
 }
 

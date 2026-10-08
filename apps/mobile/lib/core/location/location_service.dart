@@ -200,6 +200,11 @@ class LocationService {
   List<CheckGeofenceProximityResponse> get nearbyGeofences => List.unmodifiable(_nearbyGeofences);
   List<LocationPoint> get pointBuffer => List.unmodifiable(_pointBuffer);
 
+  /// Captures current fix on-demand for geotagging proofs and site visits.
+  Future<LocationPoint?> getCurrentFix() async {
+    return _latestLocation ?? await adapter.getCurrentPosition();
+  }
+
   Stream<bool> get trackingStateStream => _trackingStateController.stream;
   Stream<LocationPoint?> get locationStream => _locationController.stream;
   Stream<List<CheckGeofenceProximityResponse>> get geofenceProximityStream => _geofenceController.stream;
