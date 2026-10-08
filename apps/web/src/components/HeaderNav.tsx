@@ -16,6 +16,7 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
 
   const navItems = [
     { label: 'Overview', href: '/dashboard' },
+    { label: 'Live Map', href: '/live-map' },
     { label: 'Tasks', href: '/tasks' },
     { label: 'Attendance', href: '/attendance' },
   ];

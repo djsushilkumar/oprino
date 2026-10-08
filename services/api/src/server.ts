@@ -18,6 +18,10 @@ import { meRoutes } from './routes/me.js';
 import { deviceRoutes } from './routes/devices.js';
 import { taskRoutes } from './routes/tasks.js';
 import { attendanceRoutes } from './routes/attendance.js';
+import { telemetryRoutes } from './routes/telemetry.js';
+import { geofencesRoutes } from './routes/geofences.js';
+import { TelemetryService } from './services/telemetry.service.js';
+import { PubSubService } from './services/pubsub.service.js';
 
 export function buildServer(options?: {
   env?: Record<string, unknown>;
@@ -31,6 +35,8 @@ export function buildServer(options?: {
   deviceService: DeviceService;
   taskService: TaskService;
   attendanceService: AttendanceService;
+  telemetryService: TelemetryService;
+  pubsub: PubSubService;
 } {
   const env = validateEnv(options?.env);
 
@@ -54,14 +60,17 @@ export function buildServer(options?: {
   // Database & Services Setup
   const dbClient = options?.dbClient ?? createDatabaseClient({ url: env.DATABASE_URL });
   const auth = createAuth(env, dbClient);
+  const pubsub = new PubSubService(env.REDIS_URL);
   const deviceService = new DeviceService(dbClient.db);
   const workspaceService = new WorkspaceService(dbClient.db);
   const taskService = new TaskService(dbClient.db);
   const attendanceService = new AttendanceService(dbClient.db);
+  const telemetryService = new TelemetryService(dbClient.db, pubsub);
   const authMiddleware = createAuthMiddleware(auth, deviceService, dbClient.db);
 
-  // Close DB connections on Fastify shutdown
+  // Close connections on Fastify shutdown
   app.addHook('onClose', async () => {
+    await pubsub.close();
     await dbClient.client.end();
   });
 
@@ -95,5 +104,19 @@ export function buildServer(options?: {
   app.register(taskRoutes, { taskService, authMiddleware });
   app.register(attendanceRoutes, { attendanceService, authMiddleware });
 
-  return { app, env, dbClient, workspaceService, deviceService, taskService, attendanceService };
+  // Phase 02C Location Telemetry & Geofencing Routes
+  app.register(telemetryRoutes, { telemetryService, pubsub, authMiddleware });
+  app.register(geofencesRoutes, { telemetryService, authMiddleware });
+
+  return {
+    app,
+    env,
+    dbClient,
+    workspaceService,
+    deviceService,
+    taskService,
+    attendanceService,
+    telemetryService,
+    pubsub,
+  };
 }

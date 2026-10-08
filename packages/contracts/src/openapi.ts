@@ -57,6 +57,19 @@ import {
   AttendanceHistoryResponseSchema,
   TeamAttendanceResponseSchema,
 } from './schemas/attendance.js';
+import {
+  LocationPointSchema,
+  LocationIngestBatchRequestSchema,
+  LocationIngestResponseSchema,
+  LiveWorkerLocationSchema,
+  ListLiveWorkersResponseSchema,
+  LocationHistoryResponseSchema,
+  GeofenceSchema,
+  CreateGeofenceRequestSchema,
+  ListGeofencesResponseSchema,
+  CheckGeofenceProximityRequestSchema,
+  CheckGeofenceProximityResponseSchema,
+} from './schemas/telemetry.js';
 
 export const registry = new OpenAPIRegistry();
 
@@ -118,6 +131,19 @@ registry.register('PunchOutRequest', PunchOutRequestSchema);
 registry.register('CurrentAttendanceResponse', CurrentAttendanceResponseSchema);
 registry.register('AttendanceHistoryResponse', AttendanceHistoryResponseSchema);
 registry.register('TeamAttendanceResponse', TeamAttendanceResponseSchema);
+
+// Register Telemetry & Geofencing Components (Phase 02C)
+registry.register('LocationPoint', LocationPointSchema);
+registry.register('LocationIngestBatchRequest', LocationIngestBatchRequestSchema);
+registry.register('LocationIngestResponse', LocationIngestResponseSchema);
+registry.register('LiveWorkerLocation', LiveWorkerLocationSchema);
+registry.register('ListLiveWorkersResponse', ListLiveWorkersResponseSchema);
+registry.register('LocationHistoryResponse', LocationHistoryResponseSchema);
+registry.register('Geofence', GeofenceSchema);
+registry.register('CreateGeofenceRequest', CreateGeofenceRequestSchema);
+registry.register('ListGeofencesResponse', ListGeofencesResponseSchema);
+registry.register('CheckGeofenceProximityRequest', CheckGeofenceProximityRequestSchema);
+registry.register('CheckGeofenceProximityResponse', CheckGeofenceProximityResponseSchema);
 
 // ---------------------------------------------------------------------------
 // Path Definitions
@@ -814,6 +840,177 @@ registry.registerPath({
   },
 });
 
+// Telemetry & Location Pipeline (Phase 02C)
+registry.registerPath({
+  method: 'post',
+  path: '/v1/telemetry/locations',
+  summary: 'Ingest Location Telemetry Batch',
+  description:
+    'Ingests GPS coordinate batch strictly during active duty hours. Coordinates outside active duty are dropped with zero database writes (Duty-Hours-Only Invariant).',
+  tags: ['Telemetry'],
+  operationId: 'ingestLocations',
+  request: {
+    body: {
+      description: 'Batch of duty location breadcrumbs',
+      content: { 'application/json': { schema: LocationIngestBatchRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Ingestion outcome report',
+      content: { 'application/json': { schema: LocationIngestResponseSchema } },
+    },
+    400: {
+      description: 'Invalid telemetry batch',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    403: {
+      description: 'Forbidden - Missing location.record permission',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/telemetry/live',
+  summary: 'Get Live On-Duty Workers',
+  description:
+    'Retrieves latest coordinates and duty statuses for active on-duty team members (Requires location.read permission; Peer visibility OFF by default).',
+  tags: ['Telemetry'],
+  operationId: 'getLiveWorkers',
+  responses: {
+    200: {
+      description: 'Live worker locations',
+      content: { 'application/json': { schema: ListLiveWorkersResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    403: {
+      description: 'Forbidden - Missing location.read permission',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/telemetry/history',
+  summary: 'Get Location Breadcrumbs History',
+  description:
+    'Retrieves historical route breadcrumbs for an employee during active duty hours for a specific date.',
+  tags: ['Telemetry'],
+  operationId: 'getLocationHistory',
+  request: {
+    query: z.object({
+      userId: z.string().uuid(),
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Historical location breadcrumbs',
+      content: { 'application/json': { schema: LocationHistoryResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    403: {
+      description: 'Forbidden - Missing location.read permission',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+// Geofencing Endpoints (Phase 02C)
+registry.registerPath({
+  method: 'get',
+  path: '/v1/geofences',
+  summary: 'List Workspace Geofences',
+  description: 'Lists all defined geofences for the current workspace.',
+  tags: ['Geofences'],
+  operationId: 'listGeofences',
+  responses: {
+    200: {
+      description: 'List of geofences',
+      content: { 'application/json': { schema: ListGeofencesResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/geofences',
+  summary: 'Create Geofence',
+  description: 'Creates a new circular geographic boundary (office, customer site, checkpoint).',
+  tags: ['Geofences'],
+  operationId: 'createGeofence',
+  request: {
+    body: {
+      description: 'Geofence definition',
+      content: { 'application/json': { schema: CreateGeofenceRequestSchema } },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Geofence created',
+      content: { 'application/json': { schema: GeofenceSchema } },
+    },
+    400: {
+      description: 'Invalid geofence parameters',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    403: {
+      description: 'Forbidden - Missing geofences.manage permission',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/geofences/validate-proximity',
+  summary: 'Validate Proximity to Geofence',
+  description: 'Calculates distance and verifies if given coordinates fall inside a geofence.',
+  tags: ['Geofences'],
+  operationId: 'validateGeofenceProximity',
+  request: {
+    body: {
+      description: 'Target geofence and coordinate pair',
+      content: { 'application/json': { schema: CheckGeofenceProximityRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Proximity result',
+      content: { 'application/json': { schema: CheckGeofenceProximityResponseSchema } },
+    },
+    400: {
+      description: 'Invalid coordinates or geofence not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
 export function generateOpenApiDocument(): Record<string, any> {
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
@@ -821,9 +1018,9 @@ export function generateOpenApiDocument(): Record<string, any> {
     openapi: '3.1.0',
     info: {
       title: 'Oprino Operations Engine API',
-      version: '0.2.0',
+      version: '0.3.0',
       description:
-        'Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02B)',
+        'Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02C)',
     },
     servers: [
       {

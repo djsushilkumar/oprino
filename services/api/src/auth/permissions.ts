@@ -26,6 +26,12 @@ export const PERMISSIONS = {
   ATTENDANCE_SELF_PUNCH: 'attendance.self.punch',
   ATTENDANCE_TEAM_READ: 'attendance.team.read',
   ATTENDANCE_MANAGE: 'attendance.manage',
+
+  // Phase 02C: Location Telemetry & Geofencing Domain
+  LOCATION_READ: 'location.read',
+  LOCATION_RECORD: 'location.record',
+  GEOFENCES_READ: 'geofences.read',
+  GEOFENCES_MANAGE: 'geofences.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -63,6 +69,11 @@ export const DEFAULT_ROLE_TEMPLATES: Record<string, DefaultRoleTemplate> = {
       PERMISSIONS.ATTENDANCE_SELF_PUNCH,
       PERMISSIONS.ATTENDANCE_TEAM_READ,
       PERMISSIONS.ATTENDANCE_MANAGE,
+      // Location & Geofencing
+      PERMISSIONS.LOCATION_READ,
+      PERMISSIONS.LOCATION_RECORD,
+      PERMISSIONS.GEOFENCES_READ,
+      PERMISSIONS.GEOFENCES_MANAGE,
     ],
   },
   MANAGER: {
@@ -87,6 +98,11 @@ export const DEFAULT_ROLE_TEMPLATES: Record<string, DefaultRoleTemplate> = {
       PERMISSIONS.ATTENDANCE_SELF_PUNCH,
       PERMISSIONS.ATTENDANCE_TEAM_READ,
       PERMISSIONS.ATTENDANCE_MANAGE,
+      // Location & Geofencing
+      PERMISSIONS.LOCATION_READ,
+      PERMISSIONS.LOCATION_RECORD,
+      PERMISSIONS.GEOFENCES_READ,
+      PERMISSIONS.GEOFENCES_MANAGE,
     ],
   },
   EMPLOYEE: {
@@ -103,6 +119,9 @@ export const DEFAULT_ROLE_TEMPLATES: Record<string, DefaultRoleTemplate> = {
       // Attendance
       PERMISSIONS.ATTENDANCE_SELF_READ,
       PERMISSIONS.ATTENDANCE_SELF_PUNCH,
+      // Location & Geofencing (Peer visibility is OFF by default!)
+      PERMISSIONS.LOCATION_RECORD,
+      PERMISSIONS.GEOFENCES_READ,
     ],
   },
 };

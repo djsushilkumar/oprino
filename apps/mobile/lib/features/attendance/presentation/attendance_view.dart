@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/oprino_theme.dart';
 import '../../../../core/sync/sync_service.dart';
 import '../../../../core/database/database.dart';
+import '../../../../core/location/location_service.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
 
 class AttendanceView extends ConsumerStatefulWidget {
@@ -82,6 +83,9 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
         workspaceId: workspaceId,
         note: 'Punched in from mobile',
       );
+      if (workspaceId.isNotEmpty) {
+        await ref.read(locationServiceProvider).startTracking(workspaceId: workspaceId);
+      }
     } catch (e) {
       setState(() => _actionError = e.toString());
     } finally {
@@ -101,6 +105,7 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
         workspaceId: workspaceId,
         note: 'Punched out from mobile',
       );
+      await ref.read(locationServiceProvider).stopTracking();
     } catch (e) {
       setState(() => _actionError = e.toString());
     } finally {
@@ -114,6 +119,9 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
     final workspace = auth.context?.activeWorkspace;
     final workspaceId = workspace?.id ?? '';
     final sync = ref.watch(syncServiceProvider);
+    final isTracking = ref.watch(isTrackingActiveProvider);
+    final latestLocation = ref.watch(latestLocationProvider);
+    final nearbyGeofences = ref.watch(nearbyGeofencesProvider);
 
     return StreamBuilder<CachedAttendanceData?>(
       stream: sync.watchAttendance(workspaceId),
@@ -124,8 +132,22 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
 
         if (isOnDuty) {
           _startTicker();
+          if (!isTracking && workspaceId.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ref.read(locationServiceProvider).startTracking(workspaceId: workspaceId);
+              }
+            });
+          }
         } else {
           _stopTicker();
+          if (isTracking) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ref.read(locationServiceProvider).stopTracking();
+              }
+            });
+          }
         }
 
         return RefreshIndicator(
@@ -292,7 +314,166 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+
+                // GPS Telemetry & Geofencing Card
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: isTracking ? const Color(0xFF86EFAC) : OprinoColors.border,
+                      width: isTracking ? 1.5 : 1.0,
+                    ),
+                  ),
+                  color: isTracking ? const Color(0xFFF9FEFA) : Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  isTracking ? Icons.my_location : Icons.location_off_outlined,
+                                  size: 18,
+                                  color: isTracking ? const Color(0xFF16A34A) : OprinoColors.slate,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'GPS Telemetry & Geofencing',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: OprinoColors.navy,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isTracking ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                isTracking ? 'TRACKING ON' : 'STANDBY (OFF)',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                  color: isTracking ? const Color(0xFF15803D) : OprinoColors.slate,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (isTracking) ...[
+                          if (nearbyGeofences.any((g) => g.isInside)) ...[
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFF86EFAC)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.verified, size: 16, color: Color(0xFF15803D)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Inside Geofence: ${nearbyGeofences.firstWhere((g) => g.isInside).geofenceName}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF15803D),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else if (nearbyGeofences.isNotEmpty) ...[
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFBFDBFE)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.near_me, size: 16, color: Color(0xFF1D4ED8)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Nearest Site: ${nearbyGeofences.first.geofenceName} (${nearbyGeofences.first.distanceMeters.toStringAsFixed(0)}m away)',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFF1D4ED8),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: OprinoColors.border),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.explore_outlined, size: 16, color: OprinoColors.slate),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Field Operational Radius: Tracking route points',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: OprinoColors.slate,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          if (latestLocation != null)
+                            Text(
+                              'Current Fix: ${latestLocation.latitude.toStringAsFixed(4)}° N, ${latestLocation.longitude.toStringAsFixed(4)}° E  (±${latestLocation.accuracy.toStringAsFixed(1)}m)',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontFamily: 'monospace',
+                                color: OprinoColors.slate,
+                              ),
+                            ),
+                        ] else ...[
+                          const Text(
+                            'GPS hardware is unhooked. Off-duty location tracking NEVER occurs, guaranteeing complete employee privacy.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: OprinoColors.slate,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
 
                 // Shift Information Card
                 Card(

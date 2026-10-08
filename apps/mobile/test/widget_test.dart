@@ -183,6 +183,8 @@ void main() {
     expect(find.text('Attendance'), findsWidgets);
     expect(find.text('OFF DUTY'), findsOneWidget);
     expect(find.text('Punch In (Start Duty)'), findsOneWidget);
+    expect(find.text('GPS Telemetry & Geofencing'), findsOneWidget);
+    expect(find.text('STANDBY (OFF)'), findsOneWidget);
 
     // Switch to Tasks Tab (Tab 1)
     await tester.tap(find.text('Tasks'));

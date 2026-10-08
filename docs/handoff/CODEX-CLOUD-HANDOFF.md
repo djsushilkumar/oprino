@@ -17,7 +17,8 @@
 - **Phase 01C (Production Monorepo Scaffolding):** **COMPLETED & VERIFIED** ([`docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md`](file:///workspace/oprino/docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md)).
 - **Phase 02A (Identity, Workspace & Multi-Tenant Foundation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md)).
 - **Phase 02B (Task & Attendance Domain Implementation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md)).
-- **Next Milestone Gate:** **READY FOR LOCATION, GEOFENCING & TRACKING PIPELINE (Phase 02C / Phase 03)**.
+- **Phase 02C (GPS Location Pipeline, Geofencing & Tracking Engine):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md)).
+- **Next Milestone Gate:** **READY FOR FIELD OPERATIONS, SIGNATURES ON GLASS & SCHEDULE DISPATCH (Phase 03)**.
 
 ---
 
@@ -114,5 +115,15 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
    - Offline-first Flutter mobile client with Drift SQLite outbox mutation queue and reactive Streams.
    - Next.js 15 Web operational management pages for Tasks and Attendance with real-time status visibility.
    - Full quality gates passed: TypeScript, ESLint, API integration tests (45/45), Flutter analyze (0 err), Flutter tests (14/14), Dart API tests (8/8), and Next.js production build.
-7. **Next Gate:** **READY FOR LOCATION, GEOFENCING & TRACKING PIPELINE (Phase 02C / Phase 03)**.
+7. **Phase 02C (GPS Location Pipeline, Geofencing & Tracking Engine):** **COMPLETED & VERIFIED**.
+   - PostgreSQL RLS tenant isolation across `employee_locations`, `geofences`, and `daily_travel_summaries` with PostGIS point support.
+   - Strict Duty-Hours-Only Tracking Invariant enforced at mobile client and API ingestion boundary (off-duty points hard-dropped with zero DB writes).
+   - Peer location visibility strictly OFF by default (`location.read` restricted to managers/owners).
+   - Ingestion quality gates (`accuracy <= 50m`, `speed <= 45m/s` anomaly drop) with Haversine distance rollup.
+   - Real-time Redis Pub/Sub broadcast and Server-Sent Events (`/v1/telemetry/stream`).
+   - 30-day retention pruning via `telemetry_prune_expired_records(days)` and BullMQ worker job `telemetry.retention.prune`.
+   - Web Live Radar Map (`/live-map`) with SVG coordinate space, SSE live streaming, worker inspector, and route scrubber.
+   - Mobile `LocationService` with reactive Riverpod providers, synchronous unhook on punch out, and Attendance View status card.
+   - Full quality gates passed: TypeScript, ESLint, API integration tests (57/57), Flutter analyze (0 err), Flutter tests (18/18), Dart API tests (10/10), and Next.js production build.
+8. **Next Gate:** **READY FOR FIELD OPERATIONS, SIGNATURES ON GLASS & SCHEDULE DISPATCH (Phase 03)**.
 

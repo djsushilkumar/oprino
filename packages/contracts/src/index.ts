@@ -7,4 +7,5 @@ export * from './schemas/me.js';
 export * from './schemas/device.js';
 export * from './schemas/task.js';
 export * from './schemas/attendance.js';
+export * from './schemas/telemetry.js';
 export * from './openapi.js';

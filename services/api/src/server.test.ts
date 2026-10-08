@@ -1,10 +1,14 @@
-import { test, describe } from 'node:test';
+import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildServer } from './server.js';
 import { HealthResponseSchema, VersionResponseSchema } from '@oprino/contracts';
 
 describe('Oprino API Scaffolding Tests', () => {
   const { app } = buildServer({ env: { NODE_ENV: 'test' }, logger: false });
+
+  after(async () => {
+    await app.close();
+  });
 
   test('GET /health returns 200 and passes contract schema', async () => {
     const res = await app.inject({

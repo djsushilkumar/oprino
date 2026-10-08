@@ -11,6 +11,7 @@ import 'model/me_models.dart';
 import 'model/device_models.dart';
 import 'model/task_models.dart';
 import 'model/attendance_models.dart';
+import 'model/telemetry_models.dart';
 
 class OprinoApiClient {
   final Dio dio;
@@ -498,6 +499,110 @@ class OprinoApiClient {
     try {
       final response = await dio.get<Map<String, dynamic>>('/v1/attendance/shifts');
       return ListShiftsResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Telemetry & Geofencing (Phase 02C) ---
+
+  Future<LocationIngestResponse> ingestLocationBreadcrumbs(List<LocationPoint> locations) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/telemetry/locations',
+        data: {
+          'locations': locations.map((e) => e.toJson()).toList(),
+        },
+      );
+      return LocationIngestResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListLiveWorkersResponse> getLiveWorkerLocations() async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/telemetry/live');
+      return ListLiveWorkersResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<LocationHistoryResponse> getLocationHistory({
+    required String userId,
+    required String date,
+  }) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/telemetry/history',
+        queryParameters: {
+          'userId': userId,
+          'date': date,
+        },
+      );
+      return LocationHistoryResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListGeofencesResponse> listGeofences() async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/geofences');
+      return ListGeofencesResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<Geofence> createGeofence({
+    required String name,
+    required double latitude,
+    required double longitude,
+    double radiusMeters = 100.0,
+    String geofenceType = 'OFFICE',
+    String? description,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/geofences',
+        data: {
+          'name': name,
+          'latitude': latitude,
+          'longitude': longitude,
+          'radiusMeters': radiusMeters,
+          'geofenceType': geofenceType,
+          if (description != null) 'description': description,
+        },
+      );
+      return Geofence.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<CheckGeofenceProximityResponse> checkGeofenceProximity({
+    required String geofenceId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/geofences/check-proximity',
+        data: {
+          'geofenceId': geofenceId,
+          'latitude': latitude,
+          'longitude': longitude,
+        },
+      );
+      return CheckGeofenceProximityResponse.fromJson(response.data!);
     } on DioException catch (e) {
       _handleDioException(e);
       rethrow;

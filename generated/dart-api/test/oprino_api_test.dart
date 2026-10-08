@@ -190,5 +190,70 @@ void main() {
       expect(current.activeSession?.userName, equals('Jane Tech'));
       expect(current.activeSession?.durationMinutes, equals(120));
     });
+
+    test('LocationPoint and LocationIngestResponse serialize and deserialize properly', () {
+      final point = LocationPoint(
+        id: 'loc-1111-2222-3333-4444',
+        recordedAt: DateTime.parse('2026-10-08T10:00:00.000Z'),
+        latitude: 28.6139,
+        longitude: 77.2090,
+        accuracy: 12.5,
+        speed: 3.5,
+        heading: 180.0,
+        batteryLevel: 0.85,
+        isCharging: false,
+        activityType: 'walking',
+        isMoving: true,
+      );
+
+      final pointJson = point.toJson();
+      expect(pointJson['latitude'], equals(28.6139));
+      expect(pointJson['accuracy'], equals(12.5));
+
+      final deserializedPoint = LocationPoint.fromJson(pointJson);
+      expect(deserializedPoint.id, equals('loc-1111-2222-3333-4444'));
+      expect(deserializedPoint.speed, equals(3.5));
+
+      final ingestResp = LocationIngestResponse.fromJson({
+        'accepted': 1,
+        'dropped': 0,
+        'reason': null,
+        'serverTimestamp': '2026-10-08T10:00:01.000Z',
+      });
+      expect(ingestResp.accepted, equals(1));
+      expect(ingestResp.dropped, equals(0));
+    });
+
+    test('Geofence and CheckGeofenceProximityResponse serialize and deserialize properly', () {
+      final geofenceJson = {
+        'id': 'geo-111',
+        'workspaceId': 'ws-111',
+        'name': 'HQ Campus',
+        'description': 'Main site',
+        'latitude': 28.6139,
+        'longitude': 77.2090,
+        'radiusMeters': 150.0,
+        'geofenceType': 'OFFICE',
+        'isActive': true,
+        'createdBy': 'user-1',
+        'createdAt': '2026-10-08T08:00:00.000Z',
+        'updatedAt': '2026-10-08T08:00:00.000Z',
+      };
+
+      final geofence = Geofence.fromJson(geofenceJson);
+      expect(geofence.name, equals('HQ Campus'));
+      expect(geofence.radiusMeters, equals(150.0));
+
+      final proxResp = CheckGeofenceProximityResponse.fromJson({
+        'geofenceId': 'geo-111',
+        'geofenceName': 'HQ Campus',
+        'distanceMeters': 42.5,
+        'radiusMeters': 150.0,
+        'isInside': true,
+      });
+      expect(proxResp.isInside, isTrue);
+      expect(proxResp.distanceMeters, equals(42.5));
+    });
   });
 }
+

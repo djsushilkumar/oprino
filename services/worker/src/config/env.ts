@@ -3,6 +3,9 @@ import { z } from 'zod';
 export const WorkerEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
+  DATABASE_URL: z
+    .string()
+    .default('postgresql://oprino_admin:oprino_dev_password@localhost:5432/oprino_db'),
   CONCURRENCY: z.coerce.number().int().positive().default(5),
 });
 

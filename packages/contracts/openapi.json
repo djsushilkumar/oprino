@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Oprino Operations Engine API",
-    "version": "0.2.0",
-    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02B)"
+    "version": "0.3.0",
+    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02C)"
   },
   "servers": [
     {
@@ -1630,6 +1630,513 @@
           "activeSessions",
           "history"
         ]
+      },
+      "LocationPoint": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "recordedAt": {
+            "type": "string",
+            "example": "2026-10-08T10:15:30.000Z"
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 28.6139
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": 77.209
+          },
+          "accuracy": {
+            "type": "number",
+            "minimum": 0,
+            "example": 12.5
+          },
+          "speed": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 3.2
+          },
+          "heading": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 180
+          },
+          "altitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 215
+          },
+          "batteryLevel": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1,
+            "example": 0.84
+          },
+          "isCharging": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "example": false
+          },
+          "activityType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "walking"
+          },
+          "isMoving": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "recordedAt",
+          "latitude",
+          "longitude",
+          "accuracy"
+        ]
+      },
+      "LocationIngestBatchRequest": {
+        "type": "object",
+        "properties": {
+          "locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationPoint"
+            },
+            "minItems": 1,
+            "maxItems": 200
+          }
+        },
+        "required": [
+          "locations"
+        ]
+      },
+      "LocationIngestResponse": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "example": 5
+          },
+          "dropped": {
+            "type": "integer",
+            "example": 0
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          },
+          "serverTimestamp": {
+            "type": "string",
+            "example": "2026-10-08T10:15:35.000Z"
+          }
+        },
+        "required": [
+          "accepted",
+          "dropped",
+          "serverTimestamp"
+        ]
+      },
+      "LiveWorkerLocation": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userName": {
+            "type": "string",
+            "example": "Alex Field Tech"
+          },
+          "userEmail": {
+            "type": "string",
+            "example": "alex@example.com"
+          },
+          "dutyStatus": {
+            "type": "string",
+            "enum": [
+              "ON_DUTY",
+              "OFF_DUTY"
+            ],
+            "example": "ON_DUTY"
+          },
+          "sessionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "s1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "recordedAt": {
+            "type": "string",
+            "example": "2026-10-08T10:15:30.000Z"
+          },
+          "latitude": {
+            "type": "number",
+            "example": 28.6139
+          },
+          "longitude": {
+            "type": "number",
+            "example": 77.209
+          },
+          "accuracy": {
+            "type": "number",
+            "example": 10
+          },
+          "speed": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 4.5
+          },
+          "heading": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 90
+          },
+          "batteryLevel": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.75
+          },
+          "isCharging": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "example": false
+          },
+          "activityType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "in_vehicle"
+          },
+          "isMoving": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "example": true
+          },
+          "currentTaskId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": null
+          },
+          "currentTaskTitle": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "dutyStatus",
+          "recordedAt",
+          "latitude",
+          "longitude",
+          "accuracy"
+        ]
+      },
+      "ListLiveWorkersResponse": {
+        "type": "object",
+        "properties": {
+          "workers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiveWorkerLocation"
+            }
+          }
+        },
+        "required": [
+          "workers"
+        ]
+      },
+      "LocationHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userName": {
+            "type": "string",
+            "example": "Alex Field Tech"
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-10-08"
+          },
+          "totalDistanceMeters": {
+            "type": "number",
+            "example": 12450.5
+          },
+          "totalDurationMinutes": {
+            "type": "integer",
+            "example": 275
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationPoint"
+            }
+          }
+        },
+        "required": [
+          "userId",
+          "date",
+          "totalDistanceMeters",
+          "totalDurationMinutes",
+          "points"
+        ]
+      },
+      "Geofence": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "g1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Headquarters Office"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Central HQ Hub"
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 28.6139
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": 77.209
+          },
+          "radiusMeters": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "example": 150
+          },
+          "geofenceType": {
+            "type": "string",
+            "enum": [
+              "OFFICE",
+              "CUSTOMER_SITE",
+              "CHECKPOINT"
+            ],
+            "example": "OFFICE"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdBy": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-08T08:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-10-08T08:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "name",
+          "latitude",
+          "longitude",
+          "radiusMeters",
+          "geofenceType",
+          "isActive",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateGeofenceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "North Branch Depot"
+          },
+          "description": {
+            "type": "string",
+            "example": "Logistics fulfillment depot"
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 28.65
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": 77.23
+          },
+          "radiusMeters": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "default": 100,
+            "example": 100
+          },
+          "geofenceType": {
+            "type": "string",
+            "enum": [
+              "OFFICE",
+              "CUSTOMER_SITE",
+              "CHECKPOINT"
+            ],
+            "default": "OFFICE",
+            "example": "OFFICE"
+          }
+        },
+        "required": [
+          "name",
+          "latitude",
+          "longitude"
+        ]
+      },
+      "ListGeofencesResponse": {
+        "type": "object",
+        "properties": {
+          "geofences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Geofence"
+            }
+          }
+        },
+        "required": [
+          "geofences"
+        ]
+      },
+      "CheckGeofenceProximityRequest": {
+        "type": "object",
+        "properties": {
+          "geofenceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "g1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 28.6142
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": 77.2093
+          }
+        },
+        "required": [
+          "geofenceId",
+          "latitude",
+          "longitude"
+        ]
+      },
+      "CheckGeofenceProximityResponse": {
+        "type": "object",
+        "properties": {
+          "geofenceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "g1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "geofenceName": {
+            "type": "string",
+            "example": "Headquarters Office"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "example": 45.2
+          },
+          "radiusMeters": {
+            "type": "number",
+            "example": 150
+          },
+          "isInside": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "geofenceId",
+          "geofenceName",
+          "distanceMeters",
+          "radiusMeters",
+          "isInside"
+        ]
       }
     },
     "parameters": {}
@@ -2852,6 +3359,316 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListShiftsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/telemetry/locations": {
+      "post": {
+        "summary": "Ingest Location Telemetry Batch",
+        "description": "Ingests GPS coordinate batch strictly during active duty hours. Coordinates outside active duty are dropped with zero database writes (Duty-Hours-Only Invariant).",
+        "tags": [
+          "Telemetry"
+        ],
+        "operationId": "ingestLocations",
+        "requestBody": {
+          "description": "Batch of duty location breadcrumbs",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocationIngestBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ingestion outcome report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationIngestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid telemetry batch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing location.record permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/telemetry/live": {
+      "get": {
+        "summary": "Get Live On-Duty Workers",
+        "description": "Retrieves latest coordinates and duty statuses for active on-duty team members (Requires location.read permission; Peer visibility OFF by default).",
+        "tags": [
+          "Telemetry"
+        ],
+        "operationId": "getLiveWorkers",
+        "responses": {
+          "200": {
+            "description": "Live worker locations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListLiveWorkersResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing location.read permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/telemetry/history": {
+      "get": {
+        "summary": "Get Location Breadcrumbs History",
+        "description": "Retrieves historical route breadcrumbs for an employee during active duty hours for a specific date.",
+        "tags": [
+          "Telemetry"
+        ],
+        "operationId": "getLocationHistory",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "userId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "required": true,
+            "name": "date",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historical location breadcrumbs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationHistoryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing location.read permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/geofences": {
+      "get": {
+        "summary": "List Workspace Geofences",
+        "description": "Lists all defined geofences for the current workspace.",
+        "tags": [
+          "Geofences"
+        ],
+        "operationId": "listGeofences",
+        "responses": {
+          "200": {
+            "description": "List of geofences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListGeofencesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Geofence",
+        "description": "Creates a new circular geographic boundary (office, customer site, checkpoint).",
+        "tags": [
+          "Geofences"
+        ],
+        "operationId": "createGeofence",
+        "requestBody": {
+          "description": "Geofence definition",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGeofenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Geofence created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Geofence"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid geofence parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing geofences.manage permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/geofences/validate-proximity": {
+      "post": {
+        "summary": "Validate Proximity to Geofence",
+        "description": "Calculates distance and verifies if given coordinates fall inside a geofence.",
+        "tags": [
+          "Geofences"
+        ],
+        "operationId": "validateGeofenceProximity",
+        "requestBody": {
+          "description": "Target geofence and coordinate pair",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckGeofenceProximityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proximity result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckGeofenceProximityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid coordinates or geofence not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }

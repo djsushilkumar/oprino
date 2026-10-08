@@ -27,6 +27,14 @@ import {
   type CreateShiftRequest,
   type PunchInRequest,
   type PunchOutRequest,
+  // Phase 02C Telemetry & Geofences
+  type ListLiveWorkersResponse,
+  type LocationHistoryResponse,
+  type Geofence,
+  type CreateGeofenceRequest,
+  type ListGeofencesResponse,
+  type CheckGeofenceProximityRequest,
+  type CheckGeofenceProximityResponse,
 } from '@oprino/contracts';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -257,4 +265,44 @@ export const webApi = {
   async listShifts(): Promise<ListShiftsResponse> {
     return request<ListShiftsResponse>('/v1/attendance/shifts', { method: 'GET' });
   },
+
+  // Phase 02C: Telemetry & Live Operations Map
+  async getLiveWorkers(): Promise<ListLiveWorkersResponse> {
+    return request<ListLiveWorkersResponse>('/v1/telemetry/live', { method: 'GET' });
+  },
+
+  async getLocationHistory(userId: string, date: string): Promise<LocationHistoryResponse> {
+    return request<LocationHistoryResponse>(
+      `/v1/telemetry/history?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(date)}`,
+      { method: 'GET' },
+    );
+  },
+
+  // Phase 02C: Geofences
+  async listGeofences(): Promise<ListGeofencesResponse> {
+    return request<ListGeofencesResponse>('/v1/geofences', { method: 'GET' });
+  },
+
+  async createGeofence(body: CreateGeofenceRequest): Promise<Geofence> {
+    return request<Geofence>('/v1/geofences', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async deleteGeofence(geofenceId: string): Promise<{ success: boolean }> {
+    return request<{ success: boolean }>(`/v1/geofences/${geofenceId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async validateGeofenceProximity(
+    body: CheckGeofenceProximityRequest,
+  ): Promise<CheckGeofenceProximityResponse> {
+    return request<CheckGeofenceProximityResponse>('/v1/geofences/validate-proximity', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
 };
+
