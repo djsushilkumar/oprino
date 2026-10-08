@@ -6,6 +6,8 @@ import { createDatabaseClient } from '@oprino/database';
 import { createAuth } from './auth/better-auth.js';
 import { WorkspaceService } from './services/workspace.service.js';
 import { DeviceService } from './services/device.service.js';
+import { TaskService } from './services/task.service.js';
+import { AttendanceService } from './services/attendance.service.js';
 import { createAuthMiddleware } from './middleware/auth.js';
 import { healthRoutes } from './routes/health.js';
 import { versionRoutes } from './routes/version.js';
@@ -14,6 +16,8 @@ import { authRoutes } from './routes/auth.js';
 import { workspaceRoutes } from './routes/workspaces.js';
 import { meRoutes } from './routes/me.js';
 import { deviceRoutes } from './routes/devices.js';
+import { taskRoutes } from './routes/tasks.js';
+import { attendanceRoutes } from './routes/attendance.js';
 
 export function buildServer(options?: {
   env?: Record<string, unknown>;
@@ -25,6 +29,8 @@ export function buildServer(options?: {
   dbClient: ReturnType<typeof createDatabaseClient>;
   workspaceService: WorkspaceService;
   deviceService: DeviceService;
+  taskService: TaskService;
+  attendanceService: AttendanceService;
 } {
   const env = validateEnv(options?.env);
 
@@ -50,6 +56,8 @@ export function buildServer(options?: {
   const auth = createAuth(env, dbClient);
   const deviceService = new DeviceService(dbClient.db);
   const workspaceService = new WorkspaceService(dbClient.db);
+  const taskService = new TaskService(dbClient.db);
+  const attendanceService = new AttendanceService(dbClient.db);
   const authMiddleware = createAuthMiddleware(auth, deviceService, dbClient.db);
 
   // Close DB connections on Fastify shutdown
@@ -83,5 +91,9 @@ export function buildServer(options?: {
   app.register(meRoutes, { db: dbClient.db, authMiddleware });
   app.register(deviceRoutes, { deviceService, authMiddleware });
 
-  return { app, env, dbClient, workspaceService, deviceService };
+  // Phase 02B Core Operational Routes
+  app.register(taskRoutes, { taskService, authMiddleware });
+  app.register(attendanceRoutes, { attendanceService, authMiddleware });
+
+  return { app, env, dbClient, workspaceService, deviceService, taskService, attendanceService };
 }

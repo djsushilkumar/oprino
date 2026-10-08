@@ -5,4 +5,6 @@ export * from './schemas/auth.js';
 export * from './schemas/workspace.js';
 export * from './schemas/me.js';
 export * from './schemas/device.js';
+export * from './schemas/task.js';
+export * from './schemas/attendance.js';
 export * from './openapi.js';

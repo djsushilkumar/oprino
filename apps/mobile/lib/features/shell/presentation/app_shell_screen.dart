@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/oprino_theme.dart';
 import '../../../core/network/api_client_provider.dart';
+import '../../../core/sync/sync_service.dart';
+import '../../../core/database/database.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
+import '../../attendance/presentation/attendance_view.dart';
+import '../../tasks/presentation/tasks_view.dart';
 
 class AppShellScreen extends ConsumerStatefulWidget {
   const AppShellScreen({super.key});
@@ -13,6 +17,7 @@ class AppShellScreen extends ConsumerStatefulWidget {
 
 class _AppShellScreenState extends ConsumerState<AppShellScreen> {
   String? _installationId;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -79,7 +84,10 @@ class _AppShellScreenState extends ConsumerState<AppShellScreen> {
                           color: isCurrent ? OprinoColors.cobalt : OprinoColors.navy,
                         ),
                       ),
-                      subtitle: Text('Role: ${ws.roleName} • Status: ${ws.membershipStatus}'),
+                      subtitle: Text(
+                        'Role: ${ws.roleName} • Status: ${ws.membershipStatus}',
+                        style: const TextStyle(fontSize: 12, color: OprinoColors.slate),
+                      ),
                       trailing: isCurrent
                           ? const Icon(Icons.check_circle, color: OprinoColors.cobalt)
                           : null,
@@ -107,6 +115,7 @@ class _AppShellScreenState extends ConsumerState<AppShellScreen> {
     final workspace = me?.activeWorkspace;
     final role = me?.role;
     final permissions = me?.permissions ?? [];
+    final sync = ref.watch(syncServiceProvider);
 
     return Scaffold(
       backgroundColor: OprinoColors.paper,
@@ -135,6 +144,34 @@ class _AppShellScreenState extends ConsumerState<AppShellScreen> {
           ],
         ),
         actions: [
+          // Outbox Sync Indicator
+          StreamBuilder<List<OutboxMutation>>(
+            stream: sync.watchPendingMutations(),
+            builder: (context, snapshot) {
+              final pendingCount = snapshot.data?.length ?? 0;
+              if (pendingCount == 0) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Tooltip(
+                  message: '$pendingCount offline changes queued for sync',
+                  child: Chip(
+                    avatar: const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    label: Text(
+                      '$pendingCount sync',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    backgroundColor: const Color(0xFFEFF6FF),
+                    side: const BorderSide(color: Color(0xFFBFDBFE)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: OprinoColors.slate),
             tooltip: 'Sign Out',
@@ -144,269 +181,331 @@ class _AppShellScreenState extends ConsumerState<AppShellScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Active Workspace Card
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: OprinoColors.border),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Active Workspace',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: OprinoColors.slate,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDCFCE7),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Text(
-                            'Active Tenant',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF15803D),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      workspace?.name ?? 'Loading Workspace...',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: OprinoColors.navy,
-                        fontFamily: 'Outfit',
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Slug: ${workspace?.slug ?? 'N/A'}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: OprinoColors.slate,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => _showWorkspaceSwitchDialog(context, authState),
-                      icon: const Icon(Icons.swap_horiz, size: 16),
-                      label: Text('Switch Workspace (${authState.workspaces.length})'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: OprinoColors.cobalt,
-                        side: const BorderSide(color: OprinoColors.cobalt),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          // Tab 0: Attendance
+          const AttendanceView(),
 
-            // User Identity & Role Card
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: OprinoColors.border),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Identity & Governance',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: OprinoColors.navy,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+          // Tab 1: Tasks
+          const TasksView(),
+
+          // Tab 2: Profile & Workspace Governance
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Active Workspace Card
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: OprinoColors.border),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          backgroundColor: OprinoColors.cobalt,
-                          radius: 20,
-                          child: Text(
-                            (user?.name.isNotEmpty == true ? user!.name[0] : 'U').toUpperCase(),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user?.name ?? 'Authenticated User',
-                                style: const TextStyle(
-                                  fontSize: 15,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Active Workspace',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: OprinoColors.slate,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Active Tenant',
+                                style: TextStyle(
+                                  fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: OprinoColors.navy,
+                                  color: Color(0xFF15803D),
                                 ),
                               ),
-                              Text(
-                                user?.email ?? '',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: OprinoColors.slate,
-                                ),
-                              ),
-                            ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          workspace?.name ?? 'Loading Workspace...',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: OprinoColors.navy,
+                            fontFamily: 'Outfit',
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
-                            border: Border.all(color: const Color(0xFFBFDBFE)),
-                            borderRadius: BorderRadius.circular(12),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Slug: ${workspace?.slug ?? 'N/A'}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: OprinoColors.slate,
+                            fontFamily: 'monospace',
                           ),
-                          child: Text(
-                            role?.name ?? 'Member',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: OprinoColors.cobalt,
-                            ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: () => _showWorkspaceSwitchDialog(context, authState),
+                          icon: const Icon(Icons.swap_horiz, size: 16),
+                          label: Text('Switch Workspace (${authState.workspaces.length})'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: OprinoColors.cobalt,
+                            side: const BorderSide(color: OprinoColors.cobalt),
                           ),
                         ),
                       ],
                     ),
-                    const Divider(height: 24),
-                    Text(
-                      'Assigned Permissions (${permissions.length})',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: OprinoColors.slate,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: permissions.map((p) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            p,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 11,
-                              color: Color(0xFF334155),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-            // Device Installation Card
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: OprinoColors.border),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                // User Identity & Role Card
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: OprinoColors.border),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.phonelink_setup, size: 18, color: OprinoColors.ocean),
-                        const SizedBox(width: 8),
                         const Text(
-                          'Installation Governance',
+                          'Identity & Governance',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: OprinoColors.navy,
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Installation ID: ${_installationId ?? 'Loading...'}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontFamily: 'monospace',
-                        color: OprinoColors.slate,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Status: Active & Registered (Zero Hardware Fingerprinting)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: OprinoColors.slate,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.shield, size: 16, color: Color(0xFF16A34A)),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Duty-Hours Invariant: Off-duty location tracking NEVER occurs. Peer visibility OFF by default.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF334155),
-                                fontWeight: FontWeight.w500,
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: OprinoColors.cobalt,
+                              foregroundColor: Colors.white,
+                              child: Text(
+                                user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'U',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user?.name ?? 'Loading User...',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: OprinoColors.navy,
+                                    ),
+                                  ),
+                                  Text(
+                                    user?.email ?? '',
+                                    style: const TextStyle(fontSize: 13, color: OprinoColors.slate),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: const Color(0xFFBFDBFE)),
+                              ),
+                              child: Text(
+                                role?.name ?? 'Employee',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: OprinoColors.cobalt,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+
+                // Active Permissions Card
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: OprinoColors.border),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Active Workspace Capabilities',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: OprinoColors.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Capabilities enforced via tenant-scoped PostgreSQL RLS policies.',
+                          style: TextStyle(fontSize: 12, color: OprinoColors.slate),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: permissions.map((perm) {
+                            return Chip(
+                              label: Text(
+                                perm,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontFamily: 'monospace',
+                                  color: OprinoColors.navy,
+                                ),
+                              ),
+                              backgroundColor: const Color(0xFFF1F5F9),
+                              side: const BorderSide(color: OprinoColors.border),
+                              visualDensity: VisualDensity.compact,
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Device Installation Governance Card
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: OprinoColors.border),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Device Installation Governance',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: OprinoColors.navy,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Authorized',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF15803D),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'UUID: ${_installationId ?? 'Loading...'}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'monospace',
+                            color: OprinoColors.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Strict Zero-IMEI privacy design. Random secure RFC 4122 UUIDv4.',
+                          style: TextStyle(fontSize: 11, color: OprinoColors.slate),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Duty-Hours Core Invariant Banner
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: OprinoColors.border),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.shield_outlined, size: 20, color: OprinoColors.cobalt),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Duty-Hours Invariant: Off-duty location tracking NEVER occurs. Peer visibility OFF by default.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: OprinoColors.navy,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        selectedItemColor: OprinoColors.cobalt,
+        unselectedItemColor: OprinoColors.slate,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.schedule),
+            label: 'Attendance',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment),
+            label: 'Tasks',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }

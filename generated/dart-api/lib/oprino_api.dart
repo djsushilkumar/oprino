@@ -11,3 +11,5 @@ export 'src/model/auth_models.dart';
 export 'src/model/workspace_models.dart';
 export 'src/model/me_models.dart';
 export 'src/model/device_models.dart';
+export 'src/model/task_models.dart';
+export 'src/model/attendance_models.dart';

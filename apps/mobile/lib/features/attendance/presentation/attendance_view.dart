@@ -1,0 +1,379 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/oprino_theme.dart';
+import '../../../../core/sync/sync_service.dart';
+import '../../../../core/database/database.dart';
+import '../../auth/presentation/auth_state_notifier.dart';
+
+class AttendanceView extends ConsumerStatefulWidget {
+  const AttendanceView({super.key});
+
+  @override
+  ConsumerState<AttendanceView> createState() => _AttendanceViewState();
+}
+
+class _AttendanceViewState extends ConsumerState<AttendanceView>
+    with SingleTickerProviderStateMixin {
+  late final Ticker _ticker;
+  DateTime _now = DateTime.now();
+  bool _isActioning = false;
+  String? _actionError;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = createTicker((elapsed) {
+      if (mounted) {
+        setState(() => _now = DateTime.now());
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshAttendance();
+    });
+  }
+
+  void _startTicker() {
+    if (!_ticker.isActive) {
+      _ticker.start();
+    }
+  }
+
+  void _stopTicker() {
+    if (_ticker.isActive) {
+      _ticker.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  void _refreshAttendance() {
+    final auth = ref.read(authStateProvider);
+    final wsId = auth.context?.activeWorkspace?.id;
+    if (wsId != null) {
+      ref.read(syncServiceProvider).syncDownAttendance(wsId);
+    }
+  }
+
+  String _formatDuration(DateTime? start) {
+    if (start == null) return '00:00:00';
+    final diff = _now.difference(start);
+    if (diff.isNegative) return '00:00:00';
+    final hours = diff.inHours.toString().padLeft(2, '0');
+    final minutes = (diff.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (diff.inSeconds % 60).toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
+  }
+
+  Future<void> _handlePunchIn(String workspaceId) async {
+    setState(() {
+      _isActioning = true;
+      _actionError = null;
+    });
+
+    try {
+      final sync = ref.read(syncServiceProvider);
+      await sync.queuePunchIn(
+        workspaceId: workspaceId,
+        note: 'Punched in from mobile',
+      );
+    } catch (e) {
+      setState(() => _actionError = e.toString());
+    } finally {
+      if (mounted) setState(() => _isActioning = false);
+    }
+  }
+
+  Future<void> _handlePunchOut(String workspaceId) async {
+    setState(() {
+      _isActioning = true;
+      _actionError = null;
+    });
+
+    try {
+      final sync = ref.read(syncServiceProvider);
+      await sync.queuePunchOut(
+        workspaceId: workspaceId,
+        note: 'Punched out from mobile',
+      );
+    } catch (e) {
+      setState(() => _actionError = e.toString());
+    } finally {
+      if (mounted) setState(() => _isActioning = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ref.watch(authStateProvider);
+    final workspace = auth.context?.activeWorkspace;
+    final workspaceId = workspace?.id ?? '';
+    final sync = ref.watch(syncServiceProvider);
+
+    return StreamBuilder<CachedAttendanceData?>(
+      stream: sync.watchAttendance(workspaceId),
+      builder: (context, snapshot) {
+        final attendance = snapshot.data;
+        final isOnDuty = attendance?.dutyState == 'ON_DUTY';
+        final punchInTime = attendance?.punchInTime;
+
+        if (isOnDuty) {
+          _startTicker();
+        } else {
+          _stopTicker();
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async => _refreshAttendance(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_actionError != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFCA5A5)),
+                    ),
+                    child: Text(
+                      _actionError!,
+                      style: const TextStyle(color: Color(0xFF991B1B), fontSize: 13),
+                    ),
+                  ),
+
+                // Duty Status Hero Card
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: isOnDuty ? const Color(0xFF86EFAC) : OprinoColors.border,
+                      width: isOnDuty ? 1.5 : 1.0,
+                    ),
+                  ),
+                  color: isOnDuty ? const Color(0xFFF0FDF4) : Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        // Status badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isOnDuty ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isOnDuty ? const Color(0xFF16A34A) : OprinoColors.slate,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                isOnDuty ? 'CURRENTLY ON DUTY' : 'OFF DUTY',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                  color: isOnDuty ? const Color(0xFF15803D) : OprinoColors.slate,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Elapsed Duration or Call to Punch
+                        if (isOnDuty) ...[
+                          const Text(
+                            'Elapsed Duty Time',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: OprinoColors.slate,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _formatDuration(punchInTime),
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                              fontFamily: 'monospace',
+                              letterSpacing: 1.0,
+                              color: OprinoColors.navy,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (punchInTime != null)
+                            Text(
+                              'Started at ${TimeOfDay.fromDateTime(punchInTime.toLocal()).format(context)}',
+                              style: const TextStyle(fontSize: 12, color: OprinoColors.slate),
+                            ),
+                        ] else ...[
+                          const Text(
+                            'Ready to start your work shift?',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: OprinoColors.navy,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Punches record canonical server timestamps.',
+                            style: TextStyle(fontSize: 12, color: OprinoColors.slate),
+                          ),
+                        ],
+
+                        const SizedBox(height: 24),
+
+                        // Primary Action Button (Punch In / Punch Out)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton.icon(
+                            onPressed: _isActioning
+                                ? null
+                                : () => isOnDuty
+                                    ? _handlePunchOut(workspaceId)
+                                    : _handlePunchIn(workspaceId),
+                            icon: _isActioning
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : Icon(isOnDuty ? Icons.logout : Icons.login),
+                            label: Text(
+                              _isActioning
+                                  ? 'Processing...'
+                                  : isOnDuty
+                                      ? 'Punch Out (End Duty)'
+                                      : 'Punch In (Start Duty)',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isOnDuty
+                                  ? const Color(0xFFDC2626)
+                                  : const Color(0xFF16A34A),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Shift Information Card
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: OprinoColors.border),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.schedule, size: 18, color: OprinoColors.cobalt),
+                            SizedBox(width: 8),
+                            Text(
+                              'Shift & Schedule Policies',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: OprinoColors.navy,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Assigned Schedule',
+                              style: TextStyle(fontSize: 13, color: OprinoColors.slate),
+                            ),
+                            Text(
+                              attendance?.shiftName ?? 'General Operations Shift',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: OprinoColors.navy,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 20),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Duty-Hours Privacy Guarantee',
+                              style: TextStyle(fontSize: 13, color: OprinoColors.slate),
+                            ),
+                            Text(
+                              'ACTIVE',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF16A34A),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Location tracking and field coordination occur strictly while On-Duty. Punching out terminates operational tracking immediately.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: OprinoColors.slate,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

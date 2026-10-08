@@ -8,6 +8,13 @@
       "when": 1791217679791,
       "tag": "0000_tense_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791220651098,
+      "tag": "0001_early_misty_knight",
+      "breakpoints": true
     }
   ]
 }

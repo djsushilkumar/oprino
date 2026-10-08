@@ -581,7 +581,551 @@ class RevokeDeviceResponse {
 `;
 fs.writeFileSync(path.resolve(modelDir, 'device_models.dart'), deviceModelsContent, 'utf-8');
 
-// 8. Generate ApiClient
+// 8. Task Models (Phase 02B)
+const taskModelsContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
+// Generated from OpenAPI 3.1 specification by @oprino/contracts
+
+class TaskAssignee {
+  final String id;
+  final String taskId;
+  final String userId;
+  final String name;
+  final String email;
+  final DateTime assignedAt;
+
+  const TaskAssignee({
+    required this.id,
+    required this.taskId,
+    required this.userId,
+    required this.name,
+    required this.email,
+    required this.assignedAt,
+  });
+
+  factory TaskAssignee.fromJson(Map<String, dynamic> json) {
+    return TaskAssignee(
+      id: json['id'] as String,
+      taskId: json['taskId'] as String,
+      userId: json['userId'] as String,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      assignedAt: DateTime.parse(json['assignedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'taskId': taskId,
+        'userId': userId,
+        'name': name,
+        'email': email,
+        'assignedAt': assignedAt.toIso8601String(),
+      };
+}
+
+class TaskChecklistItem {
+  final String id;
+  final String taskId;
+  final String title;
+  final bool isCompleted;
+  final int sortOrder;
+  final String? completedBy;
+  final DateTime? completedAt;
+  final DateTime createdAt;
+
+  const TaskChecklistItem({
+    required this.id,
+    required this.taskId,
+    required this.title,
+    required this.isCompleted,
+    required this.sortOrder,
+    this.completedBy,
+    this.completedAt,
+    required this.createdAt,
+  });
+
+  factory TaskChecklistItem.fromJson(Map<String, dynamic> json) {
+    return TaskChecklistItem(
+      id: json['id'] as String,
+      taskId: json['taskId'] as String,
+      title: json['title'] as String,
+      isCompleted: json['isCompleted'] as bool? ?? false,
+      sortOrder: json['sortOrder'] as int? ?? 0,
+      completedBy: json['completedBy'] as String?,
+      completedAt: json['completedAt'] != null
+          ? DateTime.parse(json['completedAt'] as String)
+          : null,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'taskId': taskId,
+        'title': title,
+        'isCompleted': isCompleted,
+        'sortOrder': sortOrder,
+        if (completedBy != null) 'completedBy': completedBy,
+        if (completedAt != null) 'completedAt': completedAt!.toIso8601String(),
+        'createdAt': createdAt.toIso8601String(),
+      };
+}
+
+class TaskComment {
+  final String id;
+  final String taskId;
+  final String authorId;
+  final String authorName;
+  final String content;
+  final DateTime createdAt;
+
+  const TaskComment({
+    required this.id,
+    required this.taskId,
+    required this.authorId,
+    required this.authorName,
+    required this.content,
+    required this.createdAt,
+  });
+
+  factory TaskComment.fromJson(Map<String, dynamic> json) {
+    return TaskComment(
+      id: json['id'] as String,
+      taskId: json['taskId'] as String,
+      authorId: json['authorId'] as String,
+      authorName: json['authorName'] as String,
+      content: json['content'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'taskId': taskId,
+        'authorId': authorId,
+        'authorName': authorName,
+        'content': content,
+        'createdAt': createdAt.toIso8601String(),
+      };
+}
+
+class TaskActivity {
+  final String id;
+  final String taskId;
+  final String actorId;
+  final String actorName;
+  final String action;
+  final String? fromStatus;
+  final String? toStatus;
+  final Map<String, dynamic>? details;
+  final DateTime createdAt;
+
+  const TaskActivity({
+    required this.id,
+    required this.taskId,
+    required this.actorId,
+    required this.actorName,
+    required this.action,
+    this.fromStatus,
+    this.toStatus,
+    this.details,
+    required this.createdAt,
+  });
+
+  factory TaskActivity.fromJson(Map<String, dynamic> json) {
+    return TaskActivity(
+      id: json['id'] as String,
+      taskId: json['taskId'] as String,
+      actorId: json['actorId'] as String,
+      actorName: json['actorName'] as String,
+      action: json['action'] as String,
+      fromStatus: json['fromStatus'] as String?,
+      toStatus: json['toStatus'] as String?,
+      details: json['details'] as Map<String, dynamic>?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'taskId': taskId,
+        'actorId': actorId,
+        'actorName': actorName,
+        'action': action,
+        if (fromStatus != null) 'fromStatus': fromStatus,
+        if (toStatus != null) 'toStatus': toStatus,
+        if (details != null) 'details': details,
+        'createdAt': createdAt.toIso8601String(),
+      };
+}
+
+class TaskResponse {
+  final String id;
+  final String workspaceId;
+  final String title;
+  final String? description;
+  final String status;
+  final String simplifiedStatus;
+  final String priority;
+  final DateTime? dueAt;
+  final String createdBy;
+  final String? creatorName;
+  final int version;
+  final List<TaskAssignee> assignees;
+  final List<TaskChecklistItem> checklist;
+  final List<TaskComment> comments;
+  final List<TaskActivity> activities;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const TaskResponse({
+    required this.id,
+    required this.workspaceId,
+    required this.title,
+    this.description,
+    required this.status,
+    required this.simplifiedStatus,
+    required this.priority,
+    this.dueAt,
+    required this.createdBy,
+    this.creatorName,
+    required this.version,
+    required this.assignees,
+    this.checklist = const [],
+    this.comments = const [],
+    this.activities = const [],
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory TaskResponse.fromJson(Map<String, dynamic> json) {
+    return TaskResponse(
+      id: json['id'] as String,
+      workspaceId: json['workspaceId'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      status: json['status'] as String,
+      simplifiedStatus: json['simplifiedStatus'] as String? ?? 'TO_DO',
+      priority: json['priority'] as String? ?? 'MEDIUM',
+      dueAt: json['dueAt'] != null ? DateTime.parse(json['dueAt'] as String) : null,
+      createdBy: json['createdBy'] as String,
+      creatorName: json['creatorName'] as String?,
+      version: json['version'] as int? ?? 1,
+      assignees: (json['assignees'] as List<dynamic>? ?? [])
+          .map((e) => TaskAssignee.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      checklist: (json['checklist'] as List<dynamic>? ?? [])
+          .map((e) => TaskChecklistItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      comments: (json['comments'] as List<dynamic>? ?? [])
+          .map((e) => TaskComment.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      activities: (json['activities'] as List<dynamic>? ?? [])
+          .map((e) => TaskActivity.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'workspaceId': workspaceId,
+        'title': title,
+        if (description != null) 'description': description,
+        'status': status,
+        'simplifiedStatus': simplifiedStatus,
+        'priority': priority,
+        if (dueAt != null) 'dueAt': dueAt!.toIso8601String(),
+        'createdBy': createdBy,
+        if (creatorName != null) 'creatorName': creatorName,
+        'version': version,
+        'assignees': assignees.map((e) => e.toJson()).toList(),
+        'checklist': checklist.map((e) => e.toJson()).toList(),
+        'comments': comments.map((e) => e.toJson()).toList(),
+        'activities': activities.map((e) => e.toJson()).toList(),
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+}
+
+class ListTasksResponse {
+  final List<TaskResponse> tasks;
+  final int total;
+
+  const ListTasksResponse({required this.tasks, required this.total});
+
+  factory ListTasksResponse.fromJson(Map<String, dynamic> json) {
+    return ListTasksResponse(
+      tasks: (json['tasks'] as List<dynamic>)
+          .map((e) => TaskResponse.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: json['total'] as int? ?? (json['tasks'] as List<dynamic>).length,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'tasks': tasks.map((e) => e.toJson()).toList(),
+        'total': total,
+      };
+}
+`;
+fs.writeFileSync(path.resolve(modelDir, 'task_models.dart'), taskModelsContent, 'utf-8');
+
+// 9. Attendance Models (Phase 02B)
+const attendanceModelsContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
+// Generated from OpenAPI 3.1 specification by @oprino/contracts
+
+class AttendanceShift {
+  final String id;
+  final String workspaceId;
+  final String name;
+  final String startTime;
+  final String endTime;
+  final String timezone;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const AttendanceShift({
+    required this.id,
+    required this.workspaceId,
+    required this.name,
+    required this.startTime,
+    required this.endTime,
+    required this.timezone,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory AttendanceShift.fromJson(Map<String, dynamic> json) {
+    return AttendanceShift(
+      id: json['id'] as String,
+      workspaceId: json['workspaceId'] as String,
+      name: json['name'] as String,
+      startTime: json['startTime'] as String,
+      endTime: json['endTime'] as String,
+      timezone: json['timezone'] as String? ?? 'UTC',
+      isActive: json['isActive'] as bool? ?? true,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'workspaceId': workspaceId,
+        'name': name,
+        'startTime': startTime,
+        'endTime': endTime,
+        'timezone': timezone,
+        'isActive': isActive,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+}
+
+class ListShiftsResponse {
+  final List<AttendanceShift> shifts;
+
+  const ListShiftsResponse({required this.shifts});
+
+  factory ListShiftsResponse.fromJson(Map<String, dynamic> json) {
+    return ListShiftsResponse(
+      shifts: (json['shifts'] as List<dynamic>)
+          .map((e) => AttendanceShift.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'shifts': shifts.map((e) => e.toJson()).toList(),
+      };
+}
+
+class AttendanceSessionResponse {
+  final String id;
+  final String workspaceId;
+  final String userId;
+  final String? userName;
+  final String? userEmail;
+  final String? shiftId;
+  final String? shiftName;
+  final String status;
+  final DateTime punchInTime;
+  final DateTime? punchOutTime;
+  final int? durationMinutes;
+  final bool isLate;
+  final int lateMinutes;
+  final bool isManualAdjustment;
+  final String? adjustmentNote;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const AttendanceSessionResponse({
+    required this.id,
+    required this.workspaceId,
+    required this.userId,
+    this.userName,
+    this.userEmail,
+    this.shiftId,
+    this.shiftName,
+    required this.status,
+    required this.punchInTime,
+    this.punchOutTime,
+    this.durationMinutes,
+    this.isLate = false,
+    this.lateMinutes = 0,
+    this.isManualAdjustment = false,
+    this.adjustmentNote,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory AttendanceSessionResponse.fromJson(Map<String, dynamic> json) {
+    return AttendanceSessionResponse(
+      id: json['id'] as String,
+      workspaceId: json['workspaceId'] as String,
+      userId: json['userId'] as String,
+      userName: json['userName'] as String?,
+      userEmail: json['userEmail'] as String?,
+      shiftId: json['shiftId'] as String?,
+      shiftName: json['shiftName'] as String?,
+      status: json['status'] as String,
+      punchInTime: DateTime.parse(json['punchInTime'] as String),
+      punchOutTime: json['punchOutTime'] != null
+          ? DateTime.parse(json['punchOutTime'] as String)
+          : null,
+      durationMinutes: json['durationMinutes'] as int?,
+      isLate: json['isLate'] as bool? ?? false,
+      lateMinutes: json['lateMinutes'] as int? ?? 0,
+      isManualAdjustment: json['isManualAdjustment'] as bool? ?? false,
+      adjustmentNote: json['adjustmentNote'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'workspaceId': workspaceId,
+        'userId': userId,
+        if (userName != null) 'userName': userName,
+        if (userEmail != null) 'userEmail': userEmail,
+        if (shiftId != null) 'shiftId': shiftId,
+        if (shiftName != null) 'shiftName': shiftName,
+        'status': status,
+        'punchInTime': punchInTime.toIso8601String(),
+        if (punchOutTime != null) 'punchOutTime': punchOutTime!.toIso8601String(),
+        if (durationMinutes != null) 'durationMinutes': durationMinutes,
+        'isLate': isLate,
+        'lateMinutes': lateMinutes,
+        'isManualAdjustment': isManualAdjustment,
+        if (adjustmentNote != null) 'adjustmentNote': adjustmentNote,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+}
+
+class CurrentAttendanceResponse {
+  final String dutyState;
+  final AttendanceSessionResponse? activeSession;
+  final AttendanceSessionResponse? lastSession;
+  final AttendanceShift? assignedShift;
+  final DateTime serverTime;
+
+  const CurrentAttendanceResponse({
+    required this.dutyState,
+    this.activeSession,
+    this.lastSession,
+    this.assignedShift,
+    required this.serverTime,
+  });
+
+  factory CurrentAttendanceResponse.fromJson(Map<String, dynamic> json) {
+    return CurrentAttendanceResponse(
+      dutyState: json['dutyState'] as String,
+      activeSession: json['activeSession'] != null
+          ? AttendanceSessionResponse.fromJson(json['activeSession'] as Map<String, dynamic>)
+          : null,
+      lastSession: json['lastSession'] != null
+          ? AttendanceSessionResponse.fromJson(json['lastSession'] as Map<String, dynamic>)
+          : null,
+      assignedShift: json['assignedShift'] != null
+          ? AttendanceShift.fromJson(json['assignedShift'] as Map<String, dynamic>)
+          : null,
+      serverTime: DateTime.parse(json['serverTime'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'dutyState': dutyState,
+        if (activeSession != null) 'activeSession': activeSession!.toJson(),
+        if (lastSession != null) 'lastSession': lastSession!.toJson(),
+        if (assignedShift != null) 'assignedShift': assignedShift!.toJson(),
+        'serverTime': serverTime.toIso8601String(),
+      };
+}
+
+class AttendanceHistoryResponse {
+  final List<AttendanceSessionResponse> sessions;
+  final int total;
+
+  const AttendanceHistoryResponse({required this.sessions, required this.total});
+
+  factory AttendanceHistoryResponse.fromJson(Map<String, dynamic> json) {
+    return AttendanceHistoryResponse(
+      sessions: (json['sessions'] as List<dynamic>)
+          .map((e) => AttendanceSessionResponse.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: json['total'] as int? ?? (json['sessions'] as List<dynamic>).length,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'sessions': sessions.map((e) => e.toJson()).toList(),
+        'total': total,
+      };
+}
+
+class TeamAttendanceResponse {
+  final int onDutyCount;
+  final int offDutyCount;
+  final List<AttendanceSessionResponse> activeSessions;
+  final List<AttendanceSessionResponse> history;
+
+  const TeamAttendanceResponse({
+    required this.onDutyCount,
+    required this.offDutyCount,
+    required this.activeSessions,
+    required this.history,
+  });
+
+  factory TeamAttendanceResponse.fromJson(Map<String, dynamic> json) {
+    return TeamAttendanceResponse(
+      onDutyCount: json['onDutyCount'] as int? ?? 0,
+      offDutyCount: json['offDutyCount'] as int? ?? 0,
+      activeSessions: (json['activeSessions'] as List<dynamic>? ?? [])
+          .map((e) => AttendanceSessionResponse.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      history: (json['history'] as List<dynamic>? ?? [])
+          .map((e) => AttendanceSessionResponse.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'onDutyCount': onDutyCount,
+        'offDutyCount': offDutyCount,
+        'activeSessions': activeSessions.map((e) => e.toJson()).toList(),
+        'history': history.map((e) => e.toJson()).toList(),
+      };
+}
+`;
+fs.writeFileSync(path.resolve(modelDir, 'attendance_models.dart'), attendanceModelsContent, 'utf-8');
+
+// 10. Generate ApiClient
 const apiClientContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
 // Generated from OpenAPI 3.1 specification by @oprino/contracts
 
@@ -593,6 +1137,8 @@ import 'model/auth_models.dart';
 import 'model/workspace_models.dart';
 import 'model/me_models.dart';
 import 'model/device_models.dart';
+import 'model/task_models.dart';
+import 'model/attendance_models.dart';
 
 class OprinoApiClient {
   final Dio dio;
@@ -611,6 +1157,8 @@ class OprinoApiClient {
               },
             ));
 
+  // --- System ---
+
   Future<HealthResponse> getHealth() async {
     try {
       final response = await dio.get<Map<String, dynamic>>('/health');
@@ -623,13 +1171,15 @@ class OprinoApiClient {
 
   Future<VersionResponse> getVersion() async {
     try {
-      final response = await dio.get<Map<String, dynamic>>('/v1/version');
+      final response = await dio.get<Map<String, dynamic>>('/version');
       return VersionResponse.fromJson(response.data!);
     } on DioException catch (e) {
       _handleDioException(e);
       rethrow;
     }
   }
+
+  // --- Auth ---
 
   Future<AuthResponse> signUp({
     required String email,
@@ -681,6 +1231,8 @@ class OprinoApiClient {
     }
   }
 
+  // --- Identity / Session ---
+
   Future<MeResponse> getMe() async {
     try {
       final response = await dio.get<Map<String, dynamic>>('/v1/me');
@@ -690,6 +1242,8 @@ class OprinoApiClient {
       rethrow;
     }
   }
+
+  // --- Workspaces ---
 
   Future<WorkspaceResponse> createWorkspace({
     required String name,
@@ -736,6 +1290,8 @@ class OprinoApiClient {
       rethrow;
     }
   }
+
+  // --- Devices ---
 
   Future<DeviceResponse> registerDevice({
     required String installationId,
@@ -791,6 +1347,291 @@ class OprinoApiClient {
     }
   }
 
+  // --- Tasks (Phase 02B) ---
+
+  Future<TaskResponse> createTask({
+    required String title,
+    String? description,
+    String priority = 'MEDIUM',
+    String? dueAt,
+    List<String>? assigneeIds,
+    List<String>? checklist,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks',
+        data: {
+          'title': title,
+          if (description != null) 'description': description,
+          'priority': priority,
+          if (dueAt != null) 'dueAt': dueAt,
+          if (assigneeIds != null) 'assigneeIds': assigneeIds,
+          if (checklist != null) 'checklist': checklist,
+        },
+      );
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListTasksResponse> listTasks({
+    String? status,
+    String? assigneeId,
+    String? priority,
+    String? overdue,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        if (status != null) 'status': status,
+        if (assigneeId != null) 'assigneeId': assigneeId,
+        if (priority != null) 'priority': priority,
+        if (overdue != null) 'overdue': overdue,
+      };
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/tasks',
+        queryParameters: queryParams,
+      );
+      return ListTasksResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskResponse> getTaskById(String taskId) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/tasks/$taskId');
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskResponse> updateTask(
+    String taskId, {
+    String? title,
+    String? description,
+    String? priority,
+    String? dueAt,
+    List<String>? assigneeIds,
+    required int version,
+  }) async {
+    try {
+      final response = await dio.patch<Map<String, dynamic>>(
+        '/v1/tasks/$taskId',
+        data: {
+          if (title != null) 'title': title,
+          if (description != null) 'description': description,
+          if (priority != null) 'priority': priority,
+          if (dueAt != null) 'dueAt': dueAt,
+          if (assigneeIds != null) 'assigneeIds': assigneeIds,
+          'version': version,
+        },
+      );
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskResponse> transitionTask(
+    String taskId, {
+    required String status,
+    required int version,
+    String? comment,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/transition',
+        data: {
+          'status': status,
+          'version': version,
+          if (comment != null) 'comment': comment,
+        },
+      );
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskChecklistItem> createChecklistItem(
+    String taskId, {
+    required String title,
+    int? sortOrder,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/checklist',
+        data: {
+          'title': title,
+          if (sortOrder != null) 'sortOrder': sortOrder,
+        },
+      );
+      return TaskChecklistItem.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskChecklistItem> updateChecklistItem(
+    String taskId,
+    String itemId, {
+    required bool isCompleted,
+  }) async {
+    try {
+      final response = await dio.patch<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/checklist/$itemId',
+        data: {
+          'isCompleted': isCompleted,
+        },
+      );
+      return TaskChecklistItem.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskComment> createTaskComment(
+    String taskId, {
+    required String content,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/comments',
+        data: {
+          'content': content,
+        },
+      );
+      return TaskComment.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Attendance (Phase 02B) ---
+
+  Future<AttendanceSessionResponse> punchIn({
+    required String idempotencyKey,
+    String? shiftId,
+    String? note,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/attendance/punch-in',
+        data: {
+          'idempotencyKey': idempotencyKey,
+          if (shiftId != null) 'shiftId': shiftId,
+          if (note != null) 'note': note,
+        },
+      );
+      return AttendanceSessionResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<AttendanceSessionResponse> punchOut({
+    required String idempotencyKey,
+    String? note,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/attendance/punch-out',
+        data: {
+          'idempotencyKey': idempotencyKey,
+          if (note != null) 'note': note,
+        },
+      );
+      return AttendanceSessionResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<CurrentAttendanceResponse> getCurrentAttendance() async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/attendance/current');
+      return CurrentAttendanceResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<AttendanceHistoryResponse> getAttendanceHistory({
+    String? limit,
+    String? offset,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        if (limit != null) 'limit': limit,
+        if (offset != null) 'offset': offset,
+      };
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/attendance/history',
+        queryParameters: queryParams,
+      );
+      return AttendanceHistoryResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TeamAttendanceResponse> getTeamAttendance() async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/attendance/team');
+      return TeamAttendanceResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<AttendanceShift> createShift({
+    required String name,
+    required String startTime,
+    required String endTime,
+    String? timezone,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/attendance/shifts',
+        data: {
+          'name': name,
+          'startTime': startTime,
+          'endTime': endTime,
+          if (timezone != null) 'timezone': timezone,
+        },
+      );
+      return AttendanceShift.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListShiftsResponse> listShifts() async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/attendance/shifts');
+      return ListShiftsResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
   void _handleDioException(DioException e) {
     if (e.response?.data is Map<String, dynamic>) {
       throw ApiError.fromJson(e.response!.data as Map<String, dynamic>);
@@ -800,7 +1641,7 @@ class OprinoApiClient {
 `;
 fs.writeFileSync(path.resolve(srcDir, 'api_client.dart'), apiClientContent, 'utf-8');
 
-// 9. Generate Root Library Export
+// 11. Generate Root Library Export
 const oprinoApiContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
 // Generated from OpenAPI 3.1 specification by @oprino/contracts
 
@@ -814,6 +1655,8 @@ export 'src/model/auth_models.dart';
 export 'src/model/workspace_models.dart';
 export 'src/model/me_models.dart';
 export 'src/model/device_models.dart';
+export 'src/model/task_models.dart';
+export 'src/model/attendance_models.dart';
 `;
 fs.writeFileSync(path.resolve(libDir, 'oprino_api.dart'), oprinoApiContent, 'utf-8');
 

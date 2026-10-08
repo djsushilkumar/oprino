@@ -9,6 +9,8 @@ import 'model/auth_models.dart';
 import 'model/workspace_models.dart';
 import 'model/me_models.dart';
 import 'model/device_models.dart';
+import 'model/task_models.dart';
+import 'model/attendance_models.dart';
 
 class OprinoApiClient {
   final Dio dio;
@@ -27,6 +29,8 @@ class OprinoApiClient {
               },
             ));
 
+  // --- System ---
+
   Future<HealthResponse> getHealth() async {
     try {
       final response = await dio.get<Map<String, dynamic>>('/health');
@@ -39,13 +43,15 @@ class OprinoApiClient {
 
   Future<VersionResponse> getVersion() async {
     try {
-      final response = await dio.get<Map<String, dynamic>>('/v1/version');
+      final response = await dio.get<Map<String, dynamic>>('/version');
       return VersionResponse.fromJson(response.data!);
     } on DioException catch (e) {
       _handleDioException(e);
       rethrow;
     }
   }
+
+  // --- Auth ---
 
   Future<AuthResponse> signUp({
     required String email,
@@ -97,6 +103,8 @@ class OprinoApiClient {
     }
   }
 
+  // --- Identity / Session ---
+
   Future<MeResponse> getMe() async {
     try {
       final response = await dio.get<Map<String, dynamic>>('/v1/me');
@@ -106,6 +114,8 @@ class OprinoApiClient {
       rethrow;
     }
   }
+
+  // --- Workspaces ---
 
   Future<WorkspaceResponse> createWorkspace({
     required String name,
@@ -152,6 +162,8 @@ class OprinoApiClient {
       rethrow;
     }
   }
+
+  // --- Devices ---
 
   Future<DeviceResponse> registerDevice({
     required String installationId,
@@ -201,6 +213,291 @@ class OprinoApiClient {
         },
       );
       return RevokeDeviceResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Tasks (Phase 02B) ---
+
+  Future<TaskResponse> createTask({
+    required String title,
+    String? description,
+    String priority = 'MEDIUM',
+    String? dueAt,
+    List<String>? assigneeIds,
+    List<String>? checklist,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks',
+        data: {
+          'title': title,
+          if (description != null) 'description': description,
+          'priority': priority,
+          if (dueAt != null) 'dueAt': dueAt,
+          if (assigneeIds != null) 'assigneeIds': assigneeIds,
+          if (checklist != null) 'checklist': checklist,
+        },
+      );
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListTasksResponse> listTasks({
+    String? status,
+    String? assigneeId,
+    String? priority,
+    String? overdue,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        if (status != null) 'status': status,
+        if (assigneeId != null) 'assigneeId': assigneeId,
+        if (priority != null) 'priority': priority,
+        if (overdue != null) 'overdue': overdue,
+      };
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/tasks',
+        queryParameters: queryParams,
+      );
+      return ListTasksResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskResponse> getTaskById(String taskId) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/tasks/$taskId');
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskResponse> updateTask(
+    String taskId, {
+    String? title,
+    String? description,
+    String? priority,
+    String? dueAt,
+    List<String>? assigneeIds,
+    required int version,
+  }) async {
+    try {
+      final response = await dio.patch<Map<String, dynamic>>(
+        '/v1/tasks/$taskId',
+        data: {
+          if (title != null) 'title': title,
+          if (description != null) 'description': description,
+          if (priority != null) 'priority': priority,
+          if (dueAt != null) 'dueAt': dueAt,
+          if (assigneeIds != null) 'assigneeIds': assigneeIds,
+          'version': version,
+        },
+      );
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskResponse> transitionTask(
+    String taskId, {
+    required String status,
+    required int version,
+    String? comment,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/transition',
+        data: {
+          'status': status,
+          'version': version,
+          if (comment != null) 'comment': comment,
+        },
+      );
+      return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskChecklistItem> createChecklistItem(
+    String taskId, {
+    required String title,
+    int? sortOrder,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/checklist',
+        data: {
+          'title': title,
+          if (sortOrder != null) 'sortOrder': sortOrder,
+        },
+      );
+      return TaskChecklistItem.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskChecklistItem> updateChecklistItem(
+    String taskId,
+    String itemId, {
+    required bool isCompleted,
+  }) async {
+    try {
+      final response = await dio.patch<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/checklist/$itemId',
+        data: {
+          'isCompleted': isCompleted,
+        },
+      );
+      return TaskChecklistItem.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TaskComment> createTaskComment(
+    String taskId, {
+    required String content,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/tasks/$taskId/comments',
+        data: {
+          'content': content,
+        },
+      );
+      return TaskComment.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Attendance (Phase 02B) ---
+
+  Future<AttendanceSessionResponse> punchIn({
+    required String idempotencyKey,
+    String? shiftId,
+    String? note,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/attendance/punch-in',
+        data: {
+          'idempotencyKey': idempotencyKey,
+          if (shiftId != null) 'shiftId': shiftId,
+          if (note != null) 'note': note,
+        },
+      );
+      return AttendanceSessionResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<AttendanceSessionResponse> punchOut({
+    required String idempotencyKey,
+    String? note,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/attendance/punch-out',
+        data: {
+          'idempotencyKey': idempotencyKey,
+          if (note != null) 'note': note,
+        },
+      );
+      return AttendanceSessionResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<CurrentAttendanceResponse> getCurrentAttendance() async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/attendance/current');
+      return CurrentAttendanceResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<AttendanceHistoryResponse> getAttendanceHistory({
+    String? limit,
+    String? offset,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        if (limit != null) 'limit': limit,
+        if (offset != null) 'offset': offset,
+      };
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/attendance/history',
+        queryParameters: queryParams,
+      );
+      return AttendanceHistoryResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<TeamAttendanceResponse> getTeamAttendance() async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/attendance/team');
+      return TeamAttendanceResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<AttendanceShift> createShift({
+    required String name,
+    required String startTime,
+    required String endTime,
+    String? timezone,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/attendance/shifts',
+        data: {
+          'name': name,
+          'startTime': startTime,
+          'endTime': endTime,
+          if (timezone != null) 'timezone': timezone,
+        },
+      );
+      return AttendanceShift.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListShiftsResponse> listShifts() async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/v1/attendance/shifts');
+      return ListShiftsResponse.fromJson(response.data!);
     } on DioException catch (e) {
       _handleDioException(e);
       rethrow;

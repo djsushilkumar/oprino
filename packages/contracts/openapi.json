@@ -3,7 +3,7 @@
   "info": {
     "title": "Oprino Operations Engine API",
     "version": "0.2.0",
-    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02A)"
+    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02B)"
   },
   "servers": [
     {
@@ -26,7 +26,11 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["ok", "degraded", "unhealthy"],
+            "enum": [
+              "ok",
+              "degraded",
+              "unhealthy"
+            ],
             "example": "ok"
           },
           "timestamp": {
@@ -39,20 +43,35 @@
             "properties": {
               "database": {
                 "type": "string",
-                "enum": ["connected", "disconnected", "unhealthy"],
+                "enum": [
+                  "connected",
+                  "disconnected",
+                  "unhealthy"
+                ],
                 "example": "connected"
               },
               "redis": {
                 "type": "string",
-                "enum": ["connected", "disconnected", "unhealthy"],
+                "enum": [
+                  "connected",
+                  "disconnected",
+                  "unhealthy"
+                ],
                 "example": "connected"
               }
             },
-            "required": ["database", "redis"],
+            "required": [
+              "database",
+              "redis"
+            ],
             "description": "Subsystem connectivity health"
           }
         },
-        "required": ["status", "timestamp", "services"]
+        "required": [
+          "status",
+          "timestamp",
+          "services"
+        ]
       },
       "SystemArchitectureInfo": {
         "type": "object",
@@ -74,7 +93,12 @@
             "example": "Better Auth"
           }
         },
-        "required": ["framework", "database", "mobile", "auth"]
+        "required": [
+          "framework",
+          "database",
+          "mobile",
+          "auth"
+        ]
       },
       "VersionResponse": {
         "type": "object",
@@ -99,7 +123,12 @@
             "$ref": "#/components/schemas/SystemArchitectureInfo"
           }
         },
-        "required": ["name", "version", "environment", "architecture"]
+        "required": [
+          "name",
+          "version",
+          "environment",
+          "architecture"
+        ]
       },
       "ApiError": {
         "type": "object",
@@ -124,7 +153,11 @@
             }
           }
         },
-        "required": ["statusCode", "error", "message"]
+        "required": [
+          "statusCode",
+          "error",
+          "message"
+        ]
       },
       "AuthUser": {
         "type": "object",
@@ -149,11 +182,19 @@
             "example": true
           },
           "image": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "https://cdn.oprino.com/avatars/user1.png"
           }
         },
-        "required": ["id", "email", "name", "emailVerified"]
+        "required": [
+          "id",
+          "email",
+          "name",
+          "emailVerified"
+        ]
       },
       "SignUpRequest": {
         "type": "object",
@@ -174,7 +215,11 @@
             "example": "Acme Owner"
           }
         },
-        "required": ["email", "password", "name"]
+        "required": [
+          "email",
+          "password",
+          "name"
+        ]
       },
       "SignInRequest": {
         "type": "object",
@@ -190,7 +235,10 @@
             "example": "SecurePassword123!"
           }
         },
-        "required": ["email", "password"]
+        "required": [
+          "email",
+          "password"
+        ]
       },
       "AuthResponse": {
         "type": "object",
@@ -203,12 +251,18 @@
             "$ref": "#/components/schemas/AuthUser"
           },
           "activeWorkspaceId": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uuid",
             "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
           }
         },
-        "required": ["token", "user"]
+        "required": [
+          "token",
+          "user"
+        ]
       },
       "SignOutResponse": {
         "type": "object",
@@ -218,7 +272,9 @@
             "example": true
           }
         },
-        "required": ["success"]
+        "required": [
+          "success"
+        ]
       },
       "CreateWorkspaceRequest": {
         "type": "object",
@@ -236,7 +292,9 @@
             "example": "acme-field-services"
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       },
       "WorkspaceResponse": {
         "type": "object",
@@ -267,14 +325,27 @@
             "items": {
               "type": "string"
             },
-            "example": ["workspace.read", "workspace.manage", "members.read", "members.manage"]
+            "example": [
+              "workspace.read",
+              "workspace.manage",
+              "members.read",
+              "members.manage"
+            ]
           },
           "createdAt": {
             "type": "string",
             "example": "2026-10-05T12:00:00.000Z"
           }
         },
-        "required": ["id", "name", "slug", "status", "role", "permissions", "createdAt"]
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "role",
+          "permissions",
+          "createdAt"
+        ]
       },
       "WorkspaceListItem": {
         "type": "object",
@@ -305,7 +376,14 @@
             "example": "Owner/Admin"
           }
         },
-        "required": ["id", "name", "slug", "status", "membershipStatus", "roleName"]
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "membershipStatus",
+          "roleName"
+        ]
       },
       "ListWorkspacesResponse": {
         "type": "object",
@@ -317,7 +395,9 @@
             }
           }
         },
-        "required": ["workspaces"]
+        "required": [
+          "workspaces"
+        ]
       },
       "SwitchWorkspaceRequest": {
         "type": "object",
@@ -328,7 +408,9 @@
             "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
           }
         },
-        "required": ["workspaceId"]
+        "required": [
+          "workspaceId"
+        ]
       },
       "SwitchWorkspaceResponse": {
         "type": "object",
@@ -351,10 +433,18 @@
             "items": {
               "type": "string"
             },
-            "example": ["workspace.read", "workspace.manage"]
+            "example": [
+              "workspace.read",
+              "workspace.manage"
+            ]
           }
         },
-        "required": ["activeWorkspaceId", "name", "role", "permissions"]
+        "required": [
+          "activeWorkspaceId",
+          "name",
+          "role",
+          "permissions"
+        ]
       },
       "ActiveWorkspaceInfo": {
         "type": "object",
@@ -377,7 +467,12 @@
             "example": "ACTIVE"
           }
         },
-        "required": ["id", "name", "slug", "status"]
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status"
+        ]
       },
       "MembershipInfo": {
         "type": "object",
@@ -392,7 +487,10 @@
             "example": "active"
           }
         },
-        "required": ["id", "status"]
+        "required": [
+          "id",
+          "status"
+        ]
       },
       "RoleInfo": {
         "type": "object",
@@ -407,7 +505,10 @@
             "example": "Owner/Admin"
           }
         },
-        "required": ["id", "name"]
+        "required": [
+          "id",
+          "name"
+        ]
       },
       "InstallationInfo": {
         "type": "object",
@@ -431,7 +532,12 @@
             "example": true
           }
         },
-        "required": ["id", "installationId", "status", "isTrusted"]
+        "required": [
+          "id",
+          "installationId",
+          "status",
+          "isTrusted"
+        ]
       },
       "MeResponse": {
         "type": "object",
@@ -445,7 +551,10 @@
                 "$ref": "#/components/schemas/ActiveWorkspaceInfo"
               },
               {
-                "type": ["object", "null"]
+                "type": [
+                  "object",
+                  "null"
+                ]
               }
             ]
           },
@@ -455,7 +564,10 @@
                 "$ref": "#/components/schemas/MembershipInfo"
               },
               {
-                "type": ["object", "null"]
+                "type": [
+                  "object",
+                  "null"
+                ]
               }
             ]
           },
@@ -465,7 +577,10 @@
                 "$ref": "#/components/schemas/RoleInfo"
               },
               {
-                "type": ["object", "null"]
+                "type": [
+                  "object",
+                  "null"
+                ]
               }
             ]
           },
@@ -474,7 +589,10 @@
             "items": {
               "type": "string"
             },
-            "example": ["workspace.read", "workspace.manage"]
+            "example": [
+              "workspace.read",
+              "workspace.manage"
+            ]
           },
           "currentInstallation": {
             "allOf": [
@@ -482,12 +600,18 @@
                 "$ref": "#/components/schemas/InstallationInfo"
               },
               {
-                "type": ["object", "null"]
+                "type": [
+                  "object",
+                  "null"
+                ]
               }
             ]
           }
         },
-        "required": ["user", "permissions"]
+        "required": [
+          "user",
+          "permissions"
+        ]
       },
       "RegisterDeviceRequest": {
         "type": "object",
@@ -499,7 +623,11 @@
           },
           "platform": {
             "type": "string",
-            "enum": ["android", "ios", "web"],
+            "enum": [
+              "android",
+              "ios",
+              "web"
+            ],
             "example": "android"
           },
           "deviceModel": {
@@ -522,7 +650,10 @@
             "example": "fcm_token_sample_123"
           }
         },
-        "required": ["installationId", "platform"]
+        "required": [
+          "installationId",
+          "platform"
+        ]
       },
       "DeviceResponse": {
         "type": "object",
@@ -542,15 +673,24 @@
             "example": "android"
           },
           "deviceModel": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "Pixel 8"
           },
           "osVersion": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "Android 15"
           },
           "appVersion": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "1.0.0"
           },
           "status": {
@@ -566,7 +706,14 @@
             "example": "2026-10-05T12:00:00.000Z"
           }
         },
-        "required": ["id", "installationId", "platform", "status", "isTrusted", "lastActiveAt"]
+        "required": [
+          "id",
+          "installationId",
+          "platform",
+          "status",
+          "isTrusted",
+          "lastActiveAt"
+        ]
       },
       "ListDevicesResponse": {
         "type": "object",
@@ -578,7 +725,9 @@
             }
           }
         },
-        "required": ["devices"]
+        "required": [
+          "devices"
+        ]
       },
       "RevokeDeviceRequest": {
         "type": "object",
@@ -589,7 +738,9 @@
             "example": "i1b2c3d4-e5f6-7890-abcd-ef1234567890"
           }
         },
-        "required": ["installationId"]
+        "required": [
+          "installationId"
+        ]
       },
       "RevokeDeviceResponse": {
         "type": "object",
@@ -603,7 +754,882 @@
             "example": "Device installation revoked successfully"
           }
         },
-        "required": ["success", "message"]
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "TaskAssignee": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Field Tech"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane@example.com"
+          },
+          "assignedAt": {
+            "type": "string",
+            "example": "2026-10-05T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "userId",
+          "name",
+          "email",
+          "assignedAt"
+        ]
+      },
+      "TaskChecklistItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "c1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "title": {
+            "type": "string",
+            "example": "Inspect water supply valve"
+          },
+          "isCompleted": {
+            "type": "boolean",
+            "example": false
+          },
+          "sortOrder": {
+            "type": "integer",
+            "example": 0
+          },
+          "completedBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": null
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-05T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "title",
+          "isCompleted",
+          "sortOrder",
+          "createdAt"
+        ]
+      },
+      "TaskComment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "m1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "authorName": {
+            "type": "string",
+            "example": "Jane Field Tech"
+          },
+          "content": {
+            "type": "string",
+            "example": "Site gate was locked, called supervisor."
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-05T12:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "authorId",
+          "authorName",
+          "content",
+          "createdAt"
+        ]
+      },
+      "TaskActivity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "e1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "actorId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "actorName": {
+            "type": "string",
+            "example": "Jane Field Tech"
+          },
+          "action": {
+            "type": "string",
+            "example": "task.status_changed"
+          },
+          "fromStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "ASSIGNED"
+          },
+          "toStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "ACCEPTED"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-05T12:05:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "actorId",
+          "actorName",
+          "action",
+          "createdAt"
+        ]
+      },
+      "TaskResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "title": {
+            "type": "string",
+            "example": "HVAC Maintenance Unit 4B"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Annual filter change and motor inspection"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ASSIGNED",
+              "ACCEPTED",
+              "EN_ROUTE",
+              "ARRIVED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "VERIFIED"
+            ],
+            "example": "ASSIGNED"
+          },
+          "simplifiedStatus": {
+            "type": "string",
+            "enum": [
+              "TO_DO",
+              "IN_PROGRESS",
+              "DONE"
+            ],
+            "example": "TO_DO"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ],
+            "example": "HIGH"
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "2026-10-06T18:00:00.000Z"
+          },
+          "createdBy": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "creatorName": {
+            "type": "string",
+            "example": "Supervisor Bob"
+          },
+          "version": {
+            "type": "integer",
+            "example": 1
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskAssignee"
+            }
+          },
+          "checklist": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskChecklistItem"
+            }
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskComment"
+            }
+          },
+          "activities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskActivity"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-05T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-10-05T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "title",
+          "status",
+          "simplifiedStatus",
+          "priority",
+          "createdBy",
+          "version",
+          "assignees",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateTaskRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "HVAC Maintenance Unit 4B"
+          },
+          "description": {
+            "type": "string",
+            "example": "Annual filter change and motor inspection"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ],
+            "default": "MEDIUM",
+            "example": "HIGH"
+          },
+          "dueAt": {
+            "type": "string",
+            "example": "2026-10-06T18:00:00.000Z"
+          },
+          "assigneeIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": [
+              "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            ]
+          },
+          "checklist": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "example": [
+              "Check air filter",
+              "Inspect wiring"
+            ]
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "UpdateTaskRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "HVAC Maintenance Unit 4B"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Updated task scope"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ],
+            "example": "URGENT"
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "2026-10-07T12:00:00.000Z"
+          },
+          "assigneeIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "version": {
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "TaskTransitionRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ASSIGNED",
+              "ACCEPTED",
+              "EN_ROUTE",
+              "ARRIVED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "VERIFIED"
+            ],
+            "example": "ACCEPTED"
+          },
+          "version": {
+            "type": "integer",
+            "example": 1
+          },
+          "comment": {
+            "type": "string",
+            "example": "Accepted task and heading to truck"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ]
+      },
+      "CreateChecklistItemRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "Verify breaker is off"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "example": 0
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "UpdateChecklistItemRequest": {
+        "type": "object",
+        "properties": {
+          "isCompleted": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "isCompleted"
+        ]
+      },
+      "CreateTaskCommentRequest": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "example": "Gate access code was 4211."
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "ListTasksResponse": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "required": [
+          "tasks",
+          "total"
+        ]
+      },
+      "AttendanceShift": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "s1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "General Day Shift"
+          },
+          "startTime": {
+            "type": "string",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "example": "17:00"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "UTC"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-05T08:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-10-05T08:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "name",
+          "startTime",
+          "endTime",
+          "timezone",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateShiftRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "Night Shift"
+          },
+          "startTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "example": "22:00"
+          },
+          "endTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "example": "06:00"
+          },
+          "timezone": {
+            "type": "string",
+            "default": "UTC",
+            "example": "UTC"
+          }
+        },
+        "required": [
+          "name",
+          "startTime",
+          "endTime"
+        ]
+      },
+      "ListShiftsResponse": {
+        "type": "object",
+        "properties": {
+          "shifts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttendanceShift"
+            }
+          }
+        },
+        "required": [
+          "shifts"
+        ]
+      },
+      "AttendanceSessionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "ses1b2c3-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userName": {
+            "type": "string",
+            "example": "Jane Field Tech"
+          },
+          "userEmail": {
+            "type": "string",
+            "example": "jane@example.com"
+          },
+          "shiftId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": null
+          },
+          "shiftName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "General Day Shift"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ON_DUTY",
+              "OFF_DUTY"
+            ],
+            "example": "ON_DUTY"
+          },
+          "punchInTime": {
+            "type": "string",
+            "example": "2026-10-05T09:02:15.000Z"
+          },
+          "punchOutTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          },
+          "durationMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "example": 480
+          },
+          "isLate": {
+            "type": "boolean",
+            "example": false
+          },
+          "lateMinutes": {
+            "type": "integer",
+            "example": 0
+          },
+          "isManualAdjustment": {
+            "type": "boolean",
+            "example": false
+          },
+          "adjustmentNote": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-05T09:02:15.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-10-05T09:02:15.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "userId",
+          "status",
+          "punchInTime",
+          "isLate",
+          "lateMinutes",
+          "isManualAdjustment",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PunchInRequest": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "mut-punch-in-uuid-123"
+          },
+          "shiftId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "s1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "note": {
+            "type": "string",
+            "example": "Starting shift on site A"
+          }
+        },
+        "required": [
+          "idempotencyKey"
+        ]
+      },
+      "PunchOutRequest": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "mut-punch-out-uuid-456"
+          },
+          "note": {
+            "type": "string",
+            "example": "Finished day work"
+          }
+        },
+        "required": [
+          "idempotencyKey"
+        ]
+      },
+      "CurrentAttendanceResponse": {
+        "type": "object",
+        "properties": {
+          "dutyState": {
+            "type": "string",
+            "enum": [
+              "NOT_STARTED",
+              "ON_DUTY",
+              "OFF_DUTY"
+            ],
+            "example": "ON_DUTY"
+          },
+          "activeSession": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttendanceSessionResponse"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            ]
+          },
+          "lastSession": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttendanceSessionResponse"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            ]
+          },
+          "assignedShift": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttendanceShift"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            ]
+          },
+          "serverTime": {
+            "type": "string",
+            "example": "2026-10-05T09:30:00.000Z"
+          }
+        },
+        "required": [
+          "dutyState",
+          "serverTime"
+        ]
+      },
+      "AttendanceHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttendanceSessionResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 10
+          }
+        },
+        "required": [
+          "sessions",
+          "total"
+        ]
+      },
+      "TeamAttendanceResponse": {
+        "type": "object",
+        "properties": {
+          "onDutyCount": {
+            "type": "integer",
+            "example": 5
+          },
+          "offDutyCount": {
+            "type": "integer",
+            "example": 3
+          },
+          "activeSessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttendanceSessionResponse"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttendanceSessionResponse"
+            }
+          }
+        },
+        "required": [
+          "onDutyCount",
+          "offDutyCount",
+          "activeSessions",
+          "history"
+        ]
       }
     },
     "parameters": {}
@@ -613,7 +1639,9 @@
       "get": {
         "summary": "Health Check",
         "description": "Returns the operational health status of the API and backing datastores",
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "operationId": "getHealth",
         "responses": {
           "200": {
@@ -627,11 +1655,11 @@
             }
           },
           "503": {
-            "description": "System or a dependent service is degraded or unhealthy",
+            "description": "System is degraded or down",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiError"
+                  "$ref": "#/components/schemas/HealthResponse"
                 }
               }
             }
@@ -641,13 +1669,15 @@
     },
     "/v1/version": {
       "get": {
-        "summary": "System Version Information",
-        "description": "Returns build version, active environment, and architecture metadata",
-        "tags": ["System"],
+        "summary": "API Version",
+        "description": "Returns version metadata and system uptime",
+        "tags": [
+          "System"
+        ],
         "operationId": "getVersion",
         "responses": {
           "200": {
-            "description": "Version metadata successfully retrieved",
+            "description": "Version metadata retrieved",
             "content": {
               "application/json": {
                 "schema": {
@@ -661,9 +1691,11 @@
     },
     "/v1/auth/signup": {
       "post": {
-        "summary": "User Registration",
-        "description": "Creates a new user identity and issues initial session credentials",
-        "tags": ["Auth"],
+        "summary": "Sign Up",
+        "description": "Creates a new user identity account and initial session",
+        "tags": [
+          "Auth"
+        ],
         "operationId": "signUp",
         "requestBody": {
           "required": true,
@@ -676,8 +1708,8 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "User registered successfully",
+          "201": {
+            "description": "User created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -687,7 +1719,7 @@
             }
           },
           "400": {
-            "description": "Validation or conflict error",
+            "description": "Invalid input or email already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -701,9 +1733,11 @@
     },
     "/v1/auth/signin": {
       "post": {
-        "summary": "User Authentication",
-        "description": "Authenticates credentials and establishes session",
-        "tags": ["Auth"],
+        "summary": "Sign In",
+        "description": "Authenticates with email and password, establishing a session",
+        "tags": [
+          "Auth"
+        ],
         "operationId": "signIn",
         "requestBody": {
           "required": true,
@@ -717,7 +1751,7 @@
         },
         "responses": {
           "200": {
-            "description": "Authentication successful",
+            "description": "Authenticated successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -741,9 +1775,11 @@
     },
     "/v1/auth/signout": {
       "post": {
-        "summary": "User Sign Out",
-        "description": "Revokes the active session and clears session state",
-        "tags": ["Auth"],
+        "summary": "Sign Out",
+        "description": "Terminates the current session",
+        "tags": [
+          "Auth"
+        ],
         "operationId": "signOut",
         "responses": {
           "200": {
@@ -759,41 +1795,13 @@
         }
       }
     },
-    "/v1/me": {
-      "get": {
-        "summary": "Current Session Context",
-        "description": "Returns identity, active workspace, membership, role, permissions, and device state",
-        "tags": ["Identity"],
-        "operationId": "getMe",
-        "responses": {
-          "200": {
-            "description": "Current session context retrieved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MeResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized or invalid session",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/workspaces": {
       "post": {
         "summary": "Create Workspace",
         "description": "Atomically provisions workspace, default roles, permissions, and owner membership",
-        "tags": ["Workspaces"],
+        "tags": [
+          "Workspaces"
+        ],
         "operationId": "createWorkspace",
         "requestBody": {
           "required": true,
@@ -841,7 +1849,9 @@
       "get": {
         "summary": "List Workspaces",
         "description": "Returns all non-removed workspaces the authenticated user belongs to",
-        "tags": ["Workspaces"],
+        "tags": [
+          "Workspaces"
+        ],
         "operationId": "listWorkspaces",
         "responses": {
           "200": {
@@ -871,7 +1881,9 @@
       "post": {
         "summary": "Switch Active Workspace",
         "description": "Validates active membership and activates new workspace context for the session",
-        "tags": ["Workspaces"],
+        "tags": [
+          "Workspaces"
+        ],
         "operationId": "switchWorkspace",
         "requestBody": {
           "required": true,
@@ -885,11 +1897,21 @@
         },
         "responses": {
           "200": {
-            "description": "Active workspace context switched",
+            "description": "Switched workspace context",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SwitchWorkspaceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid membership or suspended access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -903,9 +1925,31 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "summary": "Get Current Identity & Session Context",
+        "description": "Resolves current user, active workspace, role, permissions, and device status",
+        "tags": [
+          "Me"
+        ],
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "description": "Resolved context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
           },
-          "403": {
-            "description": "Forbidden - not an active member of target workspace",
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
@@ -920,8 +1964,10 @@
     "/v1/devices/register": {
       "post": {
         "summary": "Register Device Installation",
-        "description": "Registers or updates a client installation ID with hardware telemetry",
-        "tags": ["Devices"],
+        "description": "Registers or updates a client installation bound to user and workspace",
+        "tags": [
+          "Devices"
+        ],
         "operationId": "registerDevice",
         "requestBody": {
           "required": true,
@@ -935,7 +1981,7 @@
         },
         "responses": {
           "200": {
-            "description": "Device installation registered",
+            "description": "Device registered successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -961,7 +2007,9 @@
       "get": {
         "summary": "List User Devices",
         "description": "Lists all registered installations for the current user",
-        "tags": ["Devices"],
+        "tags": [
+          "Devices"
+        ],
         "operationId": "listDevices",
         "responses": {
           "200": {
@@ -991,7 +2039,9 @@
       "post": {
         "summary": "Revoke Installation",
         "description": "Revokes access for a specific device installation",
-        "tags": ["Devices"],
+        "tags": [
+          "Devices"
+        ],
         "operationId": "revokeDevice",
         "requestBody": {
           "required": true,
@@ -1010,6 +2060,798 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RevokeDeviceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks": {
+      "post": {
+        "summary": "Create Task",
+        "description": "Creates a new tenant-scoped task with assignees and checklist items",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "createTask",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Task created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid task parameters or assignee not in workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing tasks.create permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Tasks",
+        "description": "Lists tasks within the active workspace with filtering support",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "listTasks",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "assigneeId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "priority",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "overdue",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tasks retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTasksResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing tasks.read permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{taskId}": {
+      "get": {
+        "summary": "Get Task Details",
+        "description": "Returns full details of a task including assignees, checklist, and activity",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "getTaskById",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task details retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Task",
+        "description": "Updates task mutable fields with optimistic concurrency version check",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "updateTask",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version conflict - task modified by another actor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{taskId}/transition": {
+      "post": {
+        "summary": "Transition Task Status",
+        "description": "Executes a validated state transition with optimistic concurrency check",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "transitionTask",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskTransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task transitioned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status transition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{taskId}/checklist": {
+      "post": {
+        "summary": "Add Checklist Item",
+        "description": "Adds a new checklist item to the specified task",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "createChecklistItem",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChecklistItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Checklist item added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskChecklistItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{taskId}/checklist/{itemId}": {
+      "patch": {
+        "summary": "Update Checklist Item",
+        "description": "Toggles checklist item completion state",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "updateChecklistItem",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "itemId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChecklistItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist item updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskChecklistItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Checklist item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{taskId}/comments": {
+      "post": {
+        "summary": "Add Task Comment",
+        "description": "Appends an operational note to the task",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "createTaskComment",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskCommentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskComment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/attendance/punch-in": {
+      "post": {
+        "summary": "Punch In (Duty Start)",
+        "description": "Authoritative server timestamp punch in with idempotency deduplication",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "punchIn",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PunchInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Punched in successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceSessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Already on duty or invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/attendance/punch-out": {
+      "post": {
+        "summary": "Punch Out (Duty End)",
+        "description": "Authoritative server timestamp punch out with duration calculation",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "punchOut",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PunchOutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Punched out successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceSessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not currently on duty or invalid state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/attendance/current": {
+      "get": {
+        "summary": "Get Current Attendance State",
+        "description": "Returns the current user duty state, active session, and assigned shift",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "getCurrentAttendance",
+        "responses": {
+          "200": {
+            "description": "Current attendance state retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentAttendanceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/attendance/history": {
+      "get": {
+        "summary": "Get Attendance History",
+        "description": "Returns the current user attendance sessions history",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "getAttendanceHistory",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attendance history retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceHistoryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/attendance/team": {
+      "get": {
+        "summary": "Get Team Attendance",
+        "description": "Manager view of currently on-duty employees and recent sessions in workspace",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "getTeamAttendance",
+        "responses": {
+          "200": {
+            "description": "Team attendance summary retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamAttendanceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing attendance.team.read permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/attendance/shifts": {
+      "post": {
+        "summary": "Create Shift",
+        "description": "Configures a shift schedule for the workspace",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "createShift",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShiftRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Shift created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceShift"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid shift parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing attendance.manage permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Shifts",
+        "description": "Lists all configured active shifts for the workspace",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "listShifts",
+        "responses": {
+          "200": {
+            "description": "Shifts retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListShiftsResponse"
                 }
               }
             }

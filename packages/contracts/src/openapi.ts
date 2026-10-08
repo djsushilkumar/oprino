@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { OpenApiGeneratorV31, OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { HealthResponseSchema } from './schemas/health.js';
 import { VersionResponseSchema } from './schemas/version.js';
@@ -31,6 +32,31 @@ import {
   RevokeDeviceRequestSchema,
   RevokeDeviceResponseSchema,
 } from './schemas/device.js';
+import {
+  TaskAssigneeSchema,
+  TaskChecklistItemSchema,
+  TaskCommentSchema,
+  TaskActivitySchema,
+  TaskResponseSchema,
+  CreateTaskRequestSchema,
+  UpdateTaskRequestSchema,
+  TaskTransitionRequestSchema,
+  CreateChecklistItemRequestSchema,
+  UpdateChecklistItemRequestSchema,
+  CreateTaskCommentRequestSchema,
+  ListTasksResponseSchema,
+} from './schemas/task.js';
+import {
+  AttendanceShiftSchema,
+  CreateShiftRequestSchema,
+  ListShiftsResponseSchema,
+  AttendanceSessionResponseSchema,
+  PunchInRequestSchema,
+  PunchOutRequestSchema,
+  CurrentAttendanceResponseSchema,
+  AttendanceHistoryResponseSchema,
+  TeamAttendanceResponseSchema,
+} from './schemas/attendance.js';
 
 export const registry = new OpenAPIRegistry();
 
@@ -68,6 +94,31 @@ registry.register('ListDevicesResponse', ListDevicesResponseSchema);
 registry.register('RevokeDeviceRequest', RevokeDeviceRequestSchema);
 registry.register('RevokeDeviceResponse', RevokeDeviceResponseSchema);
 
+// Register Task Components (Phase 02B)
+registry.register('TaskAssignee', TaskAssigneeSchema);
+registry.register('TaskChecklistItem', TaskChecklistItemSchema);
+registry.register('TaskComment', TaskCommentSchema);
+registry.register('TaskActivity', TaskActivitySchema);
+registry.register('TaskResponse', TaskResponseSchema);
+registry.register('CreateTaskRequest', CreateTaskRequestSchema);
+registry.register('UpdateTaskRequest', UpdateTaskRequestSchema);
+registry.register('TaskTransitionRequest', TaskTransitionRequestSchema);
+registry.register('CreateChecklistItemRequest', CreateChecklistItemRequestSchema);
+registry.register('UpdateChecklistItemRequest', UpdateChecklistItemRequestSchema);
+registry.register('CreateTaskCommentRequest', CreateTaskCommentRequestSchema);
+registry.register('ListTasksResponse', ListTasksResponseSchema);
+
+// Register Attendance Components (Phase 02B)
+registry.register('AttendanceShift', AttendanceShiftSchema);
+registry.register('CreateShiftRequest', CreateShiftRequestSchema);
+registry.register('ListShiftsResponse', ListShiftsResponseSchema);
+registry.register('AttendanceSessionResponse', AttendanceSessionResponseSchema);
+registry.register('PunchInRequest', PunchInRequestSchema);
+registry.register('PunchOutRequest', PunchOutRequestSchema);
+registry.register('CurrentAttendanceResponse', CurrentAttendanceResponseSchema);
+registry.register('AttendanceHistoryResponse', AttendanceHistoryResponseSchema);
+registry.register('TeamAttendanceResponse', TeamAttendanceResponseSchema);
+
 // ---------------------------------------------------------------------------
 // Path Definitions
 // ---------------------------------------------------------------------------
@@ -86,8 +137,8 @@ registry.registerPath({
       content: { 'application/json': { schema: HealthResponseSchema } },
     },
     503: {
-      description: 'System or a dependent service is degraded or unhealthy',
-      content: { 'application/json': { schema: ApiErrorSchema } },
+      description: 'System is degraded or down',
+      content: { 'application/json': { schema: HealthResponseSchema } },
     },
   },
 });
@@ -95,24 +146,24 @@ registry.registerPath({
 registry.registerPath({
   method: 'get',
   path: '/v1/version',
-  summary: 'System Version Information',
-  description: 'Returns build version, active environment, and architecture metadata',
+  summary: 'API Version',
+  description: 'Returns version metadata and system uptime',
   tags: ['System'],
   operationId: 'getVersion',
   responses: {
     200: {
-      description: 'Version metadata successfully retrieved',
+      description: 'Version metadata retrieved',
       content: { 'application/json': { schema: VersionResponseSchema } },
     },
   },
 });
 
-// Auth
+// Authentication
 registry.registerPath({
   method: 'post',
   path: '/v1/auth/signup',
-  summary: 'User Registration',
-  description: 'Creates a new user identity and issues initial session credentials',
+  summary: 'Sign Up',
+  description: 'Creates a new user identity account and initial session',
   tags: ['Auth'],
   operationId: 'signUp',
   request: {
@@ -122,12 +173,12 @@ registry.registerPath({
     },
   },
   responses: {
-    200: {
-      description: 'User registered successfully',
+    201: {
+      description: 'User created successfully',
       content: { 'application/json': { schema: AuthResponseSchema } },
     },
     400: {
-      description: 'Validation or conflict error',
+      description: 'Invalid input or email already exists',
       content: { 'application/json': { schema: ApiErrorSchema } },
     },
   },
@@ -136,8 +187,8 @@ registry.registerPath({
 registry.registerPath({
   method: 'post',
   path: '/v1/auth/signin',
-  summary: 'User Authentication',
-  description: 'Authenticates credentials and establishes session',
+  summary: 'Sign In',
+  description: 'Authenticates with email and password, establishing a session',
   tags: ['Auth'],
   operationId: 'signIn',
   request: {
@@ -148,7 +199,7 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Authentication successful',
+      description: 'Authenticated successfully',
       content: { 'application/json': { schema: AuthResponseSchema } },
     },
     401: {
@@ -161,35 +212,14 @@ registry.registerPath({
 registry.registerPath({
   method: 'post',
   path: '/v1/auth/signout',
-  summary: 'User Sign Out',
-  description: 'Revokes the active session and clears session state',
+  summary: 'Sign Out',
+  description: 'Terminates the current session',
   tags: ['Auth'],
   operationId: 'signOut',
   responses: {
     200: {
       description: 'Signed out successfully',
       content: { 'application/json': { schema: SignOutResponseSchema } },
-    },
-  },
-});
-
-// Me
-registry.registerPath({
-  method: 'get',
-  path: '/v1/me',
-  summary: 'Current Session Context',
-  description:
-    'Returns identity, active workspace, membership, role, permissions, and device state',
-  tags: ['Identity'],
-  operationId: 'getMe',
-  responses: {
-    200: {
-      description: 'Current session context retrieved',
-      content: { 'application/json': { schema: MeResponseSchema } },
-    },
-    401: {
-      description: 'Unauthorized or invalid session',
-      content: { 'application/json': { schema: ApiErrorSchema } },
     },
   },
 });
@@ -258,11 +288,11 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Active workspace context switched',
+      description: 'Switched workspace context',
       content: { 'application/json': { schema: SwitchWorkspaceResponseSchema } },
     },
-    403: {
-      description: 'Forbidden - not an active member of target workspace',
+    400: {
+      description: 'Invalid membership or suspended access',
       content: { 'application/json': { schema: ApiErrorSchema } },
     },
     401: {
@@ -272,12 +302,32 @@ registry.registerPath({
   },
 });
 
-// Devices
+// Identity & Session Context
+registry.registerPath({
+  method: 'get',
+  path: '/v1/me',
+  summary: 'Get Current Identity & Session Context',
+  description: 'Resolves current user, active workspace, role, permissions, and device status',
+  tags: ['Me'],
+  operationId: 'getMe',
+  responses: {
+    200: {
+      description: 'Resolved context',
+      content: { 'application/json': { schema: MeResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+// Device Governance
 registry.registerPath({
   method: 'post',
   path: '/v1/devices/register',
   summary: 'Register Device Installation',
-  description: 'Registers or updates a client installation ID with hardware telemetry',
+  description: 'Registers or updates a client installation bound to user and workspace',
   tags: ['Devices'],
   operationId: 'registerDevice',
   request: {
@@ -288,7 +338,7 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Device installation registered',
+      description: 'Device registered successfully',
       content: { 'application/json': { schema: DeviceResponseSchema } },
     },
     401: {
@@ -342,6 +392,428 @@ registry.registerPath({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Tasks Endpoints (Phase 02B)
+// ---------------------------------------------------------------------------
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/tasks',
+  summary: 'Create Task',
+  description: 'Creates a new tenant-scoped task with assignees and checklist items',
+  tags: ['Tasks'],
+  operationId: 'createTask',
+  request: {
+    body: {
+      content: { 'application/json': { schema: CreateTaskRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    201: {
+      description: 'Task created successfully',
+      content: { 'application/json': { schema: TaskResponseSchema } },
+    },
+    400: {
+      description: 'Invalid task parameters or assignee not in workspace',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    403: {
+      description: 'Forbidden - Missing tasks.create permission',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/tasks',
+  summary: 'List Tasks',
+  description: 'Lists tasks within the active workspace with filtering support',
+  tags: ['Tasks'],
+  operationId: 'listTasks',
+  request: {
+    query: z.object({
+      status: z.string().optional(),
+      assigneeId: z.string().uuid().optional(),
+      priority: z.string().optional(),
+      overdue: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Tasks retrieved successfully',
+      content: { 'application/json': { schema: ListTasksResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    403: {
+      description: 'Forbidden - Missing tasks.read permission',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/tasks/{taskId}',
+  summary: 'Get Task Details',
+  description: 'Returns full details of a task including assignees, checklist, and activity',
+  tags: ['Tasks'],
+  operationId: 'getTaskById',
+  request: {
+    params: z.object({
+      taskId: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Task details retrieved',
+      content: { 'application/json': { schema: TaskResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    404: {
+      description: 'Task not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'patch',
+  path: '/v1/tasks/{taskId}',
+  summary: 'Update Task',
+  description: 'Updates task mutable fields with optimistic concurrency version check',
+  tags: ['Tasks'],
+  operationId: 'updateTask',
+  request: {
+    params: z.object({
+      taskId: z.string().uuid(),
+    }),
+    body: {
+      content: { 'application/json': { schema: UpdateTaskRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: 'Task updated successfully',
+      content: { 'application/json': { schema: TaskResponseSchema } },
+    },
+    400: {
+      description: 'Invalid input',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    409: {
+      description: 'Version conflict - task modified by another actor',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/tasks/{taskId}/transition',
+  summary: 'Transition Task Status',
+  description: 'Executes a validated state transition with optimistic concurrency check',
+  tags: ['Tasks'],
+  operationId: 'transitionTask',
+  request: {
+    params: z.object({
+      taskId: z.string().uuid(),
+    }),
+    body: {
+      content: { 'application/json': { schema: TaskTransitionRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: 'Task transitioned successfully',
+      content: { 'application/json': { schema: TaskResponseSchema } },
+    },
+    400: {
+      description: 'Invalid status transition',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    409: {
+      description: 'Version conflict',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/tasks/{taskId}/checklist',
+  summary: 'Add Checklist Item',
+  description: 'Adds a new checklist item to the specified task',
+  tags: ['Tasks'],
+  operationId: 'createChecklistItem',
+  request: {
+    params: z.object({
+      taskId: z.string().uuid(),
+    }),
+    body: {
+      content: { 'application/json': { schema: CreateChecklistItemRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    201: {
+      description: 'Checklist item added',
+      content: { 'application/json': { schema: TaskChecklistItemSchema } },
+    },
+    404: {
+      description: 'Task not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'patch',
+  path: '/v1/tasks/{taskId}/checklist/{itemId}',
+  summary: 'Update Checklist Item',
+  description: 'Toggles checklist item completion state',
+  tags: ['Tasks'],
+  operationId: 'updateChecklistItem',
+  request: {
+    params: z.object({
+      taskId: z.string().uuid(),
+      itemId: z.string().uuid(),
+    }),
+    body: {
+      content: { 'application/json': { schema: UpdateChecklistItemRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: 'Checklist item updated',
+      content: { 'application/json': { schema: TaskChecklistItemSchema } },
+    },
+    404: {
+      description: 'Checklist item not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/tasks/{taskId}/comments',
+  summary: 'Add Task Comment',
+  description: 'Appends an operational note to the task',
+  tags: ['Tasks'],
+  operationId: 'createTaskComment',
+  request: {
+    params: z.object({
+      taskId: z.string().uuid(),
+    }),
+    body: {
+      content: { 'application/json': { schema: CreateTaskCommentRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    201: {
+      description: 'Comment created',
+      content: { 'application/json': { schema: TaskCommentSchema } },
+    },
+    404: {
+      description: 'Task not found',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Attendance Endpoints (Phase 02B)
+// ---------------------------------------------------------------------------
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/attendance/punch-in',
+  summary: 'Punch In (Duty Start)',
+  description: 'Authoritative server timestamp punch in with idempotency deduplication',
+  tags: ['Attendance'],
+  operationId: 'punchIn',
+  request: {
+    body: {
+      content: { 'application/json': { schema: PunchInRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: 'Punched in successfully',
+      content: { 'application/json': { schema: AttendanceSessionResponseSchema } },
+    },
+    400: {
+      description: 'Already on duty or invalid parameters',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/attendance/punch-out',
+  summary: 'Punch Out (Duty End)',
+  description: 'Authoritative server timestamp punch out with duration calculation',
+  tags: ['Attendance'],
+  operationId: 'punchOut',
+  request: {
+    body: {
+      content: { 'application/json': { schema: PunchOutRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: 'Punched out successfully',
+      content: { 'application/json': { schema: AttendanceSessionResponseSchema } },
+    },
+    400: {
+      description: 'Not currently on duty or invalid state',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/attendance/current',
+  summary: 'Get Current Attendance State',
+  description: 'Returns the current user duty state, active session, and assigned shift',
+  tags: ['Attendance'],
+  operationId: 'getCurrentAttendance',
+  responses: {
+    200: {
+      description: 'Current attendance state retrieved',
+      content: { 'application/json': { schema: CurrentAttendanceResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/attendance/history',
+  summary: 'Get Attendance History',
+  description: 'Returns the current user attendance sessions history',
+  tags: ['Attendance'],
+  operationId: 'getAttendanceHistory',
+  request: {
+    query: z.object({
+      limit: z.string().optional(),
+      offset: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Attendance history retrieved',
+      content: { 'application/json': { schema: AttendanceHistoryResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/attendance/team',
+  summary: 'Get Team Attendance',
+  description: 'Manager view of currently on-duty employees and recent sessions in workspace',
+  tags: ['Attendance'],
+  operationId: 'getTeamAttendance',
+  responses: {
+    200: {
+      description: 'Team attendance summary retrieved',
+      content: { 'application/json': { schema: TeamAttendanceResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    403: {
+      description: 'Forbidden - Missing attendance.team.read permission',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/attendance/shifts',
+  summary: 'Create Shift',
+  description: 'Configures a shift schedule for the workspace',
+  tags: ['Attendance'],
+  operationId: 'createShift',
+  request: {
+    body: {
+      content: { 'application/json': { schema: CreateShiftRequestSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    201: {
+      description: 'Shift created successfully',
+      content: { 'application/json': { schema: AttendanceShiftSchema } },
+    },
+    400: {
+      description: 'Invalid shift parameters',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+    403: {
+      description: 'Forbidden - Missing attendance.manage permission',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/attendance/shifts',
+  summary: 'List Shifts',
+  description: 'Lists all configured active shifts for the workspace',
+  tags: ['Attendance'],
+  operationId: 'listShifts',
+  responses: {
+    200: {
+      description: 'Shifts retrieved',
+      content: { 'application/json': { schema: ListShiftsResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ApiErrorSchema } },
+    },
+  },
+});
+
 export function generateOpenApiDocument(): Record<string, any> {
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
@@ -351,7 +823,7 @@ export function generateOpenApiDocument(): Record<string, any> {
       title: 'Oprino Operations Engine API',
       version: '0.2.0',
       description:
-        'Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02A)',
+        'Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 02B)',
     },
     servers: [
       {

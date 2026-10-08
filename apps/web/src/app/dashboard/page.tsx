@@ -206,6 +206,47 @@ export default function DashboardShellPage() {
               <option value="__NEW__">+ Create New Workspace</option>
             </select>
           </div>
+
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginLeft: '0.5rem' }}>
+            <span
+              style={{
+                padding: '0.35rem 0.75rem',
+                borderRadius: '6px',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                backgroundColor: '#EFF6FF',
+                color: '#164CFF',
+              }}
+            >
+              Overview
+            </span>
+            <a
+              href="/tasks"
+              style={{
+                padding: '0.35rem 0.75rem',
+                borderRadius: '6px',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                color: '#64748B',
+                textDecoration: 'none',
+              }}
+            >
+              Tasks
+            </a>
+            <a
+              href="/attendance"
+              style={{
+                padding: '0.35rem 0.75rem',
+                borderRadius: '6px',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                color: '#64748B',
+                textDecoration: 'none',
+              }}
+            >
+              Attendance
+            </a>
+          </nav>
         </div>
 
         {/* User Identity & Logout Controls */}

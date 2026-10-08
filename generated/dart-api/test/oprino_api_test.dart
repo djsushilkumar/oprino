@@ -115,5 +115,80 @@ void main() {
       expect(dev.installationId, equals('inst-12345'));
       expect(dev.isTrusted, isTrue);
     });
+
+    test('TaskResponse deserializes properly with assignees and checklist', () {
+      final json = {
+        'id': 't1-uuid',
+        'workspaceId': 'w1-uuid',
+        'title': 'HVAC Filter Replacement',
+        'description': 'Replace intake filters',
+        'status': 'ASSIGNED',
+        'simplifiedStatus': 'TO_DO',
+        'priority': 'HIGH',
+        'dueAt': '2026-10-06T18:00:00.000Z',
+        'createdBy': 'u1-uuid',
+        'creatorName': 'Manager Bob',
+        'version': 1,
+        'assignees': [
+          {
+            'id': 'a1-uuid',
+            'taskId': 't1-uuid',
+            'userId': 'u2-uuid',
+            'name': 'Jane Tech',
+            'email': 'jane@example.com',
+            'assignedAt': '2026-10-05T12:00:00.000Z',
+          }
+        ],
+        'checklist': [
+          {
+            'id': 'c1-uuid',
+            'taskId': 't1-uuid',
+            'title': 'Turn off power',
+            'isCompleted': false,
+            'sortOrder': 0,
+            'createdAt': '2026-10-05T12:00:00.000Z',
+          }
+        ],
+        'comments': [],
+        'activities': [],
+        'createdAt': '2026-10-05T12:00:00.000Z',
+        'updatedAt': '2026-10-05T12:00:00.000Z',
+      };
+
+      final task = TaskResponse.fromJson(json);
+      expect(task.title, equals('HVAC Filter Replacement'));
+      expect(task.status, equals('ASSIGNED'));
+      expect(task.simplifiedStatus, equals('TO_DO'));
+      expect(task.assignees.length, equals(1));
+      expect(task.assignees.first.name, equals('Jane Tech'));
+      expect(task.checklist.length, equals(1));
+      expect(task.checklist.first.title, equals('Turn off power'));
+    });
+
+    test('CurrentAttendanceResponse deserializes properly', () {
+      final json = {
+        'dutyState': 'ON_DUTY',
+        'activeSession': {
+          'id': 's1-uuid',
+          'workspaceId': 'w1-uuid',
+          'userId': 'u1-uuid',
+          'userName': 'Jane Tech',
+          'status': 'ON_DUTY',
+          'punchInTime': '2026-10-05T09:00:00.000Z',
+          'durationMinutes': 120,
+          'isLate': false,
+          'lateMinutes': 0,
+          'isManualAdjustment': false,
+          'createdAt': '2026-10-05T09:00:00.000Z',
+          'updatedAt': '2026-10-05T09:00:00.000Z',
+        },
+        'serverTime': '2026-10-05T11:00:00.000Z',
+      };
+
+      final current = CurrentAttendanceResponse.fromJson(json);
+      expect(current.dutyState, equals('ON_DUTY'));
+      expect(current.activeSession?.userName, equals('Jane Tech'));
+      expect(current.activeSession?.durationMinutes, equals(120));
+    });
   });
 }

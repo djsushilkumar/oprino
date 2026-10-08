@@ -7,6 +7,26 @@ import {
   type WorkspaceResponse,
   type ListWorkspacesResponse,
   type SwitchWorkspaceResponse,
+  // Phase 02B Tasks
+  type TaskResponse,
+  type ListTasksResponse,
+  type CreateTaskRequest,
+  type UpdateTaskRequest,
+  type TaskTransitionRequest,
+  type TaskChecklistItem,
+  type UpdateChecklistItemRequest,
+  type TaskComment,
+  type CreateTaskCommentRequest,
+  // Phase 02B Attendance
+  type AttendanceSessionResponse,
+  type CurrentAttendanceResponse,
+  type AttendanceHistoryResponse,
+  type TeamAttendanceResponse,
+  type AttendanceShift,
+  type ListShiftsResponse,
+  type CreateShiftRequest,
+  type PunchInRequest,
+  type PunchOutRequest,
 } from '@oprino/contracts';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -87,6 +107,7 @@ async function request<T>(
 }
 
 export const webApi = {
+  // Auth & Identity
   async signUp(body: SignUpRequest): Promise<AuthResponse> {
     const res = await request<AuthResponse>('/v1/auth/signup', {
       method: 'POST',
@@ -148,5 +169,92 @@ export const webApi = {
     });
     setStoredWorkspaceId(res.activeWorkspaceId);
     return res;
+  },
+
+  // Phase 02B: Tasks
+  async listTasks(params?: Record<string, string>): Promise<ListTasksResponse> {
+    const query = params ? `?${new URLSearchParams(params).toString()}` : '';
+    return request<ListTasksResponse>(`/v1/tasks${query}`, { method: 'GET' });
+  },
+
+  async getTaskById(taskId: string): Promise<TaskResponse> {
+    return request<TaskResponse>(`/v1/tasks/${taskId}`, { method: 'GET' });
+  },
+
+  async createTask(body: CreateTaskRequest): Promise<TaskResponse> {
+    return request<TaskResponse>('/v1/tasks', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async updateTask(taskId: string, body: UpdateTaskRequest): Promise<TaskResponse> {
+    return request<TaskResponse>(`/v1/tasks/${taskId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async transitionTask(taskId: string, body: TaskTransitionRequest): Promise<TaskResponse> {
+    return request<TaskResponse>(`/v1/tasks/${taskId}/transition`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async updateChecklistItem(
+    taskId: string,
+    itemId: string,
+    body: UpdateChecklistItemRequest,
+  ): Promise<TaskChecklistItem> {
+    return request<TaskChecklistItem>(`/v1/tasks/${taskId}/checklist/${itemId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async createTaskComment(taskId: string, body: CreateTaskCommentRequest): Promise<TaskComment> {
+    return request<TaskComment>(`/v1/tasks/${taskId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  // Phase 02B: Attendance
+  async punchIn(body: PunchInRequest): Promise<AttendanceSessionResponse> {
+    return request<AttendanceSessionResponse>('/v1/attendance/punch-in', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async punchOut(body: PunchOutRequest): Promise<AttendanceSessionResponse> {
+    return request<AttendanceSessionResponse>('/v1/attendance/punch-out', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async getCurrentAttendance(): Promise<CurrentAttendanceResponse> {
+    return request<CurrentAttendanceResponse>('/v1/attendance/current', { method: 'GET' });
+  },
+
+  async getAttendanceHistory(): Promise<AttendanceHistoryResponse> {
+    return request<AttendanceHistoryResponse>('/v1/attendance/history', { method: 'GET' });
+  },
+
+  async getTeamAttendance(): Promise<TeamAttendanceResponse> {
+    return request<TeamAttendanceResponse>('/v1/attendance/team', { method: 'GET' });
+  },
+
+  async createShift(body: CreateShiftRequest): Promise<AttendanceShift> {
+    return request<AttendanceShift>('/v1/attendance/shifts', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async listShifts(): Promise<ListShiftsResponse> {
+    return request<ListShiftsResponse>('/v1/attendance/shifts', { method: 'GET' });
   },
 };

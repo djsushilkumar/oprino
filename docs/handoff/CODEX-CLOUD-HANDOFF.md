@@ -16,7 +16,8 @@
 - **Pre-Phase-01C Repository Cleanup:** **COMPLETED**.
 - **Phase 01C (Production Monorepo Scaffolding):** **COMPLETED & VERIFIED** ([`docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md`](file:///workspace/oprino/docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md)).
 - **Phase 02A (Identity, Workspace & Multi-Tenant Foundation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md)).
-- **Next Milestone Gate:** **READY FOR TASK & ATTENDANCE DOMAIN IMPLEMENTATION (Phase 02B)**.
+- **Phase 02B (Task & Attendance Domain Implementation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md)).
+- **Next Milestone Gate:** **READY FOR LOCATION, GEOFENCING & TRACKING PIPELINE (Phase 02C / Phase 03)**.
 
 ---
 
@@ -105,5 +106,13 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
    - Web owner onboarding & authenticated dashboard shell (Next.js 15).
    - Flutter authenticated app shell with GoRouter redirects and revocation wipe.
    - Full quality gates passed: TypeScript, ESLint, Prettier, PostgreSQL RLS tests, API tests, Flutter analyze/test, and debug APK build.
-6. **Next Gate:** **READY FOR TASK & ATTENDANCE DOMAIN IMPLEMENTATION (Phase 02B)**.
+6. **Phase 02B (Task & Attendance Domain Implementation):** **COMPLETED & VERIFIED**.
+   - PostgreSQL RLS tenant isolation across tasks, task assignees, checklist items, attendance shifts, sessions, and punch events.
+   - Optimistic concurrency control for task transitions with integer version check (HTTP 409 Conflict).
+   - Overnight shift support with configurable grace periods and cross-midnight handling.
+   - Idempotent punch in/out with authoritative server-calculated durations and duplicate replay deduplication.
+   - Offline-first Flutter mobile client with Drift SQLite outbox mutation queue and reactive Streams.
+   - Next.js 15 Web operational management pages for Tasks and Attendance with real-time status visibility.
+   - Full quality gates passed: TypeScript, ESLint, API integration tests (45/45), Flutter analyze (0 err), Flutter tests (14/14), Dart API tests (8/8), and Next.js production build.
+7. **Next Gate:** **READY FOR LOCATION, GEOFENCING & TRACKING PIPELINE (Phase 02C / Phase 03)**.
 
