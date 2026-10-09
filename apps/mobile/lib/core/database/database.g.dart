@@ -3680,7 +3680,7 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     workspaceId,
     customerId,
@@ -3703,7 +3703,7 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
     notes,
     createdAt,
     updatedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
