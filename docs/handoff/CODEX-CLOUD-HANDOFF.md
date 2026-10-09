@@ -155,4 +155,15 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
     - Physical OEM Android build scripting: Keystore signing template (`key.properties.example`), R8/ProGuard native reflection rules for Drift SQLite and Transistor Geolocation, and automated build scripts (`build-release-apk.ps1`/`build-release-apk.sh`).
     - Full quality gates passed: TypeScript monorepo typecheck (8/8 pkgs, 9 tasks), Phase 05 unit & security tests (9/9), full API test suite (23/23 tests pass), and Next.js 15 production build (14 static pages).
 11. **Launch Status:** **ENTERPRISE CORE MONOREPO READY FOR PRODUCTION DEPLOYMENT & FIELD PILOT RELEASE**.
+12. **Physical Device Installation & End-to-End Smoke Test:** **COMPLETED & VERIFIED (OCTOBER 2026)**.
+    - Production Release APK (`57.0 MB`, with R8 code shrinking and icon tree shaking) built and installed via ADB onto physical Android hardware.
+    - Automated end-to-end smoke test (`scripts/smoke_test.mjs`) verified 100% across all 10 domain flows:
+      - PostgreSQL 17 (PostGIS) & Redis 7 health probes.
+      - Tenant workspace isolation (`Oprino Field Ops Demo`).
+      - Attendance duty lifecycle (`ON_DUTY` / `OFF_DUTY` duty-hours privacy boundaries).
+      - Dispatch route stop sequencing and geofenced physical site visit GPS check-in/check-out.
+      - Task state transitions, mandatory checklist items enforcement, and watermarked proof of work (photo + on-glass digital signature).
+      - Supervisor verification queue approval workflow.
+      - Next.js Web Dashboard routes (`/auth/signin`, `/tasks`, `/visits`, `/reports`) verified operational.
+    - Repository working tree clean; local dev services running and ready for pilot exploration.
 
