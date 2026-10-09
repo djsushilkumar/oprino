@@ -49,16 +49,26 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
   });
 
   // POST /v1/auth/signup
-  app.post('/v1/auth/signup', async (req, reply) => {
-    const parsed = SignUpRequestSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return reply.status(400).send({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Invalid signup payload',
-        details: parsed.error.issues,
-      });
-    }
+  app.post(
+    '/v1/auth/signup',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: 60000,
+        },
+      },
+    },
+    async (req, reply) => {
+      const parsed = SignUpRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid signup payload',
+          details: parsed.error.issues,
+        });
+      }
 
     try {
       const result = await auth.api.signUpEmail({
@@ -94,16 +104,26 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
   });
 
   // POST /v1/auth/signin
-  app.post('/v1/auth/signin', async (req, reply) => {
-    const parsed = SignInRequestSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return reply.status(400).send({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Invalid signin payload',
-        details: parsed.error.issues,
-      });
-    }
+  app.post(
+    '/v1/auth/signin',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: 60000,
+        },
+      },
+    },
+    async (req, reply) => {
+      const parsed = SignInRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid signin payload',
+          details: parsed.error.issues,
+        });
+      }
 
     try {
       const result = await auth.api.signInEmail({

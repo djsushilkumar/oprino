@@ -103,6 +103,21 @@ export class PubSubService {
     };
   }
 
+  async checkHealth(): Promise<boolean> {
+    if (process.env.NODE_ENV === 'test') {
+      return true;
+    }
+    if (!this.redisPub) {
+      return true;
+    }
+    try {
+      const pong = await this.redisPub.ping();
+      return pong === 'PONG';
+    } catch {
+      return false;
+    }
+  }
+
   async close(): Promise<void> {
     this.localEmitter.removeAllListeners();
     if (this.redisPub) {

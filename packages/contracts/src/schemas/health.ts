@@ -19,3 +19,12 @@ export const HealthResponseSchema = z
   .openapi('HealthResponse');
 
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
+
+export const LivenessResponseSchema = z
+  .object({
+    status: z.enum(['ok', 'degraded']).openapi({ example: 'ok' }),
+    timestamp: z.string().datetime().openapi({ example: '2026-10-05T12:00:00.000Z' }),
+  })
+  .openapi('LivenessResponse');
+
+export type LivenessResponse = z.infer<typeof LivenessResponseSchema>;

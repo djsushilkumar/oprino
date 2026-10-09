@@ -7,6 +7,7 @@ export const WorkerEnvSchema = z.object({
     .string()
     .default('postgresql://oprino_admin:oprino_dev_password@localhost:5432/oprino_db'),
   CONCURRENCY: z.coerce.number().int().positive().default(5),
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
 });
 
 export type WorkerEnv = z.infer<typeof WorkerEnvSchema>;

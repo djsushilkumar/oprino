@@ -1,0 +1,11 @@
+# ------------------------------------------------------------------------------
+# Oprino Mobile — Android Keystore Configuration Template
+# Copy this file to "key.properties" (do NOT commit "key.properties" to git)
+# ------------------------------------------------------------------------------
+# Generate your production keystore with:
+# keytool -genkey -v -keystore oprino-release.keystore -alias oprino -keyalg RSA -keysize 2048 -validity 10000
+
+storePassword=<your-keystore-password>
+keyPassword=<your-key-password>
+keyAlias=oprino
+storeFile=/path/to/oprino-release.keystore

@@ -1,7 +1,10 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
-
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
+import { setupMetricsHooks } from './metrics.js';
+import { metricsRoutes } from './routes/metrics.js';
 import { validateEnv, type Env } from './config/env.js';
 import { createDatabaseClient } from '@oprino/database';
 import { createAuth } from './auth/better-auth.js';
@@ -103,22 +106,68 @@ export function buildServer(options?: {
     await dbClient.client.end();
   });
 
+  // Hardened Security Plugins
+  app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+      },
+    },
+    hsts: {
+      maxAge: 63072000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  });
+
+  const allowedOrigins = [
+    env.API_PUBLIC_URL,
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
+    'oprino://app',
+  ];
+  if (env.CORS_ORIGINS) {
+    const extraOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+    allowedOrigins.push(...extraOrigins);
+  }
+
   app.register(cors, {
-    origin: [
-      env.API_PUBLIC_URL,
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:3001',
-      'oprino://app',
-    ],
+    origin: allowedOrigins,
     credentials: true,
+  });
+
+  app.register(rateLimit, {
+    max: env.RATE_LIMIT_MAX,
+    timeWindow: env.RATE_LIMIT_WINDOW_MS,
+    keyGenerator: (req) => {
+      const authUser = (req as any).user?.id;
+      const deviceId = (req as any).deviceInstallationId;
+      return authUser || deviceId || req.ip;
+    },
+    errorResponseBuilder: (_req, context) => ({
+      statusCode: 429,
+      error: 'Too Many Requests',
+      message: `Rate limit exceeded, retry in ${context.after}`,
+    }),
   });
 
   app.register(sensible);
 
+  // Observability & Metrics
+  if (env.ENABLE_PROMETHEUS) {
+    setupMetricsHooks(app);
+    app.register(metricsRoutes);
+  }
+
   // System Routes
-  app.register(healthRoutes);
+  app.register(healthRoutes, { dbClient, pubsub, isTest: env.NODE_ENV === 'test' });
   app.register(versionRoutes);
   app.register(openapiRoutes);
 
