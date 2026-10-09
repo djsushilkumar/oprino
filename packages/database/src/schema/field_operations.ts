@@ -43,6 +43,8 @@ export const visits = pgTable(
     checkOutLatitude: doublePrecision('check_out_latitude'),
     checkOutLongitude: doublePrecision('check_out_longitude'),
     durationMinutes: integer('duration_minutes').default(0),
+    sequenceOrder: integer('sequence_order'),
+    routeDate: varchar('route_date', { length: 10 }), // YYYY-MM-DD
     notes: text('notes'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -52,6 +54,12 @@ export const visits = pgTable(
     index('visits_workspace_customer_idx').on(table.workspaceId, table.customerId),
     index('visits_workspace_task_idx').on(table.workspaceId, table.taskId),
     index('visits_workspace_status_idx').on(table.workspaceId, table.status),
+    index('visits_workspace_user_route_idx').on(
+      table.workspaceId,
+      table.userId,
+      table.routeDate,
+      table.sequenceOrder,
+    ),
   ],
 );
 

@@ -11,5 +11,8 @@ export * from './schemas/telemetry.js';
 export * from './schemas/customer.js';
 export * from './schemas/visit.js';
 export * from './schemas/proof.js';
+export * from './schemas/sync.js';
+export * from './schemas/report.js';
+export * from './schemas/notification.js';
 export * from './openapi.js';
 

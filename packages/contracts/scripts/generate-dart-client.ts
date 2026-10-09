@@ -1799,6 +1799,8 @@ class Visit {
   final double? checkOutLatitude;
   final double? checkOutLongitude;
   final int durationMinutes;
+  final int? sequenceOrder;
+  final String? routeDate;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -1823,6 +1825,8 @@ class Visit {
     this.checkOutLatitude,
     this.checkOutLongitude,
     this.durationMinutes = 0,
+    this.sequenceOrder,
+    this.routeDate,
     this.notes,
     required this.createdAt,
     required this.updatedAt,
@@ -1849,6 +1853,8 @@ class Visit {
       checkOutLatitude: (json['checkOutLatitude'] as num?)?.toDouble(),
       checkOutLongitude: (json['checkOutLongitude'] as num?)?.toDouble(),
       durationMinutes: json['durationMinutes'] as int? ?? 0,
+      sequenceOrder: json['sequenceOrder'] as int?,
+      routeDate: json['routeDate'] as String?,
       notes: json['notes'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -1875,6 +1881,8 @@ class Visit {
         if (checkOutLatitude != null) 'checkOutLatitude': checkOutLatitude,
         if (checkOutLongitude != null) 'checkOutLongitude': checkOutLongitude,
         'durationMinutes': durationMinutes,
+        if (sequenceOrder != null) 'sequenceOrder': sequenceOrder,
+        if (routeDate != null) 'routeDate': routeDate,
         if (notes != null) 'notes': notes,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
@@ -2032,7 +2040,125 @@ class ListTaskProofsResponse {
 `;
 fs.writeFileSync(path.resolve(modelDir, 'proof_models.dart'), proofModelsContent, 'utf-8');
 
-// 14. Generate ApiClient
+// 14. Sync Models (Phase 04)
+const syncModelsContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
+// Generated from OpenAPI 3.1 specification by @oprino/contracts
+
+class SyncMutationEnvelope {
+  final String mutationId;
+  final String entityType;
+  final String entityId;
+  final String mutationType;
+  final Map<String, dynamic> payload;
+  final String idempotencyKey;
+  final DateTime clientTimestamp;
+
+  const SyncMutationEnvelope({
+    required this.mutationId,
+    required this.entityType,
+    required this.entityId,
+    required this.mutationType,
+    required this.payload,
+    required this.idempotencyKey,
+    required this.clientTimestamp,
+  });
+
+  factory SyncMutationEnvelope.fromJson(Map<String, dynamic> json) {
+    return SyncMutationEnvelope(
+      mutationId: json['mutationId'] as String,
+      entityType: json['entityType'] as String,
+      entityId: json['entityId'] as String,
+      mutationType: json['mutationType'] as String,
+      payload: json['payload'] as Map<String, dynamic>,
+      idempotencyKey: json['idempotencyKey'] as String,
+      clientTimestamp: DateTime.parse(json['clientTimestamp'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'mutationId': mutationId,
+        'entityType': entityType,
+        'entityId': entityId,
+        'mutationType': mutationType,
+        'payload': payload,
+        'idempotencyKey': idempotencyKey,
+        'clientTimestamp': clientTimestamp.toIso8601String(),
+      };
+}
+
+class SyncProcessedResult {
+  final String mutationId;
+  final String status;
+  final String? conflictAction;
+  final String? error;
+
+  const SyncProcessedResult({
+    required this.mutationId,
+    required this.status,
+    this.conflictAction,
+    this.error,
+  });
+
+  factory SyncProcessedResult.fromJson(Map<String, dynamic> json) {
+    return SyncProcessedResult(
+      mutationId: json['mutationId'] as String,
+      status: json['status'] as String,
+      conflictAction: json['conflictAction'] as String?,
+      error: json['error'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'mutationId': mutationId,
+        'status': status,
+        if (conflictAction != null) 'conflictAction': conflictAction,
+        if (error != null) 'error': error,
+      };
+}
+
+class SyncBatchResponse {
+  final int processedCount;
+  final int appliedCount;
+  final int conflictCount;
+  final int duplicateCount;
+  final int errorCount;
+  final List<SyncProcessedResult> results;
+
+  const SyncBatchResponse({
+    required this.processedCount,
+    required this.appliedCount,
+    required this.conflictCount,
+    required this.duplicateCount,
+    required this.errorCount,
+    required this.results,
+  });
+
+  factory SyncBatchResponse.fromJson(Map<String, dynamic> json) {
+    return SyncBatchResponse(
+      processedCount: json['processedCount'] as int,
+      appliedCount: json['appliedCount'] as int,
+      conflictCount: json['conflictCount'] as int,
+      duplicateCount: json['duplicateCount'] as int,
+      errorCount: json['errorCount'] as int,
+      results: (json['results'] as List<dynamic>)
+          .map((e) => SyncProcessedResult.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'processedCount': processedCount,
+        'appliedCount': appliedCount,
+        'conflictCount': conflictCount,
+        'duplicateCount': duplicateCount,
+        'errorCount': errorCount,
+        'results': results.map((r) => r.toJson()).toList(),
+      };
+}
+`;
+fs.writeFileSync(path.resolve(modelDir, 'sync_models.dart'), syncModelsContent, 'utf-8');
+
+// 15. Generate ApiClient
 const apiClientContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
 // Generated from OpenAPI 3.1 specification by @oprino/contracts
 
@@ -2050,6 +2176,7 @@ import 'model/telemetry_models.dart';
 import 'model/customer_models.dart';
 import 'model/visit_models.dart';
 import 'model/proof_models.dart';
+import 'model/sync_models.dart';
 
 class OprinoApiClient {
   final Dio dio;
@@ -2928,6 +3055,46 @@ class OprinoApiClient {
     }
   }
 
+  // --- Phase 04: Advanced Scheduling & Sync ---
+
+  Future<SyncBatchResponse> syncMutationsBatch({
+    required List<SyncMutationEnvelope> mutations,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/sync/mutations',
+        data: {
+          'mutations': mutations.map((m) => m.toJson()).toList(),
+        },
+      );
+      return SyncBatchResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListVisitsResponse> reorderVisits({
+    required String userId,
+    required String routeDate,
+    required List<String> orderedVisitIds,
+  }) async {
+    try {
+      final response = await dio.put<Map<String, dynamic>>(
+        '/v1/visits/sequence',
+        data: {
+          'userId': userId,
+          'routeDate': routeDate,
+          'orderedVisitIds': orderedVisitIds,
+        },
+      );
+      return ListVisitsResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
   void _handleDioException(DioException e) {
     if (e.response?.data is Map<String, dynamic>) {
       throw ApiError.fromJson(e.response!.data as Map<String, dynamic>);
@@ -2937,7 +3104,7 @@ class OprinoApiClient {
 `;
 fs.writeFileSync(path.resolve(srcDir, 'api_client.dart'), apiClientContent, 'utf-8');
 
-// 15. Generate Root Library Export
+// 16. Generate Root Library Export
 const oprinoApiContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
 // Generated from OpenAPI 3.1 specification by @oprino/contracts
 
@@ -2957,6 +3124,7 @@ export 'src/model/telemetry_models.dart';
 export 'src/model/customer_models.dart';
 export 'src/model/visit_models.dart';
 export 'src/model/proof_models.dart';
+export 'src/model/sync_models.dart';
 `;
 fs.writeFileSync(path.resolve(libDir, 'oprino_api.dart'), oprinoApiContent, 'utf-8');
 

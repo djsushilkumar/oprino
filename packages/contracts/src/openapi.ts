@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { OpenApiGeneratorV31, OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { HealthResponseSchema } from './schemas/health.js';
+import { HealthResponseSchema, LivenessResponseSchema } from './schemas/health.js';
 import { VersionResponseSchema } from './schemas/version.js';
 import { ApiErrorSchema } from './schemas/common.js';
 import {
@@ -46,6 +46,10 @@ import {
   CreateTaskCommentRequestSchema,
   ListTasksResponseSchema,
   VerifyTaskRequestSchema,
+  RecurringTaskTemplateSchema,
+  CreateRecurringTaskTemplateRequestSchema,
+  UpdateRecurringTaskTemplateRequestSchema,
+  ListRecurringTaskTemplatesResponseSchema,
 } from './schemas/task.js';
 import {
   AttendanceShiftSchema,
@@ -57,6 +61,9 @@ import {
   CurrentAttendanceResponseSchema,
   AttendanceHistoryResponseSchema,
   TeamAttendanceResponseSchema,
+  ShiftRosterSchema,
+  AssignShiftRosterRequestSchema,
+  ListShiftRostersResponseSchema,
 } from './schemas/attendance.js';
 import {
   LocationPointSchema,
@@ -87,6 +94,7 @@ import {
   VisitCheckInRequestSchema,
   VisitCheckOutRequestSchema,
   ListVisitsResponseSchema,
+  ReorderVisitsRequestSchema,
 } from './schemas/visit.js';
 import {
   TaskProofSchema,
@@ -95,11 +103,26 @@ import {
   ConfirmMediaUploadRequestSchema,
   ListTaskProofsResponseSchema,
 } from './schemas/proof.js';
+import {
+  SyncBatchRequestSchema,
+  SyncBatchResponseSchema,
+} from './schemas/sync.js';
+import {
+  AttendanceReportResponseSchema,
+  TaskSlaReportResponseSchema,
+  VisitReportResponseSchema,
+} from './schemas/report.js';
+import {
+  NotificationSchema,
+  ListNotificationsResponseSchema,
+  MarkNotificationReadResponseSchema,
+} from './schemas/notification.js';
 
 export const registry = new OpenAPIRegistry();
 
 // Register System Components
 registry.register('HealthResponse', HealthResponseSchema);
+registry.register('LivenessResponse', LivenessResponseSchema);
 registry.register('VersionResponse', VersionResponseSchema);
 registry.register('ApiError', ApiErrorSchema);
 
@@ -195,6 +218,24 @@ registry.register('ConfirmMediaUploadRequest', ConfirmMediaUploadRequestSchema);
 registry.register('ListTaskProofsResponse', ListTaskProofsResponseSchema);
 registry.register('VerifyTaskRequest', VerifyTaskRequestSchema);
 
+// Register Phase 04 Components
+registry.register('ReorderVisitsRequest', ReorderVisitsRequestSchema);
+registry.register('RecurringTaskTemplate', RecurringTaskTemplateSchema);
+registry.register('CreateRecurringTaskTemplateRequest', CreateRecurringTaskTemplateRequestSchema);
+registry.register('UpdateRecurringTaskTemplateRequest', UpdateRecurringTaskTemplateRequestSchema);
+registry.register('ListRecurringTaskTemplatesResponse', ListRecurringTaskTemplatesResponseSchema);
+registry.register('ShiftRoster', ShiftRosterSchema);
+registry.register('AssignShiftRosterRequest', AssignShiftRosterRequestSchema);
+registry.register('ListShiftRostersResponse', ListShiftRostersResponseSchema);
+registry.register('SyncBatchRequest', SyncBatchRequestSchema);
+registry.register('SyncBatchResponse', SyncBatchResponseSchema);
+registry.register('AttendanceReportResponse', AttendanceReportResponseSchema);
+registry.register('TaskSlaReportResponse', TaskSlaReportResponseSchema);
+registry.register('VisitReportResponse', VisitReportResponseSchema);
+registry.register('Notification', NotificationSchema);
+registry.register('ListNotificationsResponse', ListNotificationsResponseSchema);
+registry.register('MarkNotificationReadResponse', MarkNotificationReadResponseSchema);
+
 
 // ---------------------------------------------------------------------------
 // Path Definitions
@@ -216,6 +257,55 @@ registry.registerPath({
     503: {
       description: 'System is degraded or down',
       content: { 'application/json': { schema: HealthResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/health/live',
+  summary: 'Liveness Probe',
+  description: 'Lightweight liveness probe indicating process and event loop responsiveness',
+  tags: ['System'],
+  operationId: 'getLiveness',
+  responses: {
+    200: {
+      description: 'Process is alive and responding',
+      content: { 'application/json': { schema: LivenessResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/health/ready',
+  summary: 'Readiness Probe',
+  description: 'Deep readiness probe evaluating database connection pool and Redis cache readiness',
+  tags: ['System'],
+  operationId: 'getReadiness',
+  responses: {
+    200: {
+      description: 'Service is ready to accept production traffic',
+      content: { 'application/json': { schema: HealthResponseSchema } },
+    },
+    503: {
+      description: 'Service or underlying dependency is not ready',
+      content: { 'application/json': { schema: HealthResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/metrics',
+  summary: 'Prometheus Metrics',
+  description: 'Exposes Prometheus system and HTTP operational metrics',
+  tags: ['System'],
+  operationId: 'getMetrics',
+  responses: {
+    200: {
+      description: 'Prometheus metrics text stream',
+      content: { 'text/plain': { schema: z.string() } },
     },
   },
 });
@@ -1406,6 +1496,295 @@ registry.registerPath({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Phase 04: Advanced Scheduling, Dispatch Routing, Conflict Resilience & Reports
+// ---------------------------------------------------------------------------
+
+// 1. Visit Sequencing / Dispatch Reorder
+registry.registerPath({
+  method: 'put',
+  path: '/v1/visits/sequence',
+  summary: 'Reorder Visits for Day Dispatch Route',
+  description: 'Atomically updates the stop sequence numbers for an assigned worker on a specific date',
+  tags: ['Visits'],
+  operationId: 'reorderVisits',
+  request: {
+    body: {
+      description: 'Ordered list of visit IDs for technician',
+      content: { 'application/json': { schema: ReorderVisitsRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated stop order list',
+      content: { 'application/json': { schema: ListVisitsResponseSchema } },
+    },
+  },
+});
+
+// 2. Recurring Task Templates
+registry.registerPath({
+  method: 'post',
+  path: '/v1/tasks/templates',
+  summary: 'Create Recurring Task Template',
+  description: 'Provisions a recurring template that automatically generates tasks',
+  tags: ['Tasks'],
+  operationId: 'createRecurringTaskTemplate',
+  request: {
+    body: {
+      description: 'Template configuration',
+      content: { 'application/json': { schema: CreateRecurringTaskTemplateRequestSchema } },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Created template',
+      content: { 'application/json': { schema: RecurringTaskTemplateSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/tasks/templates',
+  summary: 'List Recurring Task Templates',
+  description: 'Retrieves active and inactive recurring task templates for the workspace',
+  tags: ['Tasks'],
+  operationId: 'listRecurringTaskTemplates',
+  responses: {
+    200: {
+      description: 'List of templates',
+      content: { 'application/json': { schema: ListRecurringTaskTemplatesResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'patch',
+  path: '/v1/tasks/templates/{id}',
+  summary: 'Update Recurring Task Template',
+  description: 'Modifies recurring schedule, assignees, or active status',
+  tags: ['Tasks'],
+  operationId: 'updateRecurringTaskTemplate',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      description: 'Template updates',
+      content: { 'application/json': { schema: UpdateRecurringTaskTemplateRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated template',
+      content: { 'application/json': { schema: RecurringTaskTemplateSchema } },
+    },
+  },
+});
+
+// 3. Shift Rosters
+registry.registerPath({
+  method: 'post',
+  path: '/v1/attendance/rosters',
+  summary: 'Assign Shift Rosters',
+  description: 'Assigns employees to scheduled shifts across dates',
+  tags: ['Attendance'],
+  operationId: 'assignShiftRoster',
+  request: {
+    body: {
+      description: 'Roster assignments',
+      content: { 'application/json': { schema: AssignShiftRosterRequestSchema } },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Created rosters',
+      content: { 'application/json': { schema: ListShiftRostersResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/attendance/rosters',
+  summary: 'List Shift Rosters',
+  description: 'Lists scheduled rosters for workspace members with date range filtering',
+  tags: ['Attendance'],
+  operationId: 'listShiftRosters',
+  request: {
+    query: z.object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+      userId: z.string().uuid().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'List of rosters',
+      content: { 'application/json': { schema: ListShiftRostersResponseSchema } },
+    },
+  },
+});
+
+// 4. Batch Sync Replay (Conflict Engine)
+registry.registerPath({
+  method: 'post',
+  path: '/v1/sync/mutations',
+  summary: 'Replay Batch Sync Mutations',
+  description: 'Atomically processes queued offline mutations with conflict matrix resolution',
+  tags: ['Sync'],
+  operationId: 'syncMutationsBatch',
+  request: {
+    body: {
+      description: 'Array of queued client mutations',
+      content: { 'application/json': { schema: SyncBatchRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Batch processing results',
+      content: { 'application/json': { schema: SyncBatchResponseSchema } },
+    },
+  },
+});
+
+// 5. Operational Analytics & Reporting
+registry.registerPath({
+  method: 'get',
+  path: '/v1/reports/attendance',
+  summary: 'Get Attendance Summary Report',
+  description: 'Computes present days, duty hours, late minutes, and overtime across date range',
+  tags: ['Reports'],
+  operationId: 'getAttendanceReport',
+  request: {
+    query: z.object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Attendance report summary',
+      content: { 'application/json': { schema: AttendanceReportResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/reports/tasks',
+  summary: 'Get Task SLA Performance Report',
+  description: 'Aggregates task completion, verification rates, and on-time SLA metrics',
+  tags: ['Reports'],
+  operationId: 'getTaskSlaReport',
+  request: {
+    query: z.object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Task SLA report',
+      content: { 'application/json': { schema: TaskSlaReportResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/reports/visits',
+  summary: 'Get Visit Audit Report',
+  description: 'Aggregates total visits, durations, and check-in compliance',
+  tags: ['Reports'],
+  operationId: 'getVisitReport',
+  request: {
+    query: z.object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Visit report summary',
+      content: { 'application/json': { schema: VisitReportResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/v1/reports/export/csv',
+  summary: 'Export Attendance Report as CSV',
+  description: 'Streams attendance report summary in comma-separated values format for spreadsheet integration',
+  tags: ['Reports'],
+  operationId: 'exportAttendanceCsv',
+  request: {
+    query: z.object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'CSV file download stream',
+      content: {
+        'text/csv': {
+          schema: z.string(),
+        },
+      },
+    },
+  },
+});
+
+// 6. In-App Notifications
+registry.registerPath({
+  method: 'get',
+  path: '/v1/notifications',
+  summary: 'List In-App Notifications',
+  description: 'Retrieves operational notifications and alerts for the authenticated user',
+  tags: ['Notifications'],
+  operationId: 'listNotifications',
+  responses: {
+    200: {
+      description: 'List of notifications',
+      content: { 'application/json': { schema: ListNotificationsResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'patch',
+  path: '/v1/notifications/{id}/read',
+  summary: 'Mark Notification as Read',
+  description: 'Marks a specific notification as read',
+  tags: ['Notifications'],
+  operationId: 'markNotificationAsRead',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: 'Marked read confirmation',
+      content: { 'application/json': { schema: MarkNotificationReadResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/notifications/read-all',
+  summary: 'Mark All Notifications as Read',
+  description: 'Marks all notifications for the user as read',
+  tags: ['Notifications'],
+  operationId: 'markAllNotificationsAsRead',
+  responses: {
+    200: {
+      description: 'Marked read confirmation',
+      content: { 'application/json': { schema: MarkNotificationReadResponseSchema } },
+    },
+  },
+});
+
 export function generateOpenApiDocument(): Record<string, any> {
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
@@ -1415,7 +1794,7 @@ export function generateOpenApiDocument(): Record<string, any> {
       title: 'Oprino Operations Engine API',
       version: '0.4.0',
       description:
-        'Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 03: Field Operations & Proof of Work)',
+        'Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 04: Advanced Scheduling, Dispatch Routing, Conflict Resilience & Analytics)',
     },
     servers: [
       {
@@ -1433,4 +1812,5 @@ export function generateOpenApiDocument(): Record<string, any> {
     ],
   });
 }
+
 

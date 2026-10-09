@@ -52,6 +52,21 @@ import {
   type TaskProof,
   type ListTaskProofsResponse,
   type VerifyTaskRequest,
+  // Phase 04 Advanced Operations
+  type ReorderVisitsRequest,
+  type RecurringTaskTemplate,
+  type CreateRecurringTaskTemplateRequest,
+  type UpdateRecurringTaskTemplateRequest,
+  type ListRecurringTaskTemplatesResponse,
+  type ShiftRoster,
+  type AssignShiftRosterRequest,
+  type ListShiftRostersResponse,
+  type AttendanceReportResponse,
+  type TaskSlaReportResponse,
+  type VisitReportResponse,
+  type Notification,
+  type ListNotificationsResponse,
+  type MarkNotificationReadResponse,
 } from '@oprino/contracts';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -429,6 +444,118 @@ export const webApi = {
     return request<TaskResponse>(`/v1/tasks/${taskId}/verify`, {
       method: 'POST',
       body: JSON.stringify(body),
+    });
+  },
+
+  // --- Phase 04: Day Route Stop Sequencing ---
+  async reorderVisits(body: ReorderVisitsRequest): Promise<ListVisitsResponse> {
+    return request<ListVisitsResponse>('/v1/visits/sequence', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+  },
+
+  // --- Phase 04: Recurring Task Templates ---
+  async listRecurringTemplates(): Promise<ListRecurringTaskTemplatesResponse> {
+    return request<ListRecurringTaskTemplatesResponse>('/v1/tasks/templates', { method: 'GET' });
+  },
+
+  async createRecurringTemplate(
+    body: CreateRecurringTaskTemplateRequest,
+  ): Promise<RecurringTaskTemplate> {
+    return request<RecurringTaskTemplate>('/v1/tasks/templates', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async updateRecurringTemplate(
+    id: string,
+    body: UpdateRecurringTaskTemplateRequest,
+  ): Promise<RecurringTaskTemplate> {
+    return request<RecurringTaskTemplate>(`/v1/tasks/templates/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
+
+  // --- Phase 04: Shift Rostering ---
+  async listShiftRosters(filters?: {
+    startDate?: string;
+    endDate?: string;
+    userId?: string;
+  }): Promise<ListShiftRostersResponse> {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.set('startDate', filters.startDate);
+    if (filters?.endDate) params.set('endDate', filters.endDate);
+    if (filters?.userId) params.set('userId', filters.userId);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request<ListShiftRostersResponse>(`/v1/attendance/rosters${qs}`, { method: 'GET' });
+  },
+
+  async assignShiftRoster(body: AssignShiftRosterRequest): Promise<ListShiftRostersResponse> {
+    return request<ListShiftRostersResponse>('/v1/attendance/rosters', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  // --- Phase 04: Operational Analytics & Reports ---
+  async getAttendanceReport(filters?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<AttendanceReportResponse> {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.set('startDate', filters.startDate);
+    if (filters?.endDate) params.set('endDate', filters.endDate);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request<AttendanceReportResponse>(`/v1/reports/attendance${qs}`, { method: 'GET' });
+  },
+
+  async getTaskSlaReport(filters?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<TaskSlaReportResponse> {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.set('startDate', filters.startDate);
+    if (filters?.endDate) params.set('endDate', filters.endDate);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request<TaskSlaReportResponse>(`/v1/reports/tasks${qs}`, { method: 'GET' });
+  },
+
+  async getVisitReport(filters?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<VisitReportResponse> {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.set('startDate', filters.startDate);
+    if (filters?.endDate) params.set('endDate', filters.endDate);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request<VisitReportResponse>(`/v1/reports/visits${qs}`, { method: 'GET' });
+  },
+
+  getAttendanceCsvUrl(filters?: { startDate?: string; endDate?: string }): string {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.set('startDate', filters.startDate);
+    if (filters?.endDate) params.set('endDate', filters.endDate);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return `${API_BASE_URL}/v1/reports/export/csv${qs}`;
+  },
+
+  // --- Phase 04: Notifications ---
+  async listNotifications(): Promise<ListNotificationsResponse> {
+    return request<ListNotificationsResponse>('/v1/notifications', { method: 'GET' });
+  },
+
+  async markNotificationRead(id: string): Promise<MarkNotificationReadResponse> {
+    return request<MarkNotificationReadResponse>(`/v1/notifications/${id}/read`, {
+      method: 'PATCH',
+    });
+  },
+
+  async markAllNotificationsRead(): Promise<MarkNotificationReadResponse> {
+    return request<MarkNotificationReadResponse>('/v1/notifications/read-all', {
+      method: 'POST',
     });
   },
 };

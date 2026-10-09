@@ -104,6 +104,39 @@ export const TeamAttendanceResponseSchema = z
   })
   .openapi('TeamAttendanceResponse');
 
+export const ShiftRosterStatusEnum = z.enum(['SCHEDULED', 'ATTENDED', 'MISSED', 'EXCUSED']);
+export type ShiftRosterStatus = z.infer<typeof ShiftRosterStatusEnum>;
+
+export const ShiftRosterSchema = z
+  .object({
+    id: z.string().uuid().openapi({ example: 'sr1b2c3d-e5f6-7890-abcd-ef1234567890' }),
+    workspaceId: z.string().uuid().openapi({ example: 'w1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    shiftId: z.string().uuid().openapi({ example: 'sh1b2c3d-e5f6-7890-abcd-ef1234567890' }),
+    shiftName: z.string().optional(),
+    userId: z.string().uuid().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    userName: z.string().optional(),
+    scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2026-10-09' }),
+    status: ShiftRosterStatusEnum.openapi({ example: 'SCHEDULED' }),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .openapi('ShiftRoster');
+
+export const AssignShiftRosterRequestSchema = z
+  .object({
+    shiftId: z.string().uuid(),
+    userIds: z.array(z.string().uuid()),
+    dates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  })
+  .openapi('AssignShiftRosterRequest');
+
+export const ListShiftRostersResponseSchema = z
+  .object({
+    rosters: z.array(ShiftRosterSchema),
+    total: z.number().int(),
+  })
+  .openapi('ListShiftRostersResponse');
+
 export type AttendanceShift = z.infer<typeof AttendanceShiftSchema>;
 export type CreateShiftRequest = z.infer<typeof CreateShiftRequestSchema>;
 export type ListShiftsResponse = z.infer<typeof ListShiftsResponseSchema>;
@@ -113,3 +146,7 @@ export type PunchOutRequest = z.infer<typeof PunchOutRequestSchema>;
 export type CurrentAttendanceResponse = z.infer<typeof CurrentAttendanceResponseSchema>;
 export type AttendanceHistoryResponse = z.infer<typeof AttendanceHistoryResponseSchema>;
 export type TeamAttendanceResponse = z.infer<typeof TeamAttendanceResponseSchema>;
+export type ShiftRoster = z.infer<typeof ShiftRosterSchema>;
+export type AssignShiftRosterRequest = z.infer<typeof AssignShiftRosterRequestSchema>;
+export type ListShiftRostersResponse = z.infer<typeof ListShiftRostersResponseSchema>;
+

@@ -2948,6 +2948,28 @@ class $CachedVisitsTable extends CachedVisits
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sequenceOrderMeta = const VerificationMeta(
+    'sequenceOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sequenceOrder = GeneratedColumn<int>(
+    'sequence_order',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _routeDateMeta = const VerificationMeta(
+    'routeDate',
+  );
+  @override
+  late final GeneratedColumn<String> routeDate = GeneratedColumn<String>(
+    'route_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -2998,6 +3020,8 @@ class $CachedVisitsTable extends CachedVisits
     checkOutLat,
     checkOutLng,
     durationMinutes,
+    sequenceOrder,
+    routeDate,
     notes,
     createdAt,
     updatedAt,
@@ -3153,6 +3177,24 @@ class $CachedVisitsTable extends CachedVisits
         ),
       );
     }
+    if (data.containsKey('sequence_order')) {
+      context.handle(
+        _sequenceOrderMeta,
+        sequenceOrder.isAcceptableOrUnknown(
+          data['sequence_order']!,
+          _sequenceOrderMeta,
+        ),
+      );
+    }
+    if (data.containsKey('route_date')) {
+      context.handle(
+        _routeDateMeta,
+        routeDate.isAcceptableOrUnknown(
+          data['route_date']!,
+          _routeDateMeta,
+        ),
+      );
+    }
     if (data.containsKey('notes')) {
       context.handle(
         _notesMeta,
@@ -3252,6 +3294,14 @@ class $CachedVisitsTable extends CachedVisits
         DriftSqlType.int,
         data['${effectivePrefix}duration_minutes'],
       ),
+      sequenceOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sequence_order'],
+      ),
+      routeDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}route_date'],
+      ),
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -3291,6 +3341,8 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
   final double? checkOutLat;
   final double? checkOutLng;
   final int? durationMinutes;
+  final int? sequenceOrder;
+  final String? routeDate;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -3312,6 +3364,8 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
     this.checkOutLat,
     this.checkOutLng,
     this.durationMinutes,
+    this.sequenceOrder,
+    this.routeDate,
     this.notes,
     required this.createdAt,
     required this.updatedAt,
@@ -3359,6 +3413,12 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
     }
     if (!nullToAbsent || durationMinutes != null) {
       map['duration_minutes'] = Variable<int>(durationMinutes);
+    }
+    if (!nullToAbsent || sequenceOrder != null) {
+      map['sequence_order'] = Variable<int>(sequenceOrder);
+    }
+    if (!nullToAbsent || routeDate != null) {
+      map['route_date'] = Variable<String>(routeDate);
     }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
@@ -3411,6 +3471,12 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
       durationMinutes: durationMinutes == null && nullToAbsent
           ? const Value.absent()
           : Value(durationMinutes),
+      sequenceOrder: sequenceOrder == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sequenceOrder),
+      routeDate: routeDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(routeDate),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -3442,6 +3508,8 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
       checkOutLat: serializer.fromJson<double?>(json['checkOutLat']),
       checkOutLng: serializer.fromJson<double?>(json['checkOutLng']),
       durationMinutes: serializer.fromJson<int?>(json['durationMinutes']),
+      sequenceOrder: serializer.fromJson<int?>(json['sequenceOrder']),
+      routeDate: serializer.fromJson<String?>(json['routeDate']),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -3468,6 +3536,8 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
       'checkOutLat': serializer.toJson<double?>(checkOutLat),
       'checkOutLng': serializer.toJson<double?>(checkOutLng),
       'durationMinutes': serializer.toJson<int?>(durationMinutes),
+      'sequenceOrder': serializer.toJson<int?>(sequenceOrder),
+      'routeDate': serializer.toJson<String?>(routeDate),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -3492,6 +3562,8 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
     Value<double?> checkOutLat = const Value.absent(),
     Value<double?> checkOutLng = const Value.absent(),
     Value<int?> durationMinutes = const Value.absent(),
+    Value<int?> sequenceOrder = const Value.absent(),
+    Value<String?> routeDate = const Value.absent(),
     Value<String?> notes = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -3515,6 +3587,12 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
     durationMinutes: durationMinutes.present
         ? durationMinutes.value
         : this.durationMinutes,
+    sequenceOrder: sequenceOrder.present
+        ? sequenceOrder.value
+        : this.sequenceOrder,
+    routeDate: routeDate.present
+        ? routeDate.value
+        : this.routeDate,
     notes: notes.present ? notes.value : this.notes,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -3560,6 +3638,12 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
       durationMinutes: data.durationMinutes.present
           ? data.durationMinutes.value
           : this.durationMinutes,
+      sequenceOrder: data.sequenceOrder.present
+          ? data.sequenceOrder.value
+          : this.sequenceOrder,
+      routeDate: data.routeDate.present
+          ? data.routeDate.value
+          : this.routeDate,
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -3586,6 +3670,8 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
           ..write('checkOutLat: $checkOutLat, ')
           ..write('checkOutLng: $checkOutLng, ')
           ..write('durationMinutes: $durationMinutes, ')
+          ..write('sequenceOrder: $sequenceOrder, ')
+          ..write('routeDate: $routeDate, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3612,6 +3698,8 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
     checkOutLat,
     checkOutLng,
     durationMinutes,
+    sequenceOrder,
+    routeDate,
     notes,
     createdAt,
     updatedAt,
@@ -3637,6 +3725,8 @@ class CachedVisit extends DataClass implements Insertable<CachedVisit> {
           other.checkOutLat == this.checkOutLat &&
           other.checkOutLng == this.checkOutLng &&
           other.durationMinutes == this.durationMinutes &&
+          other.sequenceOrder == this.sequenceOrder &&
+          other.routeDate == this.routeDate &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -3660,6 +3750,8 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
   final Value<double?> checkOutLat;
   final Value<double?> checkOutLng;
   final Value<int?> durationMinutes;
+  final Value<int?> sequenceOrder;
+  final Value<String?> routeDate;
   final Value<String?> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -3682,6 +3774,8 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
     this.checkOutLat = const Value.absent(),
     this.checkOutLng = const Value.absent(),
     this.durationMinutes = const Value.absent(),
+    this.sequenceOrder = const Value.absent(),
+    this.routeDate = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3705,6 +3799,8 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
     this.checkOutLat = const Value.absent(),
     this.checkOutLng = const Value.absent(),
     this.durationMinutes = const Value.absent(),
+    this.sequenceOrder = const Value.absent(),
+    this.routeDate = const Value.absent(),
     this.notes = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -3734,6 +3830,8 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
     Expression<double>? checkOutLat,
     Expression<double>? checkOutLng,
     Expression<int>? durationMinutes,
+    Expression<int>? sequenceOrder,
+    Expression<String>? routeDate,
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -3757,6 +3855,8 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
       if (checkOutLat != null) 'check_out_lat': checkOutLat,
       if (checkOutLng != null) 'check_out_lng': checkOutLng,
       if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      if (sequenceOrder != null) 'sequence_order': sequenceOrder,
+      if (routeDate != null) 'route_date': routeDate,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3782,6 +3882,8 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
     Value<double?>? checkOutLat,
     Value<double?>? checkOutLng,
     Value<int?>? durationMinutes,
+    Value<int?>? sequenceOrder,
+    Value<String?>? routeDate,
     Value<String?>? notes,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -3805,6 +3907,8 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
       checkOutLat: checkOutLat ?? this.checkOutLat,
       checkOutLng: checkOutLng ?? this.checkOutLng,
       durationMinutes: durationMinutes ?? this.durationMinutes,
+      sequenceOrder: sequenceOrder ?? this.sequenceOrder,
+      routeDate: routeDate ?? this.routeDate,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3866,6 +3970,12 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
     if (durationMinutes.present) {
       map['duration_minutes'] = Variable<int>(durationMinutes.value);
     }
+    if (sequenceOrder.present) {
+      map['sequence_order'] = Variable<int>(sequenceOrder.value);
+    }
+    if (routeDate.present) {
+      map['route_date'] = Variable<String>(routeDate.value);
+    }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
@@ -3901,6 +4011,8 @@ class CachedVisitsCompanion extends UpdateCompanion<CachedVisit> {
           ..write('checkOutLat: $checkOutLat, ')
           ..write('checkOutLng: $checkOutLng, ')
           ..write('durationMinutes: $durationMinutes, ')
+          ..write('sequenceOrder: $sequenceOrder, ')
+          ..write('routeDate: $routeDate, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')

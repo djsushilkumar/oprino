@@ -96,6 +96,8 @@ class CachedVisits extends Table {
   RealColumn get checkOutLat => real().nullable()();
   RealColumn get checkOutLng => real().nullable()();
   IntColumn get durationMinutes => integer().nullable()();
+  IntColumn get sequenceOrder => integer().nullable()();
+  TextColumn get routeDate => text().nullable()();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -136,7 +138,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -163,6 +165,10 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(cachedTasks, cachedTasks.verificationNotes);
             await m.createTable(cachedVisits);
             await m.createTable(cachedTaskProofs);
+          }
+          if (from < 4) {
+            await m.addColumn(cachedVisits, cachedVisits.sequenceOrder);
+            await m.addColumn(cachedVisits, cachedVisits.routeDate);
           }
         },
       );

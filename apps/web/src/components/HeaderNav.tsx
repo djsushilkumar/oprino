@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrandLogo } from './BrandLogo';
+import { NotificationBell } from './NotificationBell';
 import type { MeResponse } from '@oprino/contracts';
 
 interface HeaderNavProps {
@@ -21,6 +22,7 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
     { label: 'Visits', href: '/visits' },
     { label: 'Customers', href: '/customers' },
     { label: 'Attendance', href: '/attendance' },
+    { label: 'Reports', href: '/reports' },
   ];
 
   return (
@@ -68,6 +70,8 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <NotificationBell />
+
         {context?.activeWorkspace && (
           <div
             style={{

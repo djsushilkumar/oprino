@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
+
 import { validateEnv, type Env } from './config/env.js';
 import { createDatabaseClient } from '@oprino/database';
 import { createAuth } from './auth/better-auth.js';
@@ -28,6 +29,14 @@ import { VisitService } from './services/visit.service.js';
 import { MediaService } from './services/media.service.js';
 import { TelemetryService } from './services/telemetry.service.js';
 import { PubSubService } from './services/pubsub.service.js';
+import { SyncService } from './services/sync.service.js';
+import { SchedulingService } from './services/scheduling.service.js';
+import { ReportService } from './services/report.service.js';
+import { NotificationService } from './services/notification.service.js';
+import { syncRoutes } from './routes/sync.js';
+import { schedulingRoutes } from './routes/scheduling.js';
+import { reportRoutes } from './routes/reports.js';
+import { notificationRoutes } from './routes/notifications.js';
 
 export function buildServer(options?: {
   env?: Record<string, unknown>;
@@ -45,6 +54,10 @@ export function buildServer(options?: {
   customerService: CustomerService;
   visitService: VisitService;
   mediaService: MediaService;
+  syncService: SyncService;
+  schedulingService: SchedulingService;
+  reportService: ReportService;
+  notificationService: NotificationService;
   pubsub: PubSubService;
 } {
   const env = validateEnv(options?.env);
@@ -78,6 +91,10 @@ export function buildServer(options?: {
   const customerService = new CustomerService(dbClient.db);
   const visitService = new VisitService(dbClient.db);
   const mediaService = new MediaService(dbClient.db, env.API_PUBLIC_URL);
+  const syncService = new SyncService(dbClient.db);
+  const schedulingService = new SchedulingService(dbClient.db);
+  const reportService = new ReportService(dbClient.db);
+  const notificationService = new NotificationService(dbClient.db);
   const authMiddleware = createAuthMiddleware(auth, deviceService, dbClient.db);
 
   // Close connections on Fastify shutdown
@@ -86,7 +103,6 @@ export function buildServer(options?: {
     await dbClient.client.end();
   });
 
-  // Plugins
   app.register(cors, {
     origin: [
       env.API_PUBLIC_URL,
@@ -125,6 +141,12 @@ export function buildServer(options?: {
   app.register(visitRoutes, { visitService, authMiddleware });
   app.register(mediaRoutes, { mediaService, authMiddleware });
 
+  // Phase 04 Advanced Operations Routes
+  app.register(syncRoutes, { syncService, authMiddleware });
+  app.register(schedulingRoutes, { schedulingService, authMiddleware });
+  app.register(reportRoutes, { reportService, authMiddleware });
+  app.register(notificationRoutes, { notificationService, authMiddleware });
+
   return {
     app,
     env,
@@ -137,6 +159,10 @@ export function buildServer(options?: {
     customerService,
     visitService,
     mediaService,
+    syncService,
+    schedulingService,
+    reportService,
+    notificationService,
     pubsub,
   };
 }

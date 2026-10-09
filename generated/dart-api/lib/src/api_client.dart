@@ -15,6 +15,7 @@ import 'model/telemetry_models.dart';
 import 'model/customer_models.dart';
 import 'model/visit_models.dart';
 import 'model/proof_models.dart';
+import 'model/sync_models.dart';
 
 class OprinoApiClient {
   final Dio dio;
@@ -887,6 +888,46 @@ class OprinoApiClient {
         },
       );
       return TaskResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  // --- Phase 04: Advanced Scheduling & Sync ---
+
+  Future<SyncBatchResponse> syncMutationsBatch({
+    required List<SyncMutationEnvelope> mutations,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/sync/mutations',
+        data: {
+          'mutations': mutations.map((m) => m.toJson()).toList(),
+        },
+      );
+      return SyncBatchResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<ListVisitsResponse> reorderVisits({
+    required String userId,
+    required String routeDate,
+    required List<String> orderedVisitIds,
+  }) async {
+    try {
+      final response = await dio.put<Map<String, dynamic>>(
+        '/v1/visits/sequence',
+        data: {
+          'userId': userId,
+          'routeDate': routeDate,
+          'orderedVisitIds': orderedVisitIds,
+        },
+      );
+      return ListVisitsResponse.fromJson(response.data!);
     } on DioException catch (e) {
       _handleDioException(e);
       rethrow;

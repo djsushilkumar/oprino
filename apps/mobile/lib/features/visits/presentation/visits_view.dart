@@ -219,7 +219,28 @@ class _VisitsViewState extends ConsumerState<VisitsView> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  _buildStatusBadge(visit.status),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                                        ),
+                                        child: Text(
+                                          'Stop #${visit.sequenceOrder ?? index + 1}',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF334155),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      _buildStatusBadge(visit.status),
+                                    ],
+                                  ),
                                   if (visit.durationMinutes != null)
                                     Text(
                                       '⏱ ${visit.durationMinutes} min',

@@ -32,6 +32,8 @@ export const VisitSchema = z
     checkOutLatitude: z.number().nullable().optional().openapi({ example: 28.6139 }),
     checkOutLongitude: z.number().nullable().optional().openapi({ example: 77.2090 }),
     durationMinutes: z.number().int().optional().default(0).openapi({ example: 75 }),
+    sequenceOrder: z.number().int().nullable().optional().openapi({ example: 1 }),
+    routeDate: z.string().nullable().optional().openapi({ example: '2026-10-09' }),
     notes: z.string().nullable().optional().openapi({ example: 'Client signed paper receipt on site' }),
     createdAt: z.string().openapi({ example: '2026-10-08T09:00:00.000Z' }),
     updatedAt: z.string().openapi({ example: '2026-10-08T09:00:00.000Z' }),
@@ -48,6 +50,14 @@ export const CreateVisitRequestSchema = z
     notes: z.string().optional().openapi({ example: 'Quarterly equipment audit' }),
   })
   .openapi('CreateVisitRequest');
+
+export const ReorderVisitsRequestSchema = z
+  .object({
+    userId: z.string().uuid().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    routeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2026-10-09' }),
+    orderedVisitIds: z.array(z.string().uuid()).openapi({ example: ['v1b2c3d4-e5f6-7890-abcd-ef1234567890'] }),
+  })
+  .openapi('ReorderVisitsRequest');
 
 export const VisitCheckInRequestSchema = z
   .object({
@@ -76,6 +86,8 @@ export const ListVisitsResponseSchema = z
 
 export type Visit = z.infer<typeof VisitSchema>;
 export type CreateVisitRequest = z.infer<typeof CreateVisitRequestSchema>;
+export type ReorderVisitsRequest = z.infer<typeof ReorderVisitsRequestSchema>;
 export type VisitCheckInRequest = z.infer<typeof VisitCheckInRequestSchema>;
 export type VisitCheckOutRequest = z.infer<typeof VisitCheckOutRequestSchema>;
 export type ListVisitsResponse = z.infer<typeof ListVisitsResponseSchema>;
+

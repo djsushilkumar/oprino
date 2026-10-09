@@ -372,6 +372,65 @@ class SyncService {
   // SYNC ENGINE: PROCESS OUTBOX MUTATIONS
   // =========================================================================
 
+  /// Phase 04: Flushes pending outbox mutations in a single batch to /v1/sync/mutations.
+  /// Resolves conflicts server-side according to SYNC-CONFLICT-MATRIX.md.
+  Future<SyncBatchResponse?> processOutboxBatch({int batchSize = 25}) async {
+    final pending = await (db.select(db.outboxMutations)
+          ..where((m) => m.status.equals('PENDING') | m.status.equals('FAILED'))
+          ..orderBy([(m) => OrderingTerm.asc(m.createdAt)])
+          ..limit(batchSize))
+        .get();
+
+    if (pending.isEmpty) return null;
+
+    final envelopes = pending.map((m) {
+      return SyncMutationEnvelope(
+        mutationId: m.id,
+        entityType: m.entityType,
+        entityId: m.entityId,
+        mutationType: m.mutationType,
+        payload: jsonDecode(m.payload) as Map<String, dynamic>,
+        idempotencyKey: m.idempotencyKey,
+        clientTimestamp: m.createdAt,
+      );
+    }).toList();
+
+    try {
+      final response = await client.syncMutationsBatch(mutations: envelopes);
+
+      final resultMap = {for (final r in response.results) r.mutationId: r};
+
+      for (final m in pending) {
+        final result = resultMap[m.id];
+        if (result != null &&
+            (result.status == 'APPLIED' ||
+                result.status == 'DUPLICATE' ||
+                result.status == 'CONFLICT')) {
+          await (db.update(db.outboxMutations)..where((row) => row.id.equals(m.id))).write(
+            OutboxMutationsCompanion(
+              status: const Value('SYNCED'),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        } else if (result != null && result.status == 'ERROR') {
+          await (db.update(db.outboxMutations)..where((row) => row.id.equals(m.id))).write(
+            OutboxMutationsCompanion(
+              status: const Value('FAILED'),
+              lastError: Value(result.error),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        }
+      }
+
+      return response;
+    } catch (_) {
+      // Offline fallback: fall through to sequential processing
+      await processOutbox();
+      return null;
+    }
+  }
+
   /// Drains pending outbox mutations via the API client.
   Future<void> processOutbox() async {
     final pending = await (db.select(db.outboxMutations)
@@ -572,6 +631,8 @@ class SyncService {
                   checkOutLat: Value(visit.checkOutLatitude),
                   checkOutLng: Value(visit.checkOutLongitude),
                   durationMinutes: Value(visit.durationMinutes),
+                  sequenceOrder: Value(visit.sequenceOrder),
+                  routeDate: Value(visit.routeDate),
                   notes: Value(visit.notes),
                   createdAt: visit.createdAt,
                   updatedAt: visit.updatedAt,

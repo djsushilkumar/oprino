@@ -7,6 +7,8 @@ import {
   timestamp,
   jsonb,
   integer,
+  unique,
+  index,
 } from 'drizzle-orm/pg-core';
 import { users } from './users.js';
 import { workspaces } from './tenants.js';
@@ -81,9 +83,43 @@ export const attendanceEvents = pgTable('attendance_events', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * TENANT-SCOPED: Shift Rosters Table
+ * Explicit daily duty assignments mapping employees to shifts.
+ */
+export const shiftRosters = pgTable(
+  'shift_rosters',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    shiftId: uuid('shift_id')
+      .notNull()
+      .references(() => attendanceShifts.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    scheduledDate: varchar('scheduled_date', { length: 10 }).notNull(), // YYYY-MM-DD
+    status: varchar('status', { length: 20 }).notNull().default('SCHEDULED'), // 'SCHEDULED' | 'ATTENDED' | 'MISSED' | 'EXCUSED'
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique('shift_rosters_workspace_user_date_idx').on(
+      table.workspaceId,
+      table.userId,
+      table.scheduledDate,
+    ),
+    index('shift_rosters_workspace_date_idx').on(table.workspaceId, table.scheduledDate),
+  ],
+);
+
 export type AttendanceShift = typeof attendanceShifts.$inferSelect;
 export type NewAttendanceShift = typeof attendanceShifts.$inferInsert;
 export type AttendanceSession = typeof attendanceSessions.$inferSelect;
 export type NewAttendanceSession = typeof attendanceSessions.$inferInsert;
 export type AttendanceEvent = typeof attendanceEvents.$inferSelect;
 export type NewAttendanceEvent = typeof attendanceEvents.$inferInsert;
+export type ShiftRoster = typeof shiftRosters.$inferSelect;
+export type NewShiftRoster = typeof shiftRosters.$inferInsert;

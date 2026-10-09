@@ -21,6 +21,8 @@ class Visit {
   final double? checkOutLatitude;
   final double? checkOutLongitude;
   final int durationMinutes;
+  final int? sequenceOrder;
+  final String? routeDate;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -45,6 +47,8 @@ class Visit {
     this.checkOutLatitude,
     this.checkOutLongitude,
     this.durationMinutes = 0,
+    this.sequenceOrder,
+    this.routeDate,
     this.notes,
     required this.createdAt,
     required this.updatedAt,
@@ -71,6 +75,8 @@ class Visit {
       checkOutLatitude: (json['checkOutLatitude'] as num?)?.toDouble(),
       checkOutLongitude: (json['checkOutLongitude'] as num?)?.toDouble(),
       durationMinutes: json['durationMinutes'] as int? ?? 0,
+      sequenceOrder: json['sequenceOrder'] as int?,
+      routeDate: json['routeDate'] as String?,
       notes: json['notes'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -97,6 +103,8 @@ class Visit {
         if (checkOutLatitude != null) 'checkOutLatitude': checkOutLatitude,
         if (checkOutLongitude != null) 'checkOutLongitude': checkOutLongitude,
         'durationMinutes': durationMinutes,
+        if (sequenceOrder != null) 'sequenceOrder': sequenceOrder,
+        if (routeDate != null) 'routeDate': routeDate,
         if (notes != null) 'notes': notes,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),

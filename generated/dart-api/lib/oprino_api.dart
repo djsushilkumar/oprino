@@ -17,3 +17,4 @@ export 'src/model/telemetry_models.dart';
 export 'src/model/customer_models.dart';
 export 'src/model/visit_models.dart';
 export 'src/model/proof_models.dart';
+export 'src/model/sync_models.dart';

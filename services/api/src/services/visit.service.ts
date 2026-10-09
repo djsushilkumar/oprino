@@ -115,6 +115,8 @@ export class VisitService {
           checkOutLatitude: r.visit.checkOutLatitude,
           checkOutLongitude: r.visit.checkOutLongitude,
           durationMinutes: r.visit.durationMinutes,
+          sequenceOrder: r.visit.sequenceOrder,
+          routeDate: r.visit.routeDate,
           notes: r.visit.notes,
           createdAt: r.visit.createdAt.toISOString(),
           updatedAt: r.visit.updatedAt.toISOString(),
@@ -288,9 +290,45 @@ export class VisitService {
       checkOutLatitude: row.visit.checkOutLatitude,
       checkOutLongitude: row.visit.checkOutLongitude,
       durationMinutes: row.visit.durationMinutes,
+      sequenceOrder: row.visit.sequenceOrder,
+      routeDate: row.visit.routeDate,
       notes: row.visit.notes,
       createdAt: row.visit.createdAt.toISOString(),
       updatedAt: row.visit.updatedAt.toISOString(),
     };
+  }
+
+  /**
+   * Reorders stop sequence numbers for a technician's day itinerary.
+   */
+  async reorderVisits(
+    workspaceId: string,
+    userId: string,
+    routeDate: string,
+    orderedVisitIds: string[],
+  ) {
+    return this.db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
+
+      for (let i = 0; i < orderedVisitIds.length; i++) {
+        const visitId = orderedVisitIds[i];
+        await tx
+          .update(visits)
+          .set({
+            sequenceOrder: i + 1,
+            routeDate,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(visits.workspaceId, workspaceId),
+              eq(visits.id, visitId),
+              eq(visits.userId, userId),
+            ),
+          );
+      }
+
+      return this.listVisits(workspaceId, { userId, date: routeDate });
+    });
   }
 }

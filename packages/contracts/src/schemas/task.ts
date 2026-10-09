@@ -173,6 +173,86 @@ export const ListTasksResponseSchema = z
   })
   .openapi('ListTasksResponse');
 
+export const RecurrenceFrequencyEnum = z.enum(['DAILY', 'WEEKLY', 'MONTHLY']);
+export type RecurrenceFrequency = z.infer<typeof RecurrenceFrequencyEnum>;
+
+export const RecurringTaskTemplateSchema = z
+  .object({
+    id: z.string().uuid().openapi({ example: 'rt1b2c3d-e5f6-7890-abcd-ef1234567890' }),
+    workspaceId: z.string().uuid().openapi({ example: 'w1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    title: z.string().openapi({ example: 'Daily HVAC Filter Inspection' }),
+    description: z.string().nullable().optional().openapi({ example: 'Inspect and replace dirty filters' }),
+    priority: TaskPriorityEnum.openapi({ example: 'MEDIUM' }),
+    customerId: z.string().uuid().nullable().optional(),
+    customerName: z.string().nullable().optional(),
+    siteId: z.string().uuid().nullable().optional(),
+    siteName: z.string().nullable().optional(),
+    requiresSignature: z.boolean().default(false),
+    requiresPhotoProof: z.boolean().default(false),
+    checklistTemplate: z
+      .array(
+        z.object({
+          title: z.string(),
+          sortOrder: z.number().int().default(0),
+        }),
+      )
+      .default([]),
+    assigneeIds: z.array(z.string().uuid()).default([]),
+    recurrenceFrequency: RecurrenceFrequencyEnum.openapi({ example: 'DAILY' }),
+    recurrenceInterval: z.number().int().default(1),
+    daysOfWeek: z.array(z.number().int().min(0).max(6)).default([]),
+    dayOfMonth: z.number().int().min(1).max(31).nullable().optional(),
+    timeOfDay: z.string().regex(/^\d{2}:\d{2}$/).default('09:00'),
+    timezone: z.string().default('UTC'),
+    isActive: z.boolean().default(true),
+    nextRunAt: z.string(),
+    lastRunAt: z.string().nullable().optional(),
+    createdBy: z.string().uuid(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .openapi('RecurringTaskTemplate');
+
+export const CreateRecurringTaskTemplateRequestSchema = z
+  .object({
+    title: z.string().min(1).max(255).openapi({ example: 'Daily HVAC Filter Inspection' }),
+    description: z.string().optional(),
+    priority: TaskPriorityEnum.default('MEDIUM'),
+    customerId: z.string().uuid().optional(),
+    siteId: z.string().uuid().optional(),
+    requiresSignature: z.boolean().default(false),
+    requiresPhotoProof: z.boolean().default(false),
+    checklistTemplate: z
+      .array(
+        z.object({
+          title: z.string(),
+          sortOrder: z.number().int().default(0),
+        }),
+      )
+      .default([]),
+    assigneeIds: z.array(z.string().uuid()).default([]),
+    recurrenceFrequency: RecurrenceFrequencyEnum.openapi({ example: 'DAILY' }),
+    recurrenceInterval: z.number().int().default(1),
+    daysOfWeek: z.array(z.number().int().min(0).max(6)).default([]),
+    dayOfMonth: z.number().int().min(1).max(31).optional(),
+    timeOfDay: z.string().regex(/^\d{2}:\d{2}$/).default('09:00'),
+    timezone: z.string().default('UTC'),
+  })
+  .openapi('CreateRecurringTaskTemplateRequest');
+
+export const UpdateRecurringTaskTemplateRequestSchema = CreateRecurringTaskTemplateRequestSchema.partial()
+  .extend({
+    isActive: z.boolean().optional(),
+  })
+  .openapi('UpdateRecurringTaskTemplateRequest');
+
+export const ListRecurringTaskTemplatesResponseSchema = z
+  .object({
+    templates: z.array(RecurringTaskTemplateSchema),
+    total: z.number().int(),
+  })
+  .openapi('ListRecurringTaskTemplatesResponse');
+
 export type TaskAssignee = z.infer<typeof TaskAssigneeSchema>;
 export type TaskChecklistItem = z.infer<typeof TaskChecklistItemSchema>;
 export type TaskComment = z.infer<typeof TaskCommentSchema>;
@@ -186,4 +266,9 @@ export type CreateChecklistItemRequest = z.infer<typeof CreateChecklistItemReque
 export type UpdateChecklistItemRequest = z.infer<typeof UpdateChecklistItemRequestSchema>;
 export type CreateTaskCommentRequest = z.infer<typeof CreateTaskCommentRequestSchema>;
 export type ListTasksResponse = z.infer<typeof ListTasksResponseSchema>;
+export type RecurringTaskTemplate = z.infer<typeof RecurringTaskTemplateSchema>;
+export type CreateRecurringTaskTemplateRequest = z.infer<typeof CreateRecurringTaskTemplateRequestSchema>;
+export type UpdateRecurringTaskTemplateRequest = z.infer<typeof UpdateRecurringTaskTemplateRequestSchema>;
+export type ListRecurringTaskTemplatesResponse = z.infer<typeof ListRecurringTaskTemplatesResponseSchema>;
+
 

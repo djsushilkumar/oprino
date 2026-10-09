@@ -3,7 +3,7 @@
   "info": {
     "title": "Oprino Operations Engine API",
     "version": "0.4.0",
-    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 03: Field Operations & Proof of Work)"
+    "description": "Authoritative REST & Realtime API for Oprino Workforce Management Platform (Phase 04: Advanced Scheduling, Dispatch Routing, Conflict Resilience & Analytics)"
   },
   "servers": [
     {
@@ -71,6 +71,28 @@
           "status",
           "timestamp",
           "services"
+        ]
+      },
+      "LivenessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "example": "ok"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-05T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp"
         ]
       },
       "SystemArchitectureInfo": {
@@ -2747,6 +2769,20 @@
             "default": 0,
             "example": 75
           },
+          "sequenceOrder": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "example": 1
+          },
+          "routeDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "2026-10-09"
+          },
           "notes": {
             "type": [
               "string",
@@ -3152,6 +3188,979 @@
         "required": [
           "action"
         ]
+      },
+      "ReorderVisitsRequest": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "routeDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-10-09"
+          },
+          "orderedVisitIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": [
+              "v1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            ]
+          }
+        },
+        "required": [
+          "userId",
+          "routeDate",
+          "orderedVisitIds"
+        ]
+      },
+      "RecurringTaskTemplate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "rt1b2c3d-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "title": {
+            "type": "string",
+            "example": "Daily HVAC Filter Inspection"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Inspect and replace dirty filters"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ],
+            "example": "MEDIUM"
+          },
+          "customerId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "customerName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "siteId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "siteName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requiresSignature": {
+            "type": "boolean",
+            "default": false
+          },
+          "requiresPhotoProof": {
+            "type": "boolean",
+            "default": false
+          },
+          "checklistTemplate": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "sortOrder": {
+                  "type": "integer",
+                  "default": 0
+                }
+              },
+              "required": [
+                "title"
+              ]
+            },
+            "default": []
+          },
+          "assigneeIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "default": []
+          },
+          "recurrenceFrequency": {
+            "type": "string",
+            "enum": [
+              "DAILY",
+              "WEEKLY",
+              "MONTHLY"
+            ],
+            "example": "DAILY"
+          },
+          "recurrenceInterval": {
+            "type": "integer",
+            "default": 1
+          },
+          "daysOfWeek": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "default": []
+          },
+          "dayOfMonth": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 31
+          },
+          "timeOfDay": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "default": "09:00"
+          },
+          "timezone": {
+            "type": "string",
+            "default": "UTC"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          },
+          "nextRunAt": {
+            "type": "string"
+          },
+          "lastRunAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "title",
+          "priority",
+          "recurrenceFrequency",
+          "nextRunAt",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateRecurringTaskTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "Daily HVAC Filter Inspection"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ],
+            "default": "MEDIUM"
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requiresSignature": {
+            "type": "boolean",
+            "default": false
+          },
+          "requiresPhotoProof": {
+            "type": "boolean",
+            "default": false
+          },
+          "checklistTemplate": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "sortOrder": {
+                  "type": "integer",
+                  "default": 0
+                }
+              },
+              "required": [
+                "title"
+              ]
+            },
+            "default": []
+          },
+          "assigneeIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "default": []
+          },
+          "recurrenceFrequency": {
+            "type": "string",
+            "enum": [
+              "DAILY",
+              "WEEKLY",
+              "MONTHLY"
+            ],
+            "example": "DAILY"
+          },
+          "recurrenceInterval": {
+            "type": "integer",
+            "default": 1
+          },
+          "daysOfWeek": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "default": []
+          },
+          "dayOfMonth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 31
+          },
+          "timeOfDay": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "default": "09:00"
+          },
+          "timezone": {
+            "type": "string",
+            "default": "UTC"
+          }
+        },
+        "required": [
+          "title",
+          "recurrenceFrequency"
+        ]
+      },
+      "UpdateRecurringTaskTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "Daily HVAC Filter Inspection"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ],
+            "default": "MEDIUM"
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requiresSignature": {
+            "type": "boolean",
+            "default": false
+          },
+          "requiresPhotoProof": {
+            "type": "boolean",
+            "default": false
+          },
+          "checklistTemplate": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "sortOrder": {
+                  "type": "integer",
+                  "default": 0
+                }
+              },
+              "required": [
+                "title"
+              ]
+            },
+            "default": []
+          },
+          "assigneeIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "default": []
+          },
+          "recurrenceFrequency": {
+            "type": "string",
+            "enum": [
+              "DAILY",
+              "WEEKLY",
+              "MONTHLY"
+            ],
+            "example": "DAILY"
+          },
+          "recurrenceInterval": {
+            "type": "integer",
+            "default": 1
+          },
+          "daysOfWeek": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "default": []
+          },
+          "dayOfMonth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 31
+          },
+          "timeOfDay": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "default": "09:00"
+          },
+          "timezone": {
+            "type": "string",
+            "default": "UTC"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ListRecurringTaskTemplatesResponse": {
+        "type": "object",
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecurringTaskTemplate"
+            }
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "templates",
+          "total"
+        ]
+      },
+      "ShiftRoster": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "sr1b2c3d-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "shiftId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "sh1b2c3d-e5f6-7890-abcd-ef1234567890"
+          },
+          "shiftName": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "scheduledDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-10-09"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "ATTENDED",
+              "MISSED",
+              "EXCUSED"
+            ],
+            "example": "SCHEDULED"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "shiftId",
+          "userId",
+          "scheduledDate",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AssignShiftRosterRequest": {
+        "type": "object",
+        "properties": {
+          "shiftId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "dates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          }
+        },
+        "required": [
+          "shiftId",
+          "userIds",
+          "dates"
+        ]
+      },
+      "ListShiftRostersResponse": {
+        "type": "object",
+        "properties": {
+          "rosters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShiftRoster"
+            }
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rosters",
+          "total"
+        ]
+      },
+      "SyncMutationEnvelope": {
+        "type": "object",
+        "properties": {
+          "mutationId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "m1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "ATTENDANCE",
+              "TASK",
+              "CHECKLIST",
+              "VISIT",
+              "PROOF"
+            ],
+            "example": "TASK"
+          },
+          "entityId": {
+            "type": "string",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "mutationType": {
+            "type": "string",
+            "enum": [
+              "PUNCH_IN",
+              "PUNCH_OUT",
+              "TRANSITION",
+              "CHECKLIST_UPDATE",
+              "VISIT_CHECK_IN",
+              "VISIT_CHECK_OUT",
+              "CONFIRM_PROOF"
+            ],
+            "example": "TRANSITION"
+          },
+          "clientTimestamp": {
+            "type": "string",
+            "example": "2026-10-09T08:30:00.000Z"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {},
+            "example": {
+              "status": "COMPLETED",
+              "version": 2
+            }
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "example": 2
+          }
+        },
+        "required": [
+          "mutationId",
+          "entityType",
+          "entityId",
+          "mutationType",
+          "clientTimestamp",
+          "payload"
+        ]
+      },
+      "SyncBatchRequest": {
+        "type": "object",
+        "properties": {
+          "mutations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncMutationEnvelope"
+            }
+          }
+        },
+        "required": [
+          "mutations"
+        ]
+      },
+      "SyncMutationResult": {
+        "type": "object",
+        "properties": {
+          "mutationId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "m1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "APPLIED",
+              "APPLIED_OVERRIDE",
+              "MERGED_PARTIAL",
+              "REJECTED_STALE",
+              "DUPLICATE_ACK"
+            ],
+            "example": "APPLIED"
+          },
+          "entityId": {
+            "type": "string",
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "serverVersion": {
+            "type": "integer",
+            "example": 3
+          },
+          "resolutionNote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "mutationId",
+          "status",
+          "entityId"
+        ]
+      },
+      "SyncBatchResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncMutationResult"
+            }
+          },
+          "processedCount": {
+            "type": "integer",
+            "example": 5
+          },
+          "appliedCount": {
+            "type": "integer",
+            "example": 5
+          },
+          "conflictCount": {
+            "type": "integer",
+            "example": 0
+          }
+        },
+        "required": [
+          "results",
+          "processedCount",
+          "appliedCount",
+          "conflictCount"
+        ]
+      },
+      "AttendanceSummaryItem": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userName": {
+            "type": "string",
+            "example": "Jane Field Tech"
+          },
+          "userEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "jane@example.com"
+          },
+          "presentDays": {
+            "type": "integer",
+            "example": 22
+          },
+          "totalMinutes": {
+            "type": "integer",
+            "example": 10560
+          },
+          "totalHours": {
+            "type": "number",
+            "example": 176
+          },
+          "lateDays": {
+            "type": "integer",
+            "example": 1
+          },
+          "totalLateMinutes": {
+            "type": "integer",
+            "example": 15
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "userEmail",
+          "presentDays",
+          "totalMinutes",
+          "totalHours",
+          "lateDays",
+          "totalLateMinutes"
+        ]
+      },
+      "AttendanceReportResponse": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2026-10-31"
+          },
+          "totalEmployees": {
+            "type": "integer",
+            "example": 12
+          },
+          "totalCompanyHours": {
+            "type": "number",
+            "example": 2112
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttendanceSummaryItem"
+            }
+          }
+        },
+        "required": [
+          "startDate",
+          "endDate",
+          "totalEmployees",
+          "totalCompanyHours",
+          "items"
+        ]
+      },
+      "TaskSlaReportResponse": {
+        "type": "object",
+        "properties": {
+          "totalTasks": {
+            "type": "integer",
+            "example": 150
+          },
+          "completedTasks": {
+            "type": "integer",
+            "example": 142
+          },
+          "verifiedTasks": {
+            "type": "integer",
+            "example": 138
+          },
+          "rejectedTasks": {
+            "type": "integer",
+            "example": 4
+          },
+          "overdueTasks": {
+            "type": "integer",
+            "example": 8
+          },
+          "onTimeRate": {
+            "type": "number",
+            "example": 94.6
+          },
+          "statusDistribution": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "example": {
+              "ASSIGNED": 3,
+              "IN_PROGRESS": 5,
+              "COMPLETED": 4,
+              "VERIFIED": 138
+            }
+          }
+        },
+        "required": [
+          "totalTasks",
+          "completedTasks",
+          "verifiedTasks",
+          "rejectedTasks",
+          "overdueTasks",
+          "onTimeRate",
+          "statusDistribution"
+        ]
+      },
+      "VisitReportResponse": {
+        "type": "object",
+        "properties": {
+          "totalVisits": {
+            "type": "integer",
+            "example": 85
+          },
+          "completedVisits": {
+            "type": "integer",
+            "example": 80
+          },
+          "plannedVisits": {
+            "type": "integer",
+            "example": 5
+          },
+          "totalDurationMinutes": {
+            "type": "integer",
+            "example": 4250
+          },
+          "averageDurationMinutes": {
+            "type": "number",
+            "example": 53.1
+          }
+        },
+        "required": [
+          "totalVisits",
+          "completedVisits",
+          "plannedVisits",
+          "totalDurationMinutes",
+          "averageDurationMinutes"
+        ]
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "n1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "w1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TASK_ASSIGNED",
+              "TASK_OVERDUE",
+              "PROOF_REJECTED",
+              "MISSED_SHIFT",
+              "SYSTEM"
+            ],
+            "example": "TASK_ASSIGNED"
+          },
+          "title": {
+            "type": "string",
+            "example": "New Task Assigned"
+          },
+          "body": {
+            "type": "string",
+            "example": "You have been assigned to HVAC Maintenance Unit 4B"
+          },
+          "entityType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "task"
+          },
+          "entityId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "t1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "isRead": {
+            "type": "boolean",
+            "example": false
+          },
+          "readAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-09T08:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "userId",
+          "type",
+          "title",
+          "body",
+          "isRead",
+          "createdAt"
+        ]
+      },
+      "ListNotificationsResponse": {
+        "type": "object",
+        "properties": {
+          "notifications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 5
+          },
+          "unreadCount": {
+            "type": "integer",
+            "example": 2
+          }
+        },
+        "required": [
+          "notifications",
+          "total",
+          "unreadCount"
+        ]
+      },
+      "MarkNotificationReadResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "markedCount": {
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "required": [
+          "success",
+          "markedCount"
+        ]
       }
     },
     "parameters": {}
@@ -3182,6 +4191,82 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "summary": "Liveness Probe",
+        "description": "Lightweight liveness probe indicating process and event loop responsiveness",
+        "tags": [
+          "System"
+        ],
+        "operationId": "getLiveness",
+        "responses": {
+          "200": {
+            "description": "Process is alive and responding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Readiness Probe",
+        "description": "Deep readiness probe evaluating database connection pool and Redis cache readiness",
+        "tags": [
+          "System"
+        ],
+        "operationId": "getReadiness",
+        "responses": {
+          "200": {
+            "description": "Service is ready to accept production traffic",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service or underlying dependency is not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Prometheus Metrics",
+        "description": "Exposes Prometheus system and HTTP operational metrics",
+        "tags": [
+          "System"
+        ],
+        "operationId": "getMetrics",
+        "responses": {
+          "200": {
+            "description": "Prometheus metrics text stream",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -5295,6 +6380,481 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/visits/sequence": {
+      "put": {
+        "summary": "Reorder Visits for Day Dispatch Route",
+        "description": "Atomically updates the stop sequence numbers for an assigned worker on a specific date",
+        "tags": [
+          "Visits"
+        ],
+        "operationId": "reorderVisits",
+        "requestBody": {
+          "description": "Ordered list of visit IDs for technician",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderVisitsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated stop order list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListVisitsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/templates": {
+      "post": {
+        "summary": "Create Recurring Task Template",
+        "description": "Provisions a recurring template that automatically generates tasks",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "createRecurringTaskTemplate",
+        "requestBody": {
+          "description": "Template configuration",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecurringTaskTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringTaskTemplate"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Recurring Task Templates",
+        "description": "Retrieves active and inactive recurring task templates for the workspace",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "listRecurringTaskTemplates",
+        "responses": {
+          "200": {
+            "description": "List of templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRecurringTaskTemplatesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/templates/{id}": {
+      "patch": {
+        "summary": "Update Recurring Task Template",
+        "description": "Modifies recurring schedule, assignees, or active status",
+        "tags": [
+          "Tasks"
+        ],
+        "operationId": "updateRecurringTaskTemplate",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "description": "Template updates",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecurringTaskTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringTaskTemplate"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/attendance/rosters": {
+      "post": {
+        "summary": "Assign Shift Rosters",
+        "description": "Assigns employees to scheduled shifts across dates",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "assignShiftRoster",
+        "requestBody": {
+          "description": "Roster assignments",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignShiftRosterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created rosters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListShiftRostersResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Shift Rosters",
+        "description": "Lists scheduled rosters for workspace members with date range filtering",
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "listShiftRosters",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "userId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of rosters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListShiftRostersResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/mutations": {
+      "post": {
+        "summary": "Replay Batch Sync Mutations",
+        "description": "Atomically processes queued offline mutations with conflict matrix resolution",
+        "tags": [
+          "Sync"
+        ],
+        "operationId": "syncMutationsBatch",
+        "requestBody": {
+          "description": "Array of queued client mutations",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch processing results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncBatchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/attendance": {
+      "get": {
+        "summary": "Get Attendance Summary Report",
+        "description": "Computes present days, duty hours, late minutes, and overtime across date range",
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "getAttendanceReport",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attendance report summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceReportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/tasks": {
+      "get": {
+        "summary": "Get Task SLA Performance Report",
+        "description": "Aggregates task completion, verification rates, and on-time SLA metrics",
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "getTaskSlaReport",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task SLA report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSlaReportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/visits": {
+      "get": {
+        "summary": "Get Visit Audit Report",
+        "description": "Aggregates total visits, durations, and check-in compliance",
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "getVisitReport",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visit report summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitReportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/export/csv": {
+      "get": {
+        "summary": "Export Attendance Report as CSV",
+        "description": "Streams attendance report summary in comma-separated values format for spreadsheet integration",
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "exportAttendanceCsv",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file download stream",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notifications": {
+      "get": {
+        "summary": "List In-App Notifications",
+        "description": "Retrieves operational notifications and alerts for the authenticated user",
+        "tags": [
+          "Notifications"
+        ],
+        "operationId": "listNotifications",
+        "responses": {
+          "200": {
+            "description": "List of notifications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListNotificationsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notifications/{id}/read": {
+      "patch": {
+        "summary": "Mark Notification as Read",
+        "description": "Marks a specific notification as read",
+        "tags": [
+          "Notifications"
+        ],
+        "operationId": "markNotificationAsRead",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marked read confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkNotificationReadResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notifications/read-all": {
+      "post": {
+        "summary": "Mark All Notifications as Read",
+        "description": "Marks all notifications for the user as read",
+        "tags": [
+          "Notifications"
+        ],
+        "operationId": "markAllNotificationsAsRead",
+        "responses": {
+          "200": {
+            "description": "Marked read confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkNotificationReadResponse"
                 }
               }
             }

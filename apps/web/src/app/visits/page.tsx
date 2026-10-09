@@ -35,6 +35,45 @@ export default function VisitsPage() {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Phase 04: Route Sequencing State
+  const [isReordering, setIsReordering] = useState(false);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [reorderSuccess, setReorderSuccess] = useState<string | null>(null);
+
+  const moveVisit = (index: number, direction: 'UP' | 'DOWN') => {
+    const targetIndex = direction === 'UP' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= visits.length) return;
+    const updated = [...visits];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, moved);
+    setVisits(updated);
+  };
+
+  const handleSaveRouteOrder = async () => {
+    if (visits.length === 0) return;
+    const targetUserId = visits[0]?.userId || context?.user?.id;
+    if (!targetUserId) return;
+    const targetDate = dateFilter || new Date().toISOString().slice(0, 10);
+
+    try {
+      setIsSavingOrder(true);
+      setError(null);
+      await webApi.reorderVisits({
+        userId: targetUserId,
+        routeDate: targetDate,
+        orderedVisitIds: visits.map((v) => v.id),
+      });
+      setReorderSuccess('Route sequence saved successfully!');
+      setTimeout(() => setReorderSuccess(null), 3500);
+      setIsReordering(false);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to reorder visits');
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
+
   const loadData = useCallback(async () => {
     const token = getStoredToken();
     if (!token) {
@@ -227,7 +266,65 @@ export default function VisitsPage() {
               Clear Date
             </button>
           )}
+
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <button
+              onClick={() => setIsReordering(!isReordering)}
+              style={{
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                border: isReordering ? '1px solid #4F46E5' : '1px solid #CBD5E1',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                backgroundColor: isReordering ? '#EEF2FF' : '#FFFFFF',
+                color: isReordering ? '#4F46E5' : '#475569',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <span>⇅</span> {isReordering ? 'Exit Sequencing' : 'Reorder Stops'}
+            </button>
+
+            {isReordering && (
+              <button
+                onClick={handleSaveRouteOrder}
+                disabled={isSavingOrder || visits.length === 0}
+                style={{
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  backgroundColor: '#10B981',
+                  color: '#FFFFFF',
+                  cursor: isSavingOrder ? 'wait' : 'pointer',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                }}
+              >
+                {isSavingOrder ? 'Saving...' : 'Save Route Order'}
+              </button>
+            )}
+          </div>
         </div>
+
+        {reorderSuccess && (
+          <div
+            style={{
+              padding: '0.875rem 1rem',
+              backgroundColor: '#ECFDF5',
+              border: '1px solid #A7F3D0',
+              borderRadius: '8px',
+              color: '#065F46',
+              marginBottom: '1.5rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+            }}
+          >
+            ✓ {reorderSuccess}
+          </div>
+        )}
 
         {error && (
           <div
@@ -280,7 +377,7 @@ export default function VisitsPage() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.25rem' }}>
-            {visits.map((visit) => {
+            {visits.map((visit, index) => {
               const badge = getStatusBadge(visit.status);
 
               return (
@@ -298,25 +395,82 @@ export default function VisitsPage() {
                   }}
                 >
                   <div>
-                    {/* Badge & Planned Time */}
+                    {/* Badge, Stop Sequence & Controls */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '9999px',
-                          backgroundColor: badge.bg,
-                          color: badge.color,
-                        }}
-                      >
-                        {badge.text}
-                      </span>
-                      {visit.plannedAt && (
-                        <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                          📅 {new Date(visit.plannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span
+                          style={{
+                            fontSize: '0.6875rem',
+                            fontWeight: 800,
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '4px',
+                            backgroundColor: '#F1F5F9',
+                            color: '#334155',
+                            border: '1px solid #CBD5E1',
+                          }}
+                        >
+                          Stop #{visit.sequenceOrder ?? index + 1}
                         </span>
-                      )}
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '9999px',
+                            backgroundColor: badge.bg,
+                            color: badge.color,
+                          }}
+                        >
+                          {badge.text}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {isReordering && (
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button
+                              onClick={() => moveVisit(index, 'UP')}
+                              disabled={index === 0}
+                              style={{
+                                padding: '0.2rem 0.45rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                borderRadius: '4px',
+                                border: '1px solid #CBD5E1',
+                                backgroundColor: index === 0 ? '#F8FAFC' : '#FFFFFF',
+                                color: index === 0 ? '#CBD5E1' : '#334155',
+                                cursor: index === 0 ? 'not-allowed' : 'pointer',
+                              }}
+                              title="Move stop earlier"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={() => moveVisit(index, 'DOWN')}
+                              disabled={index === visits.length - 1}
+                              style={{
+                                padding: '0.2rem 0.45rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                borderRadius: '4px',
+                                border: '1px solid #CBD5E1',
+                                backgroundColor: index === visits.length - 1 ? '#F8FAFC' : '#FFFFFF',
+                                color: index === visits.length - 1 ? '#CBD5E1' : '#334155',
+                                cursor: index === visits.length - 1 ? 'not-allowed' : 'pointer',
+                              }}
+                              title="Move stop later"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        )}
+
+                        {visit.plannedAt && (
+                          <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                            📅 {new Date(visit.plannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Customer & Site */}

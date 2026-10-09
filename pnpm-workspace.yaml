@@ -10,3 +10,6 @@ allowBuilds:
 onlyBuiltDependencies:
   - esbuild
   - msgpackr-extract
+
+overrides:
+  drizzle-orm: '0.40.0'

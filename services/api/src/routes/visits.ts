@@ -6,6 +6,7 @@ import {
   CreateVisitRequestSchema,
   VisitCheckInRequestSchema,
   VisitCheckOutRequestSchema,
+  ReorderVisitsRequestSchema,
 } from '@oprino/contracts';
 
 export interface VisitRoutesOptions {
@@ -197,6 +198,47 @@ export const visitRoutes: FastifyPluginAsync<VisitRoutesOptions> = async (app, o
           statusCode: status,
           error: status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
           message: err.message || 'Failed to check out visit',
+        });
+      }
+    },
+  );
+
+  // PUT /v1/visits/sequence - Reorder day route sequence
+  app.put(
+    '/v1/visits/sequence',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.VISITS_READ),
+      ],
+    },
+    async (req, reply) => {
+      const parsed = ReorderVisitsRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid reorder sequence payload',
+          details: parsed.error.issues,
+        });
+      }
+
+      try {
+        const result = await visitService.reorderVisits(
+          req.workspaceId!,
+          parsed.data.userId,
+          parsed.data.routeDate,
+          parsed.data.orderedVisitIds,
+        );
+        return reply.status(200).send(result);
+      } catch (err: any) {
+        req.log.error(err, 'Failed to reorder visits sequence');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: status === 400 ? 'Bad Request' : 'Internal Server Error',
+          message: err.message || 'Failed to reorder visits',
         });
       }
     },
