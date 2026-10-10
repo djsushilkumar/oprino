@@ -184,15 +184,39 @@ async function runSmokeTest() {
 
   // 6. Task State Machine & Mandatory Checklist Items
   console.log('\n6. Testing Task State Transitions & Checklist Completion...');
-  // Fetch current task
-  let taskDetailRes = await api(`/v1/tasks/${TASK_ID}`);
-  if (!taskDetailRes.ok) fail('Failed to fetch task', taskDetailRes.body);
-  let task = taskDetailRes.body;
-  pass(`Task initial status: ${task.status}, version: ${task.version}`);
+  let currentTaskId = TASK_ID;
+  let taskDetailRes = await api(`/v1/tasks/${currentTaskId}`);
+  let task = taskDetailRes.ok ? taskDetailRes.body : null;
+
+  if (!task || task.status === 'COMPLETED' || task.status === 'VERIFIED' || task.status === 'CANCELLED') {
+    const createRes = await api('/v1/tasks', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: `Smoke Test Solar Maintenance ${Date.now()}`,
+        description: 'Automated smoke test validation task',
+        priority: 'HIGH',
+        customerId: CUSTOMER_ID,
+        siteId: SITE_ID,
+        requiresSignature: true,
+        requiresPhotoProof: true,
+        checklist: [
+          'Inspect main breaker voltage',
+          'Clean solar array panels',
+          'Collect client signature on glass',
+        ],
+      }),
+    });
+    if (!createRes.ok) fail('Failed to create fresh task for smoke test', createRes.body);
+    task = createRes.body;
+    currentTaskId = task.id;
+    pass(`Created fresh test task: ${task.title} (ID=${currentTaskId})`);
+  } else {
+    pass(`Using existing task: status=${task.status}, version=${task.version}`);
+  }
 
   // Transition ASSIGNED -> ACCEPTED
   if (task.status === 'ASSIGNED') {
-    const accRes = await api(`/v1/tasks/${TASK_ID}/transition`, {
+    const accRes = await api(`/v1/tasks/${currentTaskId}/transition`, {
       method: 'POST',
       body: JSON.stringify({ status: 'ACCEPTED', version: task.version }),
     });
@@ -206,7 +230,7 @@ async function runSmokeTest() {
 
   // Transition ACCEPTED -> IN_PROGRESS
   if (task.status === 'ACCEPTED') {
-    const progRes = await api(`/v1/tasks/${TASK_ID}/transition`, {
+    const progRes = await api(`/v1/tasks/${currentTaskId}/transition`, {
       method: 'POST',
       body: JSON.stringify({ status: 'IN_PROGRESS', version: task.version }),
     });
@@ -221,7 +245,7 @@ async function runSmokeTest() {
   // Complete checklist items
   console.log(`Completing ${task.checklist?.length || 0} required checklist items...`);
   for (const item of task.checklist || []) {
-    const checkRes = await api(`/v1/tasks/${TASK_ID}/checklist/${item.id}`, {
+    const checkRes = await api(`/v1/tasks/${currentTaskId}/checklist/${item.id}`, {
       method: 'PATCH',
       body: JSON.stringify({ isCompleted: true }),
     });
@@ -238,7 +262,7 @@ async function runSmokeTest() {
   const photoUploadRes = await api('/v1/media/upload-url', {
     method: 'POST',
     body: JSON.stringify({
-      taskId: TASK_ID,
+      taskId: currentTaskId,
       visitId: visitId,
       proofType: 'PHOTO',
       fileName: 'inverter_panel_reading.jpg',
@@ -252,7 +276,7 @@ async function runSmokeTest() {
   const photoConfirmRes = await api('/v1/media/confirm', {
     method: 'POST',
     body: JSON.stringify({
-      taskId: TASK_ID,
+      taskId: currentTaskId,
       visitId: visitId,
       proofType: 'PHOTO',
       fileKey: photoKey,
@@ -277,7 +301,7 @@ async function runSmokeTest() {
   const sigUploadRes = await api('/v1/media/upload-url', {
     method: 'POST',
     body: JSON.stringify({
-      taskId: TASK_ID,
+      taskId: currentTaskId,
       visitId: visitId,
       proofType: 'SIGNATURE',
       fileName: 'customer_site_signoff.png',
@@ -291,7 +315,7 @@ async function runSmokeTest() {
   const sigConfirmRes = await api('/v1/media/confirm', {
     method: 'POST',
     body: JSON.stringify({
-      taskId: TASK_ID,
+      taskId: currentTaskId,
       visitId: visitId,
       proofType: 'SIGNATURE',
       fileKey: sigKey,
@@ -310,11 +334,11 @@ async function runSmokeTest() {
   }
 
   // Re-fetch fresh task version before completing
-  taskDetailRes = await api(`/v1/tasks/${TASK_ID}`);
+  taskDetailRes = await api(`/v1/tasks/${currentTaskId}`);
   task = taskDetailRes.body;
 
   // Complete Task
-  const compRes = await api(`/v1/tasks/${TASK_ID}/transition`, {
+  const compRes = await api(`/v1/tasks/${currentTaskId}/transition`, {
     method: 'POST',
     body: JSON.stringify({ status: 'COMPLETED', version: task.version }),
   });
@@ -327,7 +351,7 @@ async function runSmokeTest() {
 
   // 8. Supervisor Review Queue & Verification
   console.log('\n8. Testing Supervisor Verification Approval...');
-  const verifyRes = await api(`/v1/tasks/${TASK_ID}/verify`, {
+  const verifyRes = await api(`/v1/tasks/${currentTaskId}/verify`, {
     method: 'POST',
     body: JSON.stringify({
       action: 'VERIFY',
