@@ -10,6 +10,29 @@ jobs:
   validate-web-and-services:
     name: Lint, Typecheck, Test & Build (TypeScript)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: oprino_admin
+          POSTGRES_PASSWORD: oprino_dev_password
+          POSTGRES_DB: oprino_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U oprino_admin -d oprino_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -39,8 +62,17 @@ jobs:
       - name: Build Web & Services
         run: pnpm turbo build
 
+      - name: Apply Drizzle Migrations
+        run: pnpm --filter @oprino/database migrate
+        env:
+          DATABASE_URL: postgresql://oprino_admin:oprino_dev_password@localhost:5432/oprino_db
+
       - name: Test
         run: pnpm turbo test
+        env:
+          DATABASE_URL: postgresql://oprino_admin:oprino_dev_password@localhost:5432/oprino_db
+          REDIS_URL: redis://localhost:6379
+          BETTER_AUTH_SECRET: oprino_dev_secret_must_be_at_least_32_characters_long_for_security
 
   validate-mobile:
     name: Flutter Analyze, Test & Android Baseline

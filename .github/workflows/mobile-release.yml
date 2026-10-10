@@ -52,10 +52,21 @@ jobs:
           cd apps/mobile
           flutter pub get
 
+      - name: Provision Android Signing Keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          cat <<EOF > apps/mobile/android/key.properties
+          storeFile=/home/runner/.android/debug.keystore
+          storePassword=android
+          keyAlias=androiddebugkey
+          keyPassword=android
+          EOF
+
       - name: Build Unified Release APK
         run: |
           cd apps/mobile
-          flutter build apk --release
+          flutter build apk --release --no-tree-shake-icons
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
