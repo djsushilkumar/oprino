@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "eslint . --no-error-on-unmatched-pattern",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
     "@oprino/contracts": "workspace:*",

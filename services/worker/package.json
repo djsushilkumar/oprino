@@ -11,7 +11,7 @@
     "start": "node dist/index.js",
     "lint": "eslint . --no-error-on-unmatched-pattern",
     "typecheck": "tsc --noEmit",
-    "test": "node --test dist/**/*.test.js || node --test --loader tsx src/**/*.test.ts"
+    "test": "node --test dist/*.test.js"
   },
   "dependencies": {
     "@oprino/contracts": "workspace:*",

@@ -4,17 +4,21 @@
 const API_BASE = 'http://localhost:3001';
 const WEB_BASE = 'http://localhost:3000';
 
-const AUTH_TOKEN = 'WPykoIltfYFpPVkR9WdiRDMjjfajHnlJ';
-const WORKSPACE_ID = '01357be8-1d1f-451b-8541-c5df8b47bcf9';
-const CUSTOMER_ID = '3b13656a-8b6e-4085-b384-09bc0af346f4';
-const SITE_ID = 'ef540833-0efc-4422-9acc-858fa09e48ad';
-const SHIFT_ID = '694034c9-a7ed-49a1-bf6e-c900e8584e7c';
-const TASK_ID = '21caf1c4-b8cb-4e89-a7b1-90c23c96e478';
+let AUTH_TOKEN = process.env.SMOKE_AUTH_TOKEN || 'WPykoIltfYFpPVkR9WdiRDMjjfajHnlJ';
+let WORKSPACE_ID = process.env.SMOKE_WORKSPACE_ID || '01357be8-1d1f-451b-8541-c5df8b47bcf9';
+let CUSTOMER_ID = process.env.SMOKE_CUSTOMER_ID || '3b13656a-8b6e-4085-b384-09bc0af346f4';
+let SITE_ID = process.env.SMOKE_SITE_ID || 'ef540833-0efc-4422-9acc-858fa09e48ad';
+let SHIFT_ID = process.env.SMOKE_SHIFT_ID || '694034c9-a7ed-49a1-bf6e-c900e8584e7c';
+let TASK_ID = process.env.SMOKE_TASK_ID || '21caf1c4-b8cb-4e89-a7b1-90c23c96e478';
 
 const headers = {
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${AUTH_TOKEN}`,
-  'x-workspace-id': WORKSPACE_ID,
+  get Authorization() {
+    return `Bearer ${AUTH_TOKEN}`;
+  },
+  get 'x-workspace-id'() {
+    return WORKSPACE_ID;
+  },
 };
 
 function pass(msg) {
@@ -29,9 +33,15 @@ function fail(msg, err) {
 
 async function api(path, options = {}) {
   const url = `${API_BASE}${path}`;
+  const effectiveHeaders = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${AUTH_TOKEN}`,
+    'x-workspace-id': WORKSPACE_ID,
+    ...(options.headers || {}),
+  };
   const res = await fetch(url, {
     ...options,
-    headers: { ...headers, ...(options.headers || {}) },
+    headers: effectiveHeaders,
   });
   const text = await res.text();
   let json = null;
@@ -55,6 +65,77 @@ async function runSmokeTest() {
     pass(`API is healthy: db=${healthRes.body.services.database}, redis=${healthRes.body.services.redis}`);
   } else {
     fail('Health check failed', healthRes.body);
+  }
+
+  // 1b. Validate/Bootstrap Session & Workspace
+  const testAuthRes = await api('/v1/workspaces');
+  if (!testAuthRes.ok || !testAuthRes.body?.workspaces?.some((w) => w.id === WORKSPACE_ID)) {
+    console.log('Bootstrapping fresh smoke test owner, workspace, customer & shift...');
+    const signupRes = await api('/v1/auth/signup', {
+      method: 'POST',
+      headers: {},
+      body: JSON.stringify({
+        email: `smoke.owner.${Date.now()}@example.com`,
+        password: 'SmokePassword123!',
+        name: 'Smoke Test Owner',
+      }),
+    });
+    if (signupRes.status === 200 && signupRes.body?.token) {
+      AUTH_TOKEN = signupRes.body.token;
+      pass(`Provisioned smoke test owner account: ${signupRes.body.user.email}`);
+
+      // Provision workspace
+      const newWsRes = await api('/v1/workspaces', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+        body: JSON.stringify({ name: 'Smoke Test Operations' }),
+      });
+      if (newWsRes.status === 201 && newWsRes.body?.id) {
+        WORKSPACE_ID = newWsRes.body.id;
+        pass(`Provisioned fresh smoke test workspace: ${WORKSPACE_ID}`);
+
+        // Provision Customer
+        const custRes = await api('/v1/customers', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Apex Industrial Solar Hub',
+            companyName: 'Apex Holdings',
+            email: 'smoke@apex.com',
+          }),
+        });
+        if (custRes.status === 201 && custRes.body?.id) {
+          CUSTOMER_ID = custRes.body.id;
+          // Provision Site
+          const siteRes = await api(`/v1/customers/${CUSTOMER_ID}/sites`, {
+            method: 'POST',
+            body: JSON.stringify({
+              name: 'North Logistics Solar Farm',
+              address: '742 Evergreen Terrace',
+              latitude: 28.6139,
+              longitude: 77.2090,
+              geofenceRadiusMeters: 150.0,
+            }),
+          });
+          if (siteRes.status === 201 && siteRes.body?.id) {
+            SITE_ID = siteRes.body.id;
+          }
+        }
+
+        // Provision Shift
+        const shiftRes = await api('/v1/attendance/shifts', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Standard Day Shift',
+            startTime: '08:00',
+            endTime: '17:00',
+            timezone: 'UTC',
+          }),
+        });
+        if (shiftRes.status === 201 && shiftRes.body?.id) {
+          SHIFT_ID = shiftRes.body.id;
+        }
+      }
+    }
   }
 
   // 2. Validate Active Workspace
