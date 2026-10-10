@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsx scripts/build.ts && tsc",
     "generate": "tsx scripts/build.ts",
-    "lint": "eslint .",
+    "lint": "eslint . --no-error-on-unmatched-pattern",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "lint": "eslint .",
+    "lint": "eslint . --no-error-on-unmatched-pattern",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "generate": "turbo generate",

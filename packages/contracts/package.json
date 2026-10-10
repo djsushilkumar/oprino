@@ -18,7 +18,7 @@
     "export:openapi": "tsx scripts/export-openapi.ts",
     "generate:dart": "tsx scripts/generate-dart-client.ts",
     "generate": "pnpm export:openapi && pnpm generate:dart",
-    "lint": "eslint .",
+    "lint": "eslint . --no-error-on-unmatched-pattern",
     "typecheck": "tsc --noEmit",
     "test": "node --test"
   },

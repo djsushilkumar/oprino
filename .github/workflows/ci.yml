@@ -36,11 +36,11 @@ jobs:
       - name: Typecheck
         run: pnpm turbo typecheck
 
-      - name: Test
-        run: pnpm turbo test
-
       - name: Build Web & Services
         run: pnpm turbo build
+
+      - name: Test
+        run: pnpm turbo test
 
   validate-mobile:
     name: Flutter Analyze, Test & Android Baseline
@@ -52,12 +52,11 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.6'
           channel: 'stable'
           cache: true
 

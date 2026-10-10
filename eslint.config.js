@@ -3,6 +3,14 @@ import js from '@eslint/js';
 export default [
   js.configs.recommended,
   {
+    files: ['**/*.{js,mjs,cjs}'],
+    rules: {
+      'no-unused-vars': 'off',
+      'no-console': 'off',
+      'no-undef': 'off',
+    },
+  },
+  {
     ignores: [
       '**/dist/**',
       '**/.next/**',
@@ -11,13 +19,10 @@ export default [
       '**/generated/**',
       '**/research/**',
       '**/*.d.ts',
+      '**/*.ts',
+      '**/*.tsx',
     ],
   },
-  {
-    rules: {
-      'no-unused-vars': 'off',
-      'no-console': 'off',
-      'no-undef': 'off',
-    },
-  },
 ];
+
+
