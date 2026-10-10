@@ -134,6 +134,29 @@ async function runSmokeTest() {
         if (shiftRes.status === 201 && shiftRes.body?.id) {
           SHIFT_ID = shiftRes.body.id;
         }
+
+        // Provision Initial Task
+        const taskRes = await api('/v1/tasks', {
+          method: 'POST',
+          body: JSON.stringify({
+            title: `Smoke Test Solar Maintenance ${Date.now()}`,
+            description: 'Automated smoke test validation task',
+            priority: 'HIGH',
+            customerId: CUSTOMER_ID,
+            siteId: SITE_ID,
+            requiresSignature: true,
+            requiresPhotoProof: true,
+            checklist: [
+              'Inspect main breaker voltage',
+              'Clean solar array panels',
+              'Collect client signature on glass',
+            ],
+          }),
+        });
+        if (taskRes.status === 201 && taskRes.body?.id) {
+          TASK_ID = taskRes.body.id;
+          pass(`Provisioned smoke test task: ${TASK_ID}`);
+        }
       }
     }
   }
@@ -187,15 +210,18 @@ async function runSmokeTest() {
 
   // 4. Physical Site Visit Creation & Dispatch Sequencing
   console.log('\n4. Testing Site Visit Creation & Dispatch Routing Sequence...');
+  const visitPayload = {
+    customerId: CUSTOMER_ID,
+    siteId: SITE_ID,
+    plannedAt: new Date(Date.now() + 3600000).toISOString(),
+    notes: 'Quarterly Inverter safety audit and verification visit',
+  };
+  if (TASK_ID && TASK_ID !== '21caf1c4-b8cb-4e89-a7b1-90c23c96e478') {
+    visitPayload.taskId = TASK_ID;
+  }
   const visitRes = await api('/v1/visits', {
     method: 'POST',
-    body: JSON.stringify({
-      customerId: CUSTOMER_ID,
-      siteId: SITE_ID,
-      taskId: TASK_ID,
-      plannedAt: new Date(Date.now() + 3600000).toISOString(),
-      notes: 'Quarterly Inverter safety audit and verification visit',
-    }),
+    body: JSON.stringify(visitPayload),
   });
   if (visitRes.status === 201) {
     pass(`Visit created: ID=${visitRes.body.id}, status=${visitRes.body.status}`);
@@ -214,8 +240,8 @@ async function runSmokeTest() {
 
   // Test Route Sequencing (Phase 04)
   const todayDate = new Date().toISOString().slice(0, 10);
-  const userMeRes = await api('/v1/auth/me');
-  const currentUserId = userMeRes.body?.id || 'c273de53-f1dc-423c-a5fa-92fef4862587';
+  const userMeRes = await api('/v1/me');
+  const currentUserId = userMeRes.body?.user?.id || userMeRes.body?.id || 'c273de53-f1dc-423c-a5fa-92fef4862587';
 
   const seqRes = await api('/v1/visits/sequence', {
     method: 'PUT',
