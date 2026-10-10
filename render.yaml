@@ -1,0 +1,40 @@
+services:
+  # Oprino Fastify API Service
+  - type: web
+    name: oprino-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile.api
+    plan: free
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: API_PUBLIC_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: '*'
+
+  # Oprino BullMQ System Worker
+  - type: worker
+    name: oprino-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile.worker
+    plan: free
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false

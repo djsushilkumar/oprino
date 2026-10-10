@@ -1,0 +1,12 @@
+node_modules
+.git
+.github
+.agents
+.next
+dist
+build
+.dart_tool
+*.log
+.env
+.env.*
+!.env.example
