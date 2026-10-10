@@ -31,6 +31,21 @@ describe('PostgreSQL Row-Level Security (RLS) & Multi-Tenant Isolation Integrati
   let roleBId: string;
 
   before(async () => {
+    // 0. Ensure non-superuser oprino_app role exists for RLS kernel enforcement
+    await adminDb.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'oprino_app') THEN
+          CREATE ROLE oprino_app WITH LOGIN PASSWORD 'oprino_dev_password';
+        END IF;
+      END $$;
+      GRANT USAGE ON SCHEMA public TO oprino_app;
+      GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO oprino_app;
+      GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO oprino_app;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO oprino_app;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO oprino_app;
+    `);
+
     // 1. Create two isolated workspaces in DB
     const [wsA] = await adminDb
       .insert(schema.workspaces)

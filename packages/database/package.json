@@ -20,6 +20,7 @@
     "build": "tsc",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
+    "provision-roles": "tsx scripts/provision-roles.ts",
     "lint": "eslint . --no-error-on-unmatched-pattern",
     "typecheck": "tsc --noEmit"
   },
@@ -33,6 +34,7 @@
     "@oprino/config-typescript": "workspace:*",
     "@types/node": "^22.13.10",
     "drizzle-kit": "^0.30.5",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }
 }

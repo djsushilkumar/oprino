@@ -62,8 +62,10 @@ jobs:
       - name: Build Web & Services
         run: pnpm turbo build
 
-      - name: Apply Drizzle Migrations
-        run: pnpm --filter @oprino/database migrate
+      - name: Apply Drizzle Migrations & Provision Roles
+        run: |
+          pnpm --filter @oprino/database migrate
+          pnpm --filter @oprino/database provision-roles
         env:
           DATABASE_URL: postgresql://oprino_admin:oprino_dev_password@localhost:5432/oprino_db
 
@@ -154,8 +156,10 @@ jobs:
       - name: Build Monorepo
         run: pnpm turbo build
 
-      - name: Apply Drizzle Migrations
-        run: pnpm --filter @oprino/database migrate
+      - name: Apply Drizzle Migrations & Provision Roles
+        run: |
+          pnpm --filter @oprino/database migrate
+          pnpm --filter @oprino/database provision-roles
         env:
           DATABASE_URL: postgresql://oprino_admin:oprino_dev_password@localhost:5432/oprino_db
 
