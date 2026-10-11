@@ -174,9 +174,28 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
       - `Full End-to-End Smoke Test`: PASSED (self-bootstrapping tenant creation, attendance punch lifecycle, visit routing, checklists, proof upload, and Next.js routes).
     - Production multi-stage Docker containerization (`Dockerfile.api`, `Dockerfile.worker`, `Dockerfile.web`).
     - 100% Free Cloud Deployment specifications (`render.yaml`, `apps/web/vercel.json`, and [`docs/deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md`](file:///workspace/oprino/docs/deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md)) across Supabase (PostgreSQL 17 + PostGIS), Upstash (Redis), Render (Fastify API & Worker), and Vercel (Next.js 15 Web Dashboard).
-14. **Current Status & Resume Gate:** **PAUSED BY USER — READY FOR CLOUD DEPLOYMENT**.
-    - Local and remote `main` branches are synchronized with zero drift.
-    - Next step on resumption: Execute free-tier cloud service provisioning (Supabase, Upstash, Render, Vercel) and perform live cross-surface pilot testing (Mobile app + Web dashboard).
+14. **Cloud Deployment Execution & Free-Tier Optimization:** **COMPLETED & VERIFIED (OCTOBER 11, 2026)**.
+    - **Vercel Web Dashboard:** Deployed live to Vercel CDN from `apps/web` with automatic Git push CI/CD.
+    - **Render Free-Tier Re-architecture:**
+      - Resolved Render free-tier limitation (`type: worker` unavailable on free plan) by bundling the BullMQ system worker into the single free `oprino-api` web container via `Dockerfile.api`.
+      - Fixed invalid `tsconfig.base.json` references across `Dockerfile.api`, `Dockerfile.worker`, and `Dockerfile.web`.
+      - Tested multi-stage Docker build locally to 100% completion (`oprino-api-test:latest`).
+      - Pushed commit `b0c86ec` to `main`; Render Blueprint manual sync succeeded with all-green status.
+      - Render Web Service `oprino-api` successfully deployed (`✔ Deployed`) in Oregon region.
+    - **Comprehensive Test Suite Re-verification:**
+      - End-to-End Smoke Test: 10/10 domain flows PASSED.
+      - Fastify API Integration & Security Tests: 88/88 PASSED (0 failures, duration 66s).
+      - Flutter Mobile Client Tests: 22/22 PASSED (0 failures).
+      - Next.js Web Dashboard Tests: 7/7 PASSED (0 failures).
+      - Automated Browser Agent: UI layout, typography, navigation, and `/attendance` dev hot-reload verified.
+15. **Current Status & Resume Gate:** **PAUSED BY USER — READY FOR CLOUD WIRING & LIVE PILOT TESTING**.
+    - Local and remote `main` branches are synchronized with zero drift (Commit `b0c86ec`).
+    - Next steps on resumption when user prompts **"start"**:
+      1. Retrieve the live Render public URL for `oprino-api` (e.g. `https://oprino-api-xxxx.onrender.com`).
+      2. Configure `NEXT_PUBLIC_API_URL` in Vercel project environment variables and redeploy to connect Web to Cloud API.
+      3. Supply cloud connection strings (`DATABASE_URL` via Supabase/Neon and `REDIS_URL` via Upstash) in Render environment variables for 24/7 cloud persistence.
+      4. Execute live cross-surface test against cloud URLs (Web Dashboard + Android Release APK).
+
 
 
 
