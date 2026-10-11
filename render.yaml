@@ -1,11 +1,12 @@
 services:
-  # Oprino Fastify API Service
+  # Oprino Fastify API Service (with bundled background worker for 100% free tier)
   - type: web
     name: oprino-api
     runtime: docker
     dockerfilePath: ./Dockerfile.api
     plan: free
     region: oregon
+    healthCheckPath: /health/live
     envVars:
       - key: NODE_ENV
         value: production
@@ -24,17 +25,3 @@ services:
       - key: CORS_ORIGINS
         value: '*'
 
-  # Oprino BullMQ System Worker
-  - type: worker
-    name: oprino-worker
-    runtime: docker
-    dockerfilePath: ./Dockerfile.worker
-    plan: free
-    region: oregon
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false

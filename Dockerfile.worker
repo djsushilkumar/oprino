@@ -9,7 +9,7 @@ WORKDIR /app
 RUN npm install -g pnpm@11.22.0
 
 # Copy workspace package manifests
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY packages/config-typescript packages/config-typescript/
 COPY packages/config-eslint packages/config-eslint/
 COPY packages/tokens packages/tokens/
@@ -36,7 +36,7 @@ ENV NODE_ENV=production
 
 RUN npm install -g pnpm@11.22.0
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY packages/config-typescript packages/config-typescript/
 COPY packages/config-eslint packages/config-eslint/
 COPY --from=builder /app/packages/tokens /app/packages/tokens/
