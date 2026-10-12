@@ -1,8 +1,8 @@
 // Oprino Full Platform End-to-End Smoke Test
 // Validates: API, Web, Postgres/PostGIS, Redis, Multi-tenancy, Visits, Checklists, Proofs, Attendance, Verification
 
-const API_BASE = 'http://localhost:3001';
-const WEB_BASE = 'http://localhost:3000';
+const API_BASE = process.env.API_BASE_URL || process.env.API_BASE || 'http://localhost:3001';
+const WEB_BASE = process.env.WEB_BASE_URL || process.env.WEB_BASE || 'http://localhost:3000';
 
 let AUTH_TOKEN = process.env.SMOKE_AUTH_TOKEN || 'WPykoIltfYFpPVkR9WdiRDMjjfajHnlJ';
 let WORKSPACE_ID = process.env.SMOKE_WORKSPACE_ID || '01357be8-1d1f-451b-8541-c5df8b47bcf9';
@@ -495,19 +495,23 @@ async function runSmokeTest() {
   }
 
   // 10. Web Dashboard Route Verification
-  console.log('\n10. Testing Next.js Web Dashboard Route Availability...');
-  const webRoutes = ['/auth/signin', '/tasks', '/visits', '/reports'];
-  for (const route of webRoutes) {
-    try {
-      const res = await fetch(`${WEB_BASE}${route}`);
-      if (res.status === 200) {
-        pass(`Web page accessible: ${WEB_BASE}${route} (HTTP 200)`);
-      } else {
-        console.warn(`Web page returned ${res.status}: ${WEB_BASE}${route}`);
+  if (process.env.SKIP_WEB_CHECK !== '1') {
+    console.log('\n10. Testing Next.js Web Dashboard Route Availability...');
+    const webRoutes = ['/auth/signin', '/tasks', '/visits', '/reports'];
+    for (const route of webRoutes) {
+      try {
+        const res = await fetch(`${WEB_BASE}${route}`);
+        if (res.status === 200) {
+          pass(`Web page accessible: ${WEB_BASE}${route} (HTTP 200)`);
+        } else {
+          console.warn(`Web page returned ${res.status}: ${WEB_BASE}${route}`);
+        }
+      } catch (err) {
+        fail(`Web frontend not reachable at ${WEB_BASE}${route}`, err);
       }
-    } catch (err) {
-      fail(`Web frontend not reachable at ${WEB_BASE}${route}`, err);
     }
+  } else {
+    pass('Skipped local web route check (SKIP_WEB_CHECK=1 for Cloud API test)');
   }
 
   console.log('\n====================================================');

@@ -188,13 +188,14 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
       - Flutter Mobile Client Tests: 22/22 PASSED (0 failures).
       - Next.js Web Dashboard Tests: 7/7 PASSED (0 failures).
       - Automated Browser Agent: UI layout, typography, navigation, and `/attendance` dev hot-reload verified.
-15. **Current Status & Resume Gate:** **PAUSED BY USER — READY FOR CLOUD WIRING & LIVE PILOT TESTING**.
-    - Local and remote `main` branches are synchronized with zero drift (Commit `b0c86ec`).
-    - Next steps on resumption when user prompts **"start"**:
-      1. Retrieve the live Render public URL for `oprino-api` (e.g. `https://oprino-api-xxxx.onrender.com`).
-      2. Configure `NEXT_PUBLIC_API_URL` in Vercel project environment variables and redeploy to connect Web to Cloud API.
-      3. Supply cloud connection strings (`DATABASE_URL` via Supabase/Neon and `REDIS_URL` via Upstash) in Render environment variables for 24/7 cloud persistence.
-      4. Execute live cross-surface test against cloud URLs (Web Dashboard + Android Release APK).
+15. **Cloud Infrastructure Wiring (Neon + Upstash + Render):** **COMPLETED & VERIFIED (OCTOBER 12, 2026)**.
+    - **Neon PostgreSQL (PostGIS):** 100% free serverless database provisioned; all Drizzle schema migrations applied (29 public tables created).
+    - **Upstash Serverless Redis:** 100% free TLS Redis provisioned and verified (`PONG` response).
+    - **Render Fastify API (`oprino-api`):** Configured with cloud connection strings in Oregon region; readiness probe `/health/ready` returns `HTTP 200 OK` with `database: connected` and `redis: connected`.
+    - **Live Cloud E2E Smoke Test:** Automated smoke test (`scripts/smoke_test.mjs`) executed against `https://oprino-api.onrender.com` passing 100% of domain flows (bootstrap tenant, duty punch in/out, visits GPS routing, checklists, watermarked photo and signature proof of work, and supervisor verification).
+16. **Current Status & Active Gate:** **LIVE CLOUD BACKEND 100% OPERATIONAL**.
+    - Cloud API Public Endpoint: `https://oprino-api.onrender.com`
+    - Next Step: Configure `NEXT_PUBLIC_API_URL=https://oprino-api.onrender.com` on Vercel Web Dashboard and execute live pilot testing from mobile APK and browser.
 
 
 
