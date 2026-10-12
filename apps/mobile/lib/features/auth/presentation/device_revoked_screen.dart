@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/oprino_theme.dart';
 import '../../../core/network/api_client_provider.dart';
+import '../../../core/widgets/oprino_brand_logo.dart';
 import 'auth_state_notifier.dart';
 
 class DeviceRevokedScreen extends ConsumerStatefulWidget {
@@ -43,6 +44,11 @@ class _DeviceRevokedScreenState extends ConsumerState<DeviceRevokedScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const OprinoBrandLogo(
+                    height: 36,
+                    variant: OprinoLogoVariant.horizontal,
+                  ),
+                  const SizedBox(height: 32),
                   Container(
                     width: 72,
                     height: 72,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/oprino_theme.dart';
 import '../../../core/network/api_client_provider.dart';
+import '../../../core/widgets/oprino_brand_logo.dart';
 import 'auth_state_notifier.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -72,47 +73,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Canonical Brand Mark
-                  Center(
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: OprinoColors.navy,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: OprinoColors.navy.withValues(alpha: 0.15),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.location_on,
-                          color: OprinoColors.mint,
-                          size: 32,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Brand Wordmark
+                  // Canonical Brand Logo
                   const Center(
-                    child: Text(
-                      'oprino',
-                      style: TextStyle(
-                        fontFamily: 'Outfit',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: OprinoColors.navy,
-                        letterSpacing: -0.8,
-                      ),
+                    child: OprinoBrandLogo(
+                      height: 48,
+                      variant: OprinoLogoVariant.horizontal,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
 
                   const Center(
                     child: Text(

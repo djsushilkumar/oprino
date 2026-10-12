@@ -12,6 +12,7 @@ import 'package:oprino_mobile/core/sync/sync_service.dart';
 import 'package:oprino_mobile/features/auth/presentation/auth_state_notifier.dart';
 import 'package:oprino_mobile/features/auth/presentation/device_revoked_screen.dart';
 import 'package:oprino_mobile/features/shell/presentation/app_shell_screen.dart';
+import 'package:oprino_mobile/core/widgets/oprino_brand_logo.dart';
 import 'package:oprino_api/oprino_api.dart';
 
 class _FakeOfflineAdapter implements HttpClientAdapter {
@@ -96,8 +97,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify canonical brand wordmark
-    expect(find.text('oprino'), findsOneWidget);
+    // Verify canonical brand logo
+    expect(find.byType(OprinoBrandLogo), findsOneWidget);
 
     // Verify subtitle & Sign In title
     expect(find.text('Operations & Workforce SaaS Platform'), findsOneWidget);
@@ -188,8 +189,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify brand wordmark
-    expect(find.text('oprino'), findsOneWidget);
+    // Verify brand logo
+    expect(find.byType(OprinoBrandLogo), findsOneWidget);
 
     // Initial tab is Attendance (Tab 0)
     expect(find.text('Attendance'), findsWidgets);

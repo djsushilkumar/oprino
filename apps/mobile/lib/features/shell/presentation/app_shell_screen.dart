@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/oprino_theme.dart';
 import '../../../core/network/api_client_provider.dart';
+import '../../../core/widgets/oprino_brand_logo.dart';
 import '../../../core/sync/sync_service.dart';
 import '../../../core/database/database.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
@@ -121,28 +122,9 @@ class _AppShellScreenState extends ConsumerState<AppShellScreen> {
     return Scaffold(
       backgroundColor: OprinoColors.paper,
       appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: OprinoColors.navy,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.location_on, color: OprinoColors.mint, size: 20),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'oprino',
-              style: TextStyle(
-                fontFamily: 'Outfit',
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: OprinoColors.navy,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ],
+        title: const OprinoBrandLogo(
+          height: 28,
+          variant: OprinoLogoVariant.horizontal,
         ),
         actions: [
           // Outbox Sync Indicator
