@@ -32,6 +32,10 @@ class SyncService {
     required String workspaceId,
     String? shiftId,
     String? note,
+    String? selfieMediaKey,
+    double? latitude,
+    double? longitude,
+    double? accuracy,
   }) async {
     final mutationId = SecureStorageService.generateUuidV4();
     final idempotencyKey = 'mut-punch-in-$mutationId';
@@ -40,6 +44,10 @@ class SyncService {
     final payload = jsonEncode({
       'shiftId': shiftId,
       'note': note,
+      'selfieMediaKey': selfieMediaKey,
+      'latitude': latitude,
+      'longitude': longitude,
+      'accuracy': accuracy,
     });
 
     await db.transaction(() async {
@@ -460,6 +468,10 @@ class SyncService {
               idempotencyKey: mutation.idempotencyKey,
               shiftId: data['shiftId'] as String?,
               note: data['note'] as String?,
+              selfieMediaKey: data['selfieMediaKey'] as String?,
+              latitude: (data['latitude'] as num?)?.toDouble(),
+              longitude: (data['longitude'] as num?)?.toDouble(),
+              accuracy: (data['accuracy'] as num?)?.toDouble(),
             );
             break;
 

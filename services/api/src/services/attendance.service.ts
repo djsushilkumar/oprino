@@ -1,6 +1,7 @@
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, ne, desc, sql } from 'drizzle-orm';
 import type { Database } from '@oprino/database';
 import {
+  workspaces,
   attendanceShifts,
   attendanceSessions,
   attendanceEvents,
@@ -18,6 +19,10 @@ export interface PunchInDto {
   idempotencyKey: string;
   shiftId?: string;
   note?: string;
+  selfieMediaKey?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
 }
 
 export interface PunchOutDto {
@@ -112,6 +117,10 @@ export class AttendanceService {
       punchInTime: row.punchInTime.toISOString(),
       punchOutTime: row.punchOutTime ? row.punchOutTime.toISOString() : null,
       durationMinutes: row.durationMinutes,
+      selfieMediaKey: row.selfieMediaKey ?? null,
+      punchInLatitude: row.punchInLatitude ?? null,
+      punchInLongitude: row.punchInLongitude ?? null,
+      punchInAccuracy: row.punchInAccuracy ?? null,
       isLate: row.isLate,
       lateMinutes: row.lateMinutes,
       isManualAdjustment: row.isManualAdjustment,
@@ -233,6 +242,63 @@ export class AttendanceService {
         }
       }
 
+      // 4b. Company Attendance Policy Enforcement (BLK-004)
+      const [ws] = await tx
+        .select({ attendancePolicy: workspaces.attendancePolicy })
+        .from(workspaces)
+        .where(eq(workspaces.id, workspaceId))
+        .limit(1);
+
+      const policy = ws?.attendancePolicy ?? 'SIMPLE';
+
+      if (policy === 'SELFIE_REQUIRED' || policy === 'GPS_AND_SELFIE_REQUIRED') {
+        if (!input.selfieMediaKey) {
+          const error: any = new Error('A verified selfie photo is required to punch in under company attendance policy.');
+          error.statusCode = 400;
+          error.code = 'MISSING_REQUIRED_SELFIE';
+          throw error;
+        }
+      }
+
+      if (policy === 'GPS_REQUIRED' || policy === 'GPS_AND_SELFIE_REQUIRED') {
+        if (input.latitude === undefined || input.longitude === undefined) {
+          const error: any = new Error('GPS coordinates are required to punch in under company attendance policy.');
+          error.statusCode = 400;
+          error.code = 'MISSING_REQUIRED_GPS';
+          throw error;
+        }
+      }
+
+      if (input.selfieMediaKey) {
+        // Validate tenant barrier: must start with workspaceId/
+        if (!input.selfieMediaKey.startsWith(`${workspaceId}/`)) {
+          const error: any = new Error('Security barrier violation: selfie photo must belong to active workspace');
+          error.statusCode = 403;
+          error.code = 'FORBIDDEN_MEDIA_ACCESS';
+          throw error;
+        }
+
+        // Prevent replay of unrelated selfie evidence across sessions
+        const [existingWithSelfie] = await tx
+          .select({ id: attendanceSessions.id })
+          .from(attendanceSessions)
+          .where(
+            and(
+              eq(attendanceSessions.workspaceId, workspaceId),
+              eq(attendanceSessions.selfieMediaKey, input.selfieMediaKey),
+              ne(attendanceSessions.punchInIdempotencyKey, input.idempotencyKey),
+            ),
+          )
+          .limit(1);
+
+        if (existingWithSelfie) {
+          const error: any = new Error('Replay detected: This selfie evidence has already been submitted for another session.');
+          error.statusCode = 400;
+          error.code = 'SELFIE_REPLAY_DETECTED';
+          throw error;
+        }
+      }
+
       // 5. Insert new Attendance Session
       const [newSession] = await tx
         .insert(attendanceSessions)
@@ -243,6 +309,10 @@ export class AttendanceService {
           status: 'ON_DUTY',
           punchInTime: serverTimestamp,
           punchInIdempotencyKey: input.idempotencyKey,
+          selfieMediaKey: input.selfieMediaKey ?? null,
+          punchInLatitude: input.latitude ?? null,
+          punchInLongitude: input.longitude ?? null,
+          punchInAccuracy: input.accuracy ?? null,
           isLate,
           lateMinutes,
         })
@@ -258,6 +328,9 @@ export class AttendanceService {
         idempotencyKey: input.idempotencyKey,
         metadata: {
           note: input.note ?? null,
+          selfieMediaKey: input.selfieMediaKey ?? null,
+          latitude: input.latitude ?? null,
+          longitude: input.longitude ?? null,
           serverTimestamp: serverTimestamp.toISOString(),
           isLate,
           lateMinutes,

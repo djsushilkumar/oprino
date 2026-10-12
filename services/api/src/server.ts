@@ -175,7 +175,7 @@ export function buildServer(options?: {
   app.register(openapiRoutes);
 
   // Auth & Identity Routes
-  app.register(authRoutes, { auth, db: dbClient.db });
+  app.register(authRoutes, { auth, db: dbClient.db, workspaceService });
   app.register(workspaceRoutes, { workspaceService, authMiddleware, auth });
   app.register(meRoutes, { db: dbClient.db, authMiddleware });
   app.register(deviceRoutes, { deviceService, authMiddleware });

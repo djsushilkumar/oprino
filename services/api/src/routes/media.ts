@@ -92,8 +92,67 @@ export const mediaRoutes: FastifyPluginAsync<MediaRoutesOptions> = async (app, o
     },
   );
 
+  // POST /v1/media/attendance-selfie-url - BLK-004: Direct attendance selfie upload
+  app.post(
+    '/v1/media/attendance-selfie-url',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+      ],
+    },
+    async (req, reply) => {
+      const fileName = (req.body as any)?.fileName || 'selfie.jpg';
+      const result = await mediaService.generateAttendanceSelfieUploadUrl(
+        req.workspaceId!,
+        req.user!.id,
+        fileName,
+      );
+      return reply.status(200).send(result);
+    },
+  );
+
+  // GET /v1/media/files/* - Protected media access partitioned by tenant barrier
+  app.get(
+    '/v1/media/files/*',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+      ],
+    },
+    async (req, reply) => {
+      const rawPath = (req.params as any)['*'] || '';
+      const fileKey = decodeURIComponent(rawPath);
+
+      // Verify tenant barrier
+      if (!fileKey.startsWith(`${req.workspaceId!}/`)) {
+        return reply.status(403).send({
+          statusCode: 403,
+          error: 'Forbidden',
+          message: 'Security barrier violation: Cannot access media outside active workspace',
+        });
+      }
+
+      return reply.status(200).send({
+        fileKey,
+        url: `${mediaService.getPublicBaseUrl()}/v1/media/mock-upload/${encodeURIComponent(fileKey)}`,
+        status: 'AVAILABLE',
+      });
+    },
+  );
+
+  // Add binary content-type parser for mock uploads
+  app.addContentTypeParser(
+    ['application/octet-stream', 'image/jpeg', 'image/png', 'text/plain'],
+    (_req, payload, done) => {
+      done(null, payload);
+    },
+  );
+
   // PUT /v1/media/mock-upload/* - Local dev mock direct S3 upload target
   app.put('/v1/media/mock-upload/*', async (_req, reply) => {
     return reply.status(200).send({ success: true, message: 'Mock upload successful' });
   });
 };
+

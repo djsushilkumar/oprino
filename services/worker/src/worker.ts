@@ -36,15 +36,40 @@ export function createWorkerManager(options?: {
       logger.info({ jobId: job.id, jobName: job.name }, 'Processing system background job');
 
       if (job.name === 'telemetry.retention.prune') {
-        const retentionDays = job.data?.retentionDays ?? 30;
-        logger.info({ retentionDays }, 'Executing telemetry retention purge');
+        const workspaceId = job.data?.workspaceId;
+        logger.info({ workspaceId }, 'Executing telemetry retention purge');
 
-        const [result] = (await dbClient.client`
-          SELECT telemetry_prune_expired_records(${retentionDays}) as deleted_count;
-        `) as unknown as [{ deleted_count: number }];
+        if (workspaceId) {
+          // 1. Specific workspace pruning using its configured retention policy (BLK-006)
+          const [ws] = (await dbClient.client`
+            SELECT location_retention_days FROM workspaces WHERE id = ${workspaceId}::uuid;
+          `) as unknown as [{ location_retention_days?: number }];
 
-        logger.info({ deletedCount: result?.deleted_count ?? 0 }, 'Telemetry retention purge complete');
-        return { success: true, deletedCount: result?.deleted_count ?? 0 };
+          const retentionDays = ws?.location_retention_days ?? job.data?.retentionDays ?? 30;
+          const [result] = (await dbClient.client`
+            SELECT telemetry_prune_workspace_records(${workspaceId}::uuid, ${retentionDays}) as deleted_count;
+          `) as unknown as [{ deleted_count: number }];
+
+          logger.info({ workspaceId, retentionDays, deletedCount: result?.deleted_count ?? 0 }, 'Per-workspace retention purge complete');
+          return { success: true, workspaceId, deletedCount: result?.deleted_count ?? 0 };
+        } else {
+          // 2. Global scheduled run: iterate across active workspaces respecting per-workspace retention
+          const activeWorkspaces = (await dbClient.client`
+            SELECT id, location_retention_days FROM workspaces WHERE status = 'ACTIVE';
+          `) as unknown as Array<{ id: string; location_retention_days: number }>;
+
+          let totalDeleted = 0;
+          for (const w of activeWorkspaces) {
+            const retentionDays = w.location_retention_days ?? 30;
+            const [res] = (await dbClient.client`
+              SELECT telemetry_prune_workspace_records(${w.id}::uuid, ${retentionDays}) as deleted_count;
+            `) as unknown as [{ deleted_count: number }];
+            totalDeleted += res?.deleted_count ?? 0;
+          }
+
+          logger.info({ totalWorkspaces: activeWorkspaces.length, totalDeleted }, 'Multi-tenant telemetry retention purge complete');
+          return { success: true, totalWorkspaces: activeWorkspaces.length, deletedCount: totalDeleted };
+        }
       }
 
       if (job.name === 'tasks.recurring.generate') {

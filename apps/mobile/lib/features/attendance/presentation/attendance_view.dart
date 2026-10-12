@@ -6,6 +6,7 @@ import '../../../../core/sync/sync_service.dart';
 import '../../../../core/database/database.dart';
 import '../../../../core/location/location_service.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
+import 'widgets/attendance_selfie_sheet.dart';
 
 class AttendanceView extends ConsumerStatefulWidget {
   const AttendanceView({super.key});
@@ -79,28 +80,54 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
       return;
     }
 
-    setState(() {
-      _isActioning = true;
-      _actionError = null;
-    });
+    final loc = ref.read(latestLocationProvider);
 
-    try {
-      final sync = ref.read(syncServiceProvider);
-      await sync.queuePunchIn(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AttendanceSelfieSheet(
         workspaceId: workspaceId,
-        note: 'Punched in from mobile',
-      );
-      if (workspaceId.isNotEmpty) {
-        await ref.read(locationServiceProvider).startTracking(
+        userId: userId,
+        currentLatitude: loc?.latitude,
+        currentLongitude: loc?.longitude,
+        accuracy: loc?.accuracy,
+        onConfirm: ({
+          required String selfieMediaKey,
+          required double? latitude,
+          required double? longitude,
+          required double? accuracy,
+          required DateTime timestamp,
+        }) async {
+          setState(() {
+            _isActioning = true;
+            _actionError = null;
+          });
+
+          try {
+            final sync = ref.read(syncServiceProvider);
+            await sync.queuePunchIn(
               workspaceId: workspaceId,
-              userId: userId,
+              note: 'Punched in from mobile with selfie verification',
+              selfieMediaKey: selfieMediaKey,
+              latitude: latitude,
+              longitude: longitude,
+              accuracy: accuracy,
             );
-      }
-    } catch (e) {
-      setState(() => _actionError = e.toString());
-    } finally {
-      if (mounted) setState(() => _isActioning = false);
-    }
+            if (workspaceId.isNotEmpty) {
+              await ref.read(locationServiceProvider).startTracking(
+                    workspaceId: workspaceId,
+                    userId: userId,
+                  );
+            }
+          } catch (e) {
+            setState(() => _actionError = e.toString());
+          } finally {
+            if (mounted) setState(() => _isActioning = false);
+          }
+        },
+      ),
+    );
   }
 
   Future<void> _handlePunchOut(String workspaceId) async {

@@ -58,6 +58,30 @@ export class MediaService {
     });
   }
 
+  getPublicBaseUrl(): string {
+    return this.publicBaseUrl;
+  }
+
+  /**
+   * BLK-004: Generates direct-upload URL for employee attendance selfie verification.
+   */
+  async generateAttendanceSelfieUploadUrl(
+    workspaceId: string,
+    userId: string,
+    fileName = 'selfie.jpg',
+  ): Promise<MediaUploadUrlResponse> {
+    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const uniqueSuffix = crypto.randomUUID().substring(0, 8);
+    const fileKey = `${workspaceId}/attendance/${userId}/${Date.now()}-${uniqueSuffix}-${safeName}`;
+    const uploadUrl = `${this.publicBaseUrl}/v1/media/mock-upload/${encodeURIComponent(fileKey)}`;
+
+    return {
+      uploadUrl,
+      fileKey,
+      expiresInSeconds: 600,
+    };
+  }
+
   /**
    * Confirms uploaded proof binary and records proof in task_proofs.
    */

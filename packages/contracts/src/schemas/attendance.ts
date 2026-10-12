@@ -54,6 +54,10 @@ export const AttendanceSessionResponseSchema = z
     punchInTime: z.string().openapi({ example: '2026-10-05T09:02:15.000Z' }),
     punchOutTime: z.string().nullable().optional().openapi({ example: null }),
     durationMinutes: z.number().int().nullable().optional().openapi({ example: 480 }),
+    selfieMediaKey: z.string().nullable().optional().openapi({ example: 'w1/attendance/u1/selfie.jpg' }),
+    punchInLatitude: z.number().nullable().optional().openapi({ example: 28.6139 }),
+    punchInLongitude: z.number().nullable().optional().openapi({ example: 77.2090 }),
+    punchInAccuracy: z.number().nullable().optional().openapi({ example: 10.5 }),
     isLate: z.boolean().openapi({ example: false }),
     lateMinutes: z.number().int().openapi({ example: 0 }),
     isManualAdjustment: z.boolean().openapi({ example: false }),
@@ -68,6 +72,10 @@ export const PunchInRequestSchema = z
     idempotencyKey: z.string().min(1).max(255).openapi({ example: 'mut-punch-in-uuid-123' }),
     shiftId: z.string().uuid().optional().openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     note: z.string().optional().openapi({ example: 'Starting shift on site A' }),
+    selfieMediaKey: z.string().optional().openapi({ example: 'w1/attendance/u1/selfie.jpg' }),
+    latitude: z.number().optional().openapi({ example: 28.6139 }),
+    longitude: z.number().optional().openapi({ example: 77.2090 }),
+    accuracy: z.number().optional().openapi({ example: 10.5 }),
   })
   .openapi('PunchInRequest');
 
