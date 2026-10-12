@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
-import { webApi, getStoredToken, getStoredWorkspaceId } from '../../lib/api';
+import { webApi, getStoredToken, getStoredWorkspaceId, getApiBaseUrl } from '../../lib/api';
 import type {
   MeResponse,
   LiveWorkerLocation,
@@ -87,7 +87,7 @@ export default function LiveMapPage() {
     const workspaceId = getStoredWorkspaceId();
     if (!token || !workspaceId) return;
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const apiUrl = getApiBaseUrl();
 
     try {
       // Establish EventSource with authentication credentials in query params

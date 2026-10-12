@@ -79,8 +79,21 @@ export interface WorkspaceMember {
   roleName: string;
   status: string;
 }
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:3001';
+    }
+    return 'https://oprino-api.onrender.com';
+  }
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3001';
+  }
+  return 'https://oprino-api.onrender.com';
+}
 
 const TOKEN_KEY = 'oprino_web_auth_token';
 const WORKSPACE_KEY = 'oprino_web_active_workspace_id';
@@ -134,8 +147,8 @@ async function request<T>(
   if (activeWorkspaceId) {
     headers['X-Workspace-Id'] = activeWorkspaceId;
   }
-
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}${endpoint}`, {
     ...options,
     headers,
     credentials: 'include',
@@ -554,7 +567,7 @@ export const webApi = {
     if (filters?.startDate) params.set('startDate', filters.startDate);
     if (filters?.endDate) params.set('endDate', filters.endDate);
     const qs = params.toString() ? `?${params.toString()}` : '';
-    return `${API_BASE_URL}/v1/reports/export/csv${qs}`;
+    return `${getApiBaseUrl()}/v1/reports/export/csv${qs}`;
   },
 
   // --- Phase 04: Notifications ---

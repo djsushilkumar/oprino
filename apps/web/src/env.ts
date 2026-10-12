@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const WebEnvSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:3000'),
+  NEXT_PUBLIC_API_URL: z.string().url().default('https://oprino-api.onrender.com'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
 
