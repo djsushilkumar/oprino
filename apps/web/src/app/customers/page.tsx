@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
+import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken } from '../../lib/api';
 import type {
   MeResponse,
@@ -330,7 +331,12 @@ export default function CustomersPage() {
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', marginTop: '0.25rem', fontSize: '0.8125rem', color: '#64748B' }}>
                           {cust.email && <span>✉ {cust.email}</span>}
-                          {cust.phone && <span>📞 {cust.phone}</span>}
+                          {cust.phone && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Icon name="phone" size={12} color="#64748B" />
+                              {cust.phone}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -422,8 +428,9 @@ export default function CustomersPage() {
                               <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.9375rem' }}>
                                 {site.name}
                               </div>
-                              <div style={{ color: '#64748B', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
-                                📍 {site.address}
+                              <div style={{ color: '#64748B', fontSize: '0.8125rem', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <Icon name="pin" size={13} color="#64748B" />
+                                <span>{site.address}</span>
                               </div>
 
                               <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.75rem' }}>
@@ -438,9 +445,12 @@ export default function CustomersPage() {
                               </div>
 
                               {(site.contactName || site.contactPhone) && (
-                                <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid #F1F5F9', fontSize: '0.75rem', color: '#64748B' }}>
-                                  👤 {site.contactName || 'On-site Lead'}{' '}
-                                  {site.contactPhone && `(${site.contactPhone})`}
+                                <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid #F1F5F9', fontSize: '0.75rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                  <Icon name="user" size={12} color="#64748B" />
+                                  <span>
+                                    {site.contactName || 'On-site Lead'}{' '}
+                                    {site.contactPhone && `(${site.contactPhone})`}
+                                  </span>
                                 </div>
                               )}
                             </div>

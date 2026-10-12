@@ -3,6 +3,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { BrandLogo } from '../../components/BrandLogo';
+import { HeaderNav } from '../../components/HeaderNav';
+import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken } from '../../lib/api';
 import type { MeResponse, WorkspaceListItem } from '@oprino/contracts';
 
@@ -148,148 +150,7 @@ export default function DashboardShellPage() {
       }}
     >
       {/* Authenticated Navigation Bar */}
-      <header
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderBottom: '1px solid #DDE5EF',
-          padding: '0.75rem 1.75rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <BrandLogo size={32} />
-
-          {/* Workspace Switcher Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                color: '#64748B',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-              }}
-            >
-              Workspace:
-            </span>
-            <select
-              value={activeWorkspace?.id || ''}
-              onChange={(e) => {
-                if (e.target.value === '__NEW__') {
-                  router.push('/onboarding/workspace');
-                } else {
-                  handleWorkspaceSwitch(e.target.value);
-                }
-              }}
-              disabled={isSwitching}
-              style={{
-                padding: '0.4rem 0.75rem',
-                borderRadius: '8px',
-                border: '1px solid #CBD5E1',
-                backgroundColor: '#F8FAFC',
-                color: '#0F172A',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              {workspaces.map((ws) => (
-                <option key={ws.id} value={ws.id}>
-                  {ws.name} ({ws.roleName})
-                </option>
-              ))}
-              <option value="__NEW__">+ Create New Workspace</option>
-            </select>
-          </div>
-
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginLeft: '0.5rem' }}>
-            <span
-              style={{
-                padding: '0.35rem 0.75rem',
-                borderRadius: '6px',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                backgroundColor: '#EFF6FF',
-                color: '#164CFF',
-              }}
-            >
-              Overview
-            </span>
-            <a
-              href="/tasks"
-              style={{
-                padding: '0.35rem 0.75rem',
-                borderRadius: '6px',
-                fontSize: '0.8125rem',
-                fontWeight: 500,
-                color: '#64748B',
-                textDecoration: 'none',
-              }}
-            >
-              Tasks
-            </a>
-            <a
-              href="/attendance"
-              style={{
-                padding: '0.35rem 0.75rem',
-                borderRadius: '6px',
-                fontSize: '0.8125rem',
-                fontWeight: 500,
-                color: '#64748B',
-                textDecoration: 'none',
-              }}
-            >
-              Attendance
-            </a>
-          </nav>
-        </div>
-
-        {/* User Identity & Logout Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0F172A' }}>
-              {user.name}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{user.email}</div>
-          </div>
-
-          <span
-            style={{
-              backgroundColor: '#EFF6FF',
-              color: '#164CFF',
-              padding: '0.3rem 0.65rem',
-              borderRadius: '9999px',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              border: '1px solid #BFDBFE',
-            }}
-          >
-            {role?.name || 'Member'}
-          </span>
-
-          <button
-            onClick={handleSignOut}
-            style={{
-              backgroundColor: 'transparent',
-              color: '#64748B',
-              border: '1px solid #CBD5E1',
-              borderRadius: '8px',
-              padding: '0.4rem 0.85rem',
-              fontSize: '0.8125rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            Sign Out
-          </button>
-        </div>
-      </header>
+      <HeaderNav context={context} onSignOut={handleSignOut} />
 
       {/* Main Authenticated Body */}
       <main
@@ -310,7 +171,7 @@ export default function DashboardShellPage() {
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               flexWrap: 'wrap',
               gap: '1rem',
             }}
@@ -352,7 +213,38 @@ export default function DashboardShellPage() {
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {workspaces.length > 1 && (
+                <select
+                  value={activeWorkspace?.id || ''}
+                  onChange={(e) => {
+                    if (e.target.value === '__NEW__') {
+                      router.push('/onboarding/workspace');
+                    } else {
+                      handleWorkspaceSwitch(e.target.value);
+                    }
+                  }}
+                  disabled={isSwitching}
+                  style={{
+                    padding: '0.5rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    backgroundColor: '#F8FAFC',
+                    color: '#0F172A',
+                    fontWeight: 600,
+                    fontSize: '0.8125rem',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {workspaces.map((ws) => (
+                    <option key={ws.id} value={ws.id}>
+                      Switch to: {ws.name} ({ws.roleName})
+                    </option>
+                  ))}
+                  <option value="__NEW__">+ Create New Workspace</option>
+                </select>
+              )}
               <button
                 onClick={() => router.push('/onboarding/workspace')}
                 style={{

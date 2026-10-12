@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
+import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken, type WorkspaceMember } from '../../lib/api';
 import type { MeResponse } from '@oprino/contracts';
 
@@ -201,7 +202,8 @@ export default function TeamPage() {
               transition: 'background-color 0.15s ease',
             }}
           >
-            <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>+</span> Add Employee
+            <Icon name="plus" size={16} color="#FFFFFF" />
+            <span>Add Employee</span>
           </button>
         </div>
 
@@ -452,7 +454,9 @@ export default function TeamPage() {
             </div>
           ) : filteredMembers.length === 0 ? (
             <div style={{ padding: '3rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>👥</div>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <Icon name="team" size={44} color="#94A3B8" />
+              </div>
               <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0F172A', margin: 0 }}>
                 No team members found
               </h3>
@@ -558,7 +562,7 @@ export default function TeamPage() {
 
                       <td style={{ padding: '1rem 1.25rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '1rem' }}>📱</span>
+                          <Icon name="mobile" size={16} color="#164CFF" />
                           <span style={{ fontSize: '0.8125rem', color: '#334155', fontWeight: 500 }}>
                             {isEmployee
                               ? 'Field Execution & GPS Track'

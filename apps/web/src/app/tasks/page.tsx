@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
+import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken, type WorkspaceMember } from '../../lib/api';
 import type {
   MeResponse,
@@ -434,9 +435,16 @@ export default function TasksPage() {
                         </div>
                       )}
                       {(task.customerName || task.siteName) && (
-                        <div style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#164CFF', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <span>🏢 {task.customerName || 'Customer'}</span>
-                          {task.siteName && <span style={{ color: '#64748B' }}>• 📍 {task.siteName}</span>}
+                        <div style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#164CFF', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Icon name="building" size={12} color="#164CFF" />
+                            {task.customerName || 'Customer'}
+                          </span>
+                          {task.siteName && (
+                            <span style={{ color: '#64748B', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              • <Icon name="pin" size={12} color="#64748B" /> {task.siteName}
+                            </span>
+                          )}
                         </div>
                       )}
                       {task.status === 'VERIFIED' && (
@@ -448,13 +456,13 @@ export default function TasksPage() {
                     <td style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                         {task.requiresPhotoProof && (
-                          <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', backgroundColor: '#F0FDF4', color: '#166534', borderRadius: '4px', fontWeight: 600, width: 'fit-content' }}>
-                            📷 Photo Proof
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', padding: '0.15rem 0.4rem', backgroundColor: '#F0FDF4', color: '#166534', borderRadius: '4px', fontWeight: 600, width: 'fit-content' }}>
+                            <Icon name="camera" size={12} color="#166534" /> Photo Proof
                           </span>
                         )}
                         {task.requiresSignature && (
-                          <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', backgroundColor: '#EFF6FF', color: '#1E40AF', borderRadius: '4px', fontWeight: 600, width: 'fit-content' }}>
-                            ✍️ Signature
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', padding: '0.15rem 0.4rem', backgroundColor: '#EFF6FF', color: '#1E40AF', borderRadius: '4px', fontWeight: 600, width: 'fit-content' }}>
+                            <Icon name="signature" size={12} color="#1E40AF" /> Signature
                           </span>
                         )}
                         {!task.requiresPhotoProof && !task.requiresSignature && (
@@ -789,7 +797,9 @@ export default function TasksPage() {
                         onChange={(e) => setNewRequiresPhotoProof(e.target.checked)}
                         style={{ width: '16px', height: '16px' }}
                       />
-                      <span>📷 Require Geotagged Photo Proof</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Icon name="camera" size={14} color="#0F172A" /> Require Geotagged Photo Proof
+                      </span>
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: '#1E293B', cursor: 'pointer' }}>
                       <input
@@ -929,8 +939,15 @@ export default function TasksPage() {
                     {reviewTask.title}
                   </h2>
                   {reviewTask.customerName && (
-                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem', color: '#475569' }}>
-                      🏢 {reviewTask.customerName} {reviewTask.siteName ? `• 📍 ${reviewTask.siteName}` : ''}
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Icon name="building" size={13} color="#475569" /> {reviewTask.customerName}
+                      </span>
+                      {reviewTask.siteName && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          • <Icon name="pin" size={13} color="#475569" /> {reviewTask.siteName}
+                        </span>
+                      )}
                     </p>
                   )}
                 </div>
@@ -1005,9 +1022,17 @@ export default function TasksPage() {
                               borderRadius: '4px',
                               backgroundColor: p.proofType === 'SIGNATURE' ? '#EFF6FF' : '#F0FDF4',
                               color: p.proofType === 'SIGNATURE' ? '#1D4ED8' : '#15803D',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
                             }}
                           >
-                            {p.proofType === 'SIGNATURE' ? '✍️ ON-GLASS SIGNATURE' : '📷 PHOTO PROOF'}
+                            <Icon
+                              name={p.proofType === 'SIGNATURE' ? 'signature' : 'camera'}
+                              size={12}
+                              color={p.proofType === 'SIGNATURE' ? '#1D4ED8' : '#15803D'}
+                            />
+                            <span>{p.proofType === 'SIGNATURE' ? 'ON-GLASS SIGNATURE' : 'PHOTO PROOF'}</span>
                           </span>
                           <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
                             {new Date(p.createdAt).toLocaleString()}

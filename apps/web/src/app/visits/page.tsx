@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
+import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken } from '../../lib/api';
 import type {
   MeResponse,
@@ -466,8 +467,9 @@ export default function VisitsPage() {
                         )}
 
                         {visit.plannedAt && (
-                          <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                            📅 {new Date(visit.plannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Icon name="calendar" size={12} color="#64748B" />
+                            {new Date(visit.plannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         )}
                       </div>
@@ -478,8 +480,9 @@ export default function VisitsPage() {
                       {visit.customerName || 'Customer Visit'}
                     </div>
                     {visit.siteName && (
-                      <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.5rem' }}>
-                        📍 {visit.siteName}
+                      <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Icon name="pin" size={13} color="#475569" />
+                        <span>{visit.siteName}</span>
                       </div>
                     )}
 

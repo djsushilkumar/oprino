@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
+import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken } from '../../lib/api';
 import type {
   MeResponse,
@@ -93,8 +94,8 @@ export default function ReportsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 shadow-xl backdrop-blur-sm">
           <div>
             <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <span className="p-2 bg-indigo-600/20 text-indigo-400 rounded-lg border border-indigo-500/30">
-                📊
+              <span className="p-2 bg-indigo-600/20 text-indigo-400 rounded-lg border border-indigo-500/30 flex items-center justify-center">
+                <Icon name="reports" size={20} color="#818CF8" />
               </span>
               Operational Reports & Analytics
             </h1>
@@ -130,7 +131,8 @@ export default function ReportsPage() {
               onClick={handleDownloadCsv}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-emerald-900/30 flex items-center gap-2"
             >
-              📥 Download CSV
+              <Icon name="download" size={16} color="#FFFFFF" />
+              <span>Download CSV</span>
             </button>
           </div>
         </div>
@@ -139,33 +141,36 @@ export default function ReportsPage() {
         <div className="flex gap-2 border-b border-slate-800 pb-2">
           <button
             onClick={() => setActiveTab('attendance')}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
               activeTab === 'attendance'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            ⏰ Attendance Summary
+            <Icon name="clock" size={16} color={activeTab === 'attendance' ? '#FFFFFF' : '#94A3B8'} />
+            <span>Attendance Summary</span>
           </button>
           <button
             onClick={() => setActiveTab('tasks')}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
               activeTab === 'tasks'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            📋 Task SLAs & Completion
+            <Icon name="tasks" size={16} color={activeTab === 'tasks' ? '#FFFFFF' : '#94A3B8'} />
+            <span>Task SLAs & Completion</span>
           </button>
           <button
             onClick={() => setActiveTab('visits')}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
               activeTab === 'visits'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            📍 Customer Visits Audit
+            <Icon name="visits" size={16} color={activeTab === 'visits' ? '#FFFFFF' : '#94A3B8'} />
+            <span>Customer Visits Audit</span>
           </button>
         </div>
 

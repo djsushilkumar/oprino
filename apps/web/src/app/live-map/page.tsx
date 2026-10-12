@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
+import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken, getStoredWorkspaceId, getApiBaseUrl } from '../../lib/api';
 import type {
   MeResponse,
@@ -329,7 +330,7 @@ export default function LiveMapPage() {
             color: '#1E40AF',
           }}
         >
-          <span style={{ fontSize: '1.1rem' }}>🔒</span>
+          <Icon name="lock" size={18} color="#1E40AF" />
           <div>
             <strong>Duty-Hours-Only Tracking Invariant:</strong> Location tracking operates strictly during active,
             verified work shifts. Off-duty location tracking never occurs. Peer visibility remains disabled by default.

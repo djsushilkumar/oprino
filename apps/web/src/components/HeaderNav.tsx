@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrandLogo } from './BrandLogo';
+import { Icon, type IconName } from './Icon';
 import { NotificationBell } from './NotificationBell';
 import type { MeResponse } from '@oprino/contracts';
 
@@ -15,15 +16,15 @@ interface HeaderNavProps {
 export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
   const pathname = usePathname();
 
-  const navItems = [
-    { label: 'Overview', href: '/dashboard' },
-    { label: 'Live Map', href: '/live-map' },
-    { label: 'Tasks', href: '/tasks' },
-    { label: 'Visits', href: '/visits' },
-    { label: 'Customers', href: '/customers' },
-    { label: 'Attendance', href: '/attendance' },
-    { label: 'Team', href: '/team' },
-    { label: 'Reports', href: '/reports' },
+  const navItems: { label: string; href: string; icon: IconName }[] = [
+    { label: 'Overview', href: '/dashboard', icon: 'dashboard' },
+    { label: 'Live Map', href: '/live-map', icon: 'live-map' },
+    { label: 'Tasks', href: '/tasks', icon: 'tasks' },
+    { label: 'Visits', href: '/visits', icon: 'visits' },
+    { label: 'Customers', href: '/customers', icon: 'customers' },
+    { label: 'Attendance', href: '/attendance', icon: 'attendance' },
+    { label: 'Team', href: '/team', icon: 'team' },
+    { label: 'Reports', href: '/reports', icon: 'reports' },
   ];
 
   return (
@@ -53,6 +54,9 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
                 key={item.href}
                 href={item.href}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
                   padding: '0.4rem 0.85rem',
                   borderRadius: '6px',
                   fontSize: '0.875rem',
@@ -63,7 +67,12 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
                   transition: 'all 0.15s ease',
                 }}
               >
-                {item.label}
+                <Icon
+                  name={item.icon}
+                  size={16}
+                  color={isActive ? '#164CFF' : '#64748B'}
+                />
+                <span>{item.label}</span>
               </Link>
             );
           })}
