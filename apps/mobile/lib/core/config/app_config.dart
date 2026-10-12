@@ -9,11 +9,16 @@ class AppConfig {
 
   static const AppConfig development = AppConfig(
     environment: 'development',
-    apiBaseUrl: 'http://10.0.2.2:3000', // Default Android emulator loopback
+    apiBaseUrl: 'https://oprino-api.onrender.com',
+  );
+
+  static const AppConfig emulator = AppConfig(
+    environment: 'development',
+    apiBaseUrl: 'https://oprino-api.onrender.com',
   );
 
   static const AppConfig physicalDevice = AppConfig(
     environment: 'development',
-    apiBaseUrl: 'http://127.0.0.1:3000', // Over ADB reverse
+    apiBaseUrl: 'https://oprino-api.onrender.com',
   );
 }

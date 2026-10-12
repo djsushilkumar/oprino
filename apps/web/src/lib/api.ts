@@ -337,6 +337,12 @@ export const webApi = {
     return request<ListLiveWorkersResponse>('/v1/telemetry/live', { method: 'GET' });
   },
 
+  async getStreamTicket(): Promise<{ ticket: string; expiresInSeconds: number }> {
+    return request<{ ticket: string; expiresInSeconds: number }>('/v1/telemetry/stream-ticket', {
+      method: 'POST',
+    });
+  },
+
   async getLocationHistory(userId: string, date: string): Promise<LocationHistoryResponse> {
     return request<LocationHistoryResponse>(
       `/v1/telemetry/history?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(date)}`,

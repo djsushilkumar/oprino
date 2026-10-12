@@ -6,7 +6,7 @@ Every architectural decision is evaluated against the **Phase 00 Approved Produc
 
 ---
 
-## Architecture Decision Register (20 ADRs)
+## Architecture Decision Register (21 ADRs)
 
 | ADR ID | Title | Status | Primary Decision | Date | Controlling Document Link |
 |---|---|:---:|---|:---:|:---:|
@@ -30,6 +30,7 @@ Every architectural decision is evaluated against the **Phase 00 Approved Produc
 | **[ADR-018](file:///workspace/oprino/docs/architecture/ADR-018-api-style.md)** | API Architecture, Protocol Selection, Contracts & Error Handling | **Approved (Revised)** | Typed Pragmatic REST + **OpenAPI 3.1 Cross-Language Boundary**; Generated Dart Client | Oct 2026 | [`ADR-018-api-style.md`](file:///workspace/oprino/docs/architecture/ADR-018-api-style.md) |
 | **[ADR-019](file:///workspace/oprino/docs/architecture/ADR-019-reporting.md)** | Operational Reporting, Data Aggregation & Export Architecture | **Recommended** | Hybrid Relational Aggregations in PostgreSQL, Node.js Cursor CSV Streaming, BullMQ PDF Renderer | Oct 2026 | [`ADR-019-reporting.md`](file:///workspace/oprino/docs/architecture/ADR-019-reporting.md) |
 | **[ADR-020](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md)** | Mobile Application Packaging Strategy (Unified vs. Separate) | **Approved (Revised)** | **One Unified Role-Aware Flutter App (`com.oprino.app`)** with GoRouter Role Shells | Oct 2026 | [`ADR-020-mobile-packaging.md`](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md) |
+| **[ADR-021](file:///workspace/oprino/docs/architecture/ADR-021-zero-cost-gps-pipeline.md)** | Zero-Cost Duty-Hours GPS Pipeline, Open-Source Mobile Hardware Adapter & MapLibre Cartography | **Approved** | **Open-source `geolocator` Foreground Service, Drift SQLite durable queue, and MapLibre GL JS** *(Supersedes Transistorsoft dependency in ADR-008)* | Oct 2026 | [`ADR-021-zero-cost-gps-pipeline.md`](file:///workspace/oprino/docs/architecture/ADR-021-zero-cost-gps-pipeline.md) |
 
 ---
 

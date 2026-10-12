@@ -2,12 +2,16 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/native.dart';
 import 'package:oprino_api/oprino_api.dart';
+import 'package:oprino_mobile/core/database/database.dart';
 import 'package:oprino_mobile/core/location/location_service.dart';
+import 'package:oprino_mobile/core/sync/sync_service.dart';
 
 class _RecordingAdapter implements HttpClientAdapter {
   final List<RequestOptions> requests = [];
   final List<dynamic> geofencesToReturn;
+  bool simulateNetworkError = false;
 
   _RecordingAdapter({this.geofencesToReturn = const []});
 
@@ -17,6 +21,13 @@ class _RecordingAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    if (simulateNetworkError) {
+      throw DioException(
+        requestOptions: options,
+        error: 'Simulated network offline',
+        type: DioExceptionType.connectionError,
+      );
+    }
     requests.add(options);
 
     if (options.path == '/v1/telemetry/locations' && options.method == 'POST') {
@@ -219,6 +230,133 @@ void main() {
         ),
       );
       expect(service.pointBuffer, isEmpty);
+    });
+  });
+
+  group('Durable Offline SQLite GPS Queue & Synchronization (Phase D)', () {
+    late AppDatabase db;
+    late LocationService dbService;
+    late SyncService syncService;
+
+    setUp(() {
+      db = AppDatabase(NativeDatabase.memory());
+      dbService = LocationService(
+        client: client,
+        adapter: hardware,
+        db: db,
+      );
+      syncService = SyncService(db: db, client: client);
+    });
+
+    tearDown(() async {
+      dbService.dispose();
+      await db.close();
+    });
+
+    test('1. On-duty GPS points persist directly to SQLite CachedLocations table', () async {
+      await dbService.startTracking(
+        workspaceId: 'w-workspace-1',
+        userId: 'u-emp-1',
+        sessionId: 's-sess-1',
+      );
+
+      final pt = LocationPoint(
+        id: 'loc-sqlite-1',
+        recordedAt: DateTime.now(),
+        latitude: 28.6145,
+        longitude: 77.2095,
+        accuracy: 6.5,
+        speed: 1.5,
+        heading: 90.0,
+        batteryLevel: 0.88,
+        isCharging: false,
+        activityType: 'walking',
+        isMoving: true,
+      );
+
+      await dbService.recordBreadcrumb(pt);
+
+      final rows = await db.select(db.cachedLocations).get();
+      // startTracking captures initial fix + recordBreadcrumb records pt
+      expect(rows, hasLength(2));
+      final savedPt = rows.firstWhere((r) => r.id == 'loc-sqlite-1');
+      expect(savedPt.workspaceId, equals('w-workspace-1'));
+      expect(savedPt.userId, equals('u-emp-1'));
+      expect(savedPt.sessionId, equals('s-sess-1'));
+      expect(savedPt.status, equals('PENDING'));
+      expect(savedPt.latitude, equals(28.6145));
+    });
+
+    test('2. Decoupled Sync: Queued SQLite points are preserved across offline punch-out', () async {
+      // Simulate network offline by having client reject HTTP
+      mockHttp.requests.clear();
+
+      await dbService.startTracking(
+        workspaceId: 'w-workspace-1',
+        userId: 'u-emp-1',
+        sessionId: 's-sess-1',
+      );
+
+      // Record 2 points during duty (plus initial fix from startTracking = 3 total)
+      await dbService.recordBreadcrumb(
+        LocationPoint(
+          id: 'loc-offline-1',
+          recordedAt: DateTime.now(),
+          latitude: 28.6140,
+          longitude: 77.2090,
+          accuracy: 8.0,
+        ),
+      );
+      await dbService.recordBreadcrumb(
+        LocationPoint(
+          id: 'loc-offline-2',
+          recordedAt: DateTime.now(),
+          latitude: 28.6142,
+          longitude: 77.2092,
+          accuracy: 7.5,
+        ),
+      );
+
+      expect(await db.select(db.cachedLocations).get(), hasLength(3));
+
+      // Simulate device being offline during punch-out
+      mockHttp.simulateNetworkError = true;
+
+      // Employee punches out while offline
+      await dbService.stopTracking();
+
+      // Hardware is completely unhooked and tracking is dead
+      expect(dbService.isTrackingActive, isFalse);
+
+      // CRITICAL INVARIANT: Points recorded during duty ARE NOT LOST or purged
+      final preservedRows = await db.select(db.cachedLocations).get();
+      expect(preservedRows, hasLength(3));
+      expect(preservedRows.map((r) => r.id), containsAll(['loc-offline-1', 'loc-offline-2']));
+
+      // Later, when network is back online, SyncService flushes and deletes acknowledged points
+      mockHttp.simulateNetworkError = false;
+      final flushedCount = await syncService.flushPendingLocations();
+      expect(flushedCount, equals(3));
+
+      final remainingRows = await db.select(db.cachedLocations).get();
+      expect(remainingRows, isEmpty);
+    });
+
+    test('3. Off-duty points are NEVER saved into SQLite queue', () async {
+      expect(dbService.isTrackingActive, isFalse);
+
+      await dbService.recordBreadcrumb(
+        LocationPoint(
+          id: 'loc-unauthorized-offduty',
+          recordedAt: DateTime.now(),
+          latitude: 28.6140,
+          longitude: 77.2090,
+          accuracy: 5.0,
+        ),
+      );
+
+      final rows = await db.select(db.cachedLocations).get();
+      expect(rows, isEmpty);
     });
   });
 }

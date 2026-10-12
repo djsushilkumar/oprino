@@ -7,7 +7,7 @@ import { createDatabaseClient } from '@oprino/database';
 import * as schema from '@oprino/database/schema';
 
 describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests', () => {
-  const { app, dbClient } = buildServer({
+  const { app, dbClient, pubsub } = buildServer({
     env: { NODE_ENV: 'test' },
     logger: false,
   });
@@ -431,6 +431,206 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
     assert.equal(body.accepted, 0);
     assert.equal(body.dropped, 1);
     assert.equal(body.reason, 'OFF_DUTY_FILTER');
+  });
+
+  test('Historical Duty Reconciliation: Offline points recorded during valid duty session uploaded AFTER punch-out are accepted', async () => {
+    // 1. Employee starts a new shift
+    const punchInRes = await app.inject({
+      method: 'POST',
+      url: '/v1/attendance/punch-in',
+      headers: {
+        authorization: `Bearer ${tokenEmployeeA}`,
+        'x-workspace-id': workspaceAId,
+      },
+      payload: {
+        idempotencyKey: 'hist-duty-punch-in-01',
+      },
+    });
+    assert.equal(punchInRes.statusCode, 200);
+    const punchInData = JSON.parse(punchInRes.body);
+    const sessionPunchInTime = new Date(punchInData.punchInTime);
+
+    // Offline point recorded 100ms after punch-in (strictly within duty shift)
+    const offlineRecordedAt = new Date(sessionPunchInTime.getTime() + 100).toISOString();
+    const offlinePointId = randomUUID();
+
+    // Wait a brief moment to ensure punch-out occurs after offlineRecordedAt
+    await new Promise((r) => setTimeout(r, 300));
+
+    // 2. Employee punches out
+    const punchOutRes = await app.inject({
+      method: 'POST',
+      url: '/v1/attendance/punch-out',
+      headers: {
+        authorization: `Bearer ${tokenEmployeeA}`,
+        'x-workspace-id': workspaceAId,
+      },
+      payload: {
+        idempotencyKey: 'hist-duty-punch-out-02',
+      },
+    });
+    assert.equal(punchOutRes.statusCode, 200);
+
+    // 3. Device now syncs the offline point recorded during the shift
+    const syncRes = await app.inject({
+      method: 'POST',
+      url: '/v1/telemetry/locations',
+      headers: {
+        authorization: `Bearer ${tokenEmployeeA}`,
+        'x-workspace-id': workspaceAId,
+      },
+      payload: {
+        locations: [
+          {
+            id: offlinePointId,
+            recordedAt: offlineRecordedAt,
+            latitude: 28.6145,
+            longitude: 77.2095,
+            accuracy: 12.0,
+          },
+        ],
+      },
+    });
+
+    assert.equal(syncRes.statusCode, 200);
+    const syncBody = JSON.parse(syncRes.body);
+    assert.equal(syncBody.accepted, 1, 'Offline point recorded during valid duty session must be accepted after punch-out');
+    assert.equal(syncBody.dropped, 0);
+  });
+
+  test('Idempotency & Travel Rollup: Duplicate batch submission does not duplicate distance or pointCount', async () => {
+    // 1. Punch in for test
+    await app.inject({
+      method: 'POST',
+      url: '/v1/attendance/punch-in',
+      headers: {
+        authorization: `Bearer ${tokenEmployeeA}`,
+        'x-workspace-id': workspaceAId,
+      },
+      payload: {
+        idempotencyKey: 'idem-duty-punch-in-01',
+      },
+    });
+
+    const pt1Id = randomUUID();
+    const pt2Id = randomUUID();
+    const now = Date.now();
+    const batch = {
+      locations: [
+        {
+          id: pt1Id,
+          recordedAt: new Date(now - 10000).toISOString(),
+          latitude: 28.6140,
+          longitude: 77.2090,
+          accuracy: 8.0,
+        },
+        {
+          id: pt2Id,
+          recordedAt: new Date(now - 5000).toISOString(),
+          latitude: 28.6150,
+          longitude: 77.2100,
+          accuracy: 8.0,
+        },
+      ],
+    };
+
+    // First ingestion
+    const firstRes = await app.inject({
+      method: 'POST',
+      url: '/v1/telemetry/locations',
+      headers: {
+        authorization: `Bearer ${tokenEmployeeA}`,
+        'x-workspace-id': workspaceAId,
+      },
+      payload: batch,
+    });
+    assert.equal(firstRes.statusCode, 200);
+
+    const todayDate = new Date().toISOString().slice(0, 10);
+    let summary1: any;
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceAId}, true)`);
+      [summary1] = await tx
+        .select()
+        .from(schema.dailyTravelSummaries)
+        .where(
+          sql`${schema.dailyTravelSummaries.workspaceId} = ${workspaceAId} AND ${schema.dailyTravelSummaries.userId} = ${userEmployeeAId} AND ${schema.dailyTravelSummaries.date} = ${todayDate}`,
+        );
+    });
+
+    // Replay the exact same batch (client network retry)
+    const secondRes = await app.inject({
+      method: 'POST',
+      url: '/v1/telemetry/locations',
+      headers: {
+        authorization: `Bearer ${tokenEmployeeA}`,
+        'x-workspace-id': workspaceAId,
+      },
+      payload: batch,
+    });
+    assert.equal(secondRes.statusCode, 200);
+
+    let summary2: any;
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceAId}, true)`);
+      [summary2] = await tx
+        .select()
+        .from(schema.dailyTravelSummaries)
+        .where(
+          sql`${schema.dailyTravelSummaries.workspaceId} = ${workspaceAId} AND ${schema.dailyTravelSummaries.userId} = ${userEmployeeAId} AND ${schema.dailyTravelSummaries.date} = ${todayDate}`,
+        );
+    });
+
+    assert.equal(summary1.pointCount, summary2.pointCount, 'Duplicate batch must not increment pointCount');
+    assert.equal(summary1.totalDistanceMeters, summary2.totalDistanceMeters, 'Duplicate batch must not accumulate duplicate distance');
+
+    // Punch out
+    await app.inject({
+      method: 'POST',
+      url: '/v1/attendance/punch-out',
+      headers: {
+        authorization: `Bearer ${tokenEmployeeA}`,
+        'x-workspace-id': workspaceAId,
+      },
+      payload: {
+        idempotencyKey: 'idem-duty-punch-out-01',
+      },
+    });
+  });
+
+  test('Security: Short-lived single-use streaming ticket can be generated and consumed for SSE without token in URL', async () => {
+    // 1. Generate stream ticket as Owner
+    const ticketRes = await app.inject({
+      method: 'POST',
+      url: '/v1/telemetry/stream-ticket',
+      headers: {
+        authorization: `Bearer ${tokenOwnerA}`,
+        'x-workspace-id': workspaceAId,
+      },
+    });
+    assert.equal(ticketRes.statusCode, 200);
+    const { ticket, expiresInSeconds } = JSON.parse(ticketRes.body);
+    assert.ok(ticket);
+    assert.equal(expiresInSeconds, 60);
+
+    // 2. Reject request with invalid ticket
+    const invalidRes = await app.inject({
+      method: 'GET',
+      url: '/v1/telemetry/stream?ticket=invalid-ticket-xyz',
+    });
+    assert.equal(invalidRes.statusCode, 401);
+
+    // 3. Consume the ticket
+    const consumed = pubsub.consumeStreamingTicket(ticket);
+    assert.ok(consumed);
+    assert.equal(consumed?.workspaceId, workspaceAId);
+
+    // 4. Second consumption of same single-use ticket fails with 401
+    const secondSseRes = await app.inject({
+      method: 'GET',
+      url: `/v1/telemetry/stream?ticket=${ticket}`,
+    });
+    assert.equal(secondSseRes.statusCode, 401, 'Streaming ticket must be single-use only');
   });
 
   // -------------------------------------------------------------------------

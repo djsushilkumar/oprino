@@ -126,6 +126,35 @@ class CachedTaskProofs extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// OFFLINE CLIENT MODEL: Cached GPS Locations Queue
+/// Durable local persistence for duty-hours GPS fixes.
+/// Decouples capture from synchronization to guarantee zero data loss
+/// during offline operations, app crashes, and shifts ending offline.
+class CachedLocations extends Table {
+  TextColumn get id => text()();
+  TextColumn get workspaceId => text()();
+  TextColumn get userId => text()();
+  TextColumn get sessionId => text().nullable()();
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+  RealColumn get accuracy => real()();
+  RealColumn get speed => real().nullable()();
+  RealColumn get heading => real().nullable()();
+  RealColumn get altitude => real().nullable()();
+  RealColumn get batteryLevel => real().nullable()();
+  BoolColumn get isCharging => boolean().nullable()();
+  TextColumn get activityType => text().nullable()();
+  BoolColumn get isMoving => boolean().nullable()();
+  DateTimeColumn get recordedAt => dateTime()();
+  TextColumn get status => text().withDefault(const Constant('PENDING'))(); // 'PENDING', 'SYNCING', 'SYNCED', 'FAILED'
+  IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+  TextColumn get lastError => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   OutboxMutations,
   CachedTasks,
@@ -133,12 +162,13 @@ class CachedTaskProofs extends Table {
   CachedAttendance,
   CachedVisits,
   CachedTaskProofs,
+  CachedLocations,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -169,6 +199,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 4) {
             await m.addColumn(cachedVisits, cachedVisits.sequenceOrder);
             await m.addColumn(cachedVisits, cachedVisits.routeDate);
+          }
+          if (from < 5) {
+            await m.createTable(cachedLocations);
           }
         },
       );

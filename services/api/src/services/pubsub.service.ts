@@ -6,6 +6,22 @@ export class PubSubService {
   private redisSub?: Redis;
   private localEmitter: EventEmitter;
   private isRedisConnected = false;
+  private streamingTickets = new Map<string, { userId: string; workspaceId: string; expiresAt: number }>();
+
+  createStreamingTicket(userId: string, workspaceId: string): string {
+    const ticket = `tkt_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+    const expiresAt = Date.now() + 60000; // 60s validity
+    this.streamingTickets.set(ticket, { userId, workspaceId, expiresAt });
+    return ticket;
+  }
+
+  consumeStreamingTicket(ticket: string): { userId: string; workspaceId: string } | null {
+    const data = this.streamingTickets.get(ticket);
+    if (!data) return null;
+    this.streamingTickets.delete(ticket);
+    if (Date.now() > data.expiresAt) return null;
+    return { userId: data.userId, workspaceId: data.workspaceId };
+  }
 
   constructor(redisUrl?: string) {
     this.localEmitter = new EventEmitter();

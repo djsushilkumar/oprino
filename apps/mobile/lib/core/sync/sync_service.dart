@@ -722,4 +722,113 @@ class SyncService {
           ..orderBy([(m) => OrderingTerm.asc(m.createdAt)]))
         .watch();
   }
+
+  // =========================================================================
+  // DURABLE OFFLINE GPS QUEUE & SYNCHRONIZATION
+  // =========================================================================
+
+  /// Persists a captured on-duty GPS fix into the local SQLite durable queue.
+  Future<void> queueLocation({
+    required String id,
+    required String workspaceId,
+    required String userId,
+    String? sessionId,
+    required double latitude,
+    required double longitude,
+    required double accuracy,
+    double? speed,
+    double? heading,
+    double? altitude,
+    double? batteryLevel,
+    bool? isCharging,
+    String? activityType,
+    bool? isMoving,
+    required DateTime recordedAt,
+  }) async {
+    await db.into(db.cachedLocations).insert(
+          CachedLocationsCompanion.insert(
+            id: id,
+            workspaceId: workspaceId,
+            userId: userId,
+            sessionId: Value(sessionId),
+            latitude: latitude,
+            longitude: longitude,
+            accuracy: accuracy,
+            speed: Value(speed),
+            heading: Value(heading),
+            altitude: Value(altitude),
+            batteryLevel: Value(batteryLevel),
+            isCharging: Value(isCharging),
+            activityType: Value(activityType),
+            isMoving: Value(isMoving),
+            recordedAt: recordedAt,
+            status: const Value('PENDING'),
+            attemptCount: const Value(0),
+            createdAt: Value(DateTime.now()),
+          ),
+        );
+  }
+
+  /// Flushes pending GPS locations in batches from SQLite to the server ingestion endpoint.
+  /// Retains points across crashes and offline shifts until server acknowledges receipt.
+  Future<int> flushPendingLocations({int batchSize = 30}) async {
+    final pending = await (db.select(db.cachedLocations)
+          ..where((l) => l.status.equals('PENDING') | l.status.equals('FAILED'))
+          ..orderBy([(l) => OrderingTerm.asc(l.recordedAt)])
+          ..limit(batchSize))
+        .get();
+
+    if (pending.isEmpty) return 0;
+
+    final batch = pending.map((l) {
+      return LocationPoint(
+        id: l.id,
+        recordedAt: l.recordedAt,
+        latitude: l.latitude,
+        longitude: l.longitude,
+        accuracy: l.accuracy,
+        speed: l.speed ?? 0.0,
+        heading: l.heading ?? 0.0,
+        batteryLevel: l.batteryLevel ?? 1.0,
+        isCharging: l.isCharging ?? false,
+        activityType: l.activityType ?? 'still',
+        isMoving: l.isMoving ?? false,
+      );
+    }).toList();
+
+    final ids = pending.map((l) => l.id).toList();
+
+    await (db.update(db.cachedLocations)..where((l) => l.id.isIn(ids))).write(
+      const CachedLocationsCompanion(
+        status: Value('SYNCING'),
+      ),
+    );
+
+    try {
+      await client.ingestLocationBreadcrumbs(batch);
+
+      // Server acknowledged receipt: clean up acknowledged points
+      await (db.delete(db.cachedLocations)..where((l) => l.id.isIn(ids))).go();
+      return batch.length;
+    } catch (err) {
+      // Offline fallback: mark as FAILED and increment attemptCount
+      for (final l in pending) {
+        await (db.update(db.cachedLocations)..where((row) => row.id.equals(l.id))).write(
+          CachedLocationsCompanion(
+            status: const Value('FAILED'),
+            attemptCount: Value(l.attemptCount + 1),
+            lastError: Value(err.toString()),
+          ),
+        );
+      }
+      return 0;
+    }
+  }
+
+  Stream<List<CachedLocation>> watchPendingLocations() {
+    return (db.select(db.cachedLocations)
+          ..where((l) => l.status.equals('PENDING') | l.status.equals('SYNCING'))
+          ..orderBy([(l) => OrderingTerm.asc(l.recordedAt)]))
+        .watch();
+  }
 }
