@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { randomBytes } from 'node:crypto';
 import { Redis } from 'ioredis';
 
 export class PubSubService {
@@ -8,17 +9,52 @@ export class PubSubService {
   private isRedisConnected = false;
   private streamingTickets = new Map<string, { userId: string; workspaceId: string; expiresAt: number }>();
 
-  createStreamingTicket(userId: string, workspaceId: string): string {
-    const ticket = `tkt_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+  async createStreamingTicket(userId: string, workspaceId: string): Promise<string> {
+    const randomPart = randomBytes(24).toString('base64url');
+    const ticket = `tkt_${randomPart}`;
     const expiresAt = Date.now() + 60000; // 60s validity
-    this.streamingTickets.set(ticket, { userId, workspaceId, expiresAt });
+    const payload = JSON.stringify({ userId, workspaceId, expiresAt });
+
+    if (this.isRedisConnected && this.redisPub) {
+      try {
+        await this.redisPub.set(`stream_ticket:${ticket}`, payload, 'EX', 60);
+      } catch {
+        this.streamingTickets.set(ticket, { userId, workspaceId, expiresAt });
+      }
+    } else {
+      this.streamingTickets.set(ticket, { userId, workspaceId, expiresAt });
+    }
+
     return ticket;
   }
 
-  consumeStreamingTicket(ticket: string): { userId: string; workspaceId: string } | null {
+  async consumeStreamingTicket(ticket: string): Promise<{ userId: string; workspaceId: string } | null> {
+    if (!ticket || !ticket.startsWith('tkt_')) return null;
+
+    if (this.isRedisConnected && this.redisPub) {
+      try {
+        let raw: string | null = null;
+        if (typeof (this.redisPub as any).getdel === 'function') {
+          raw = await (this.redisPub as any).getdel(`stream_ticket:${ticket}`);
+        } else {
+          const res = await this.redisPub.multi().get(`stream_ticket:${ticket}`).del(`stream_ticket:${ticket}`).exec();
+          if (res && res[0] && res[0][1]) {
+            raw = res[0][1] as string;
+          }
+        }
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Date.now() > parsed.expiresAt) return null;
+          return { userId: parsed.userId, workspaceId: parsed.workspaceId };
+        }
+      } catch {
+        // Fallback to local map
+      }
+    }
+
     const data = this.streamingTickets.get(ticket);
     if (!data) return null;
-    this.streamingTickets.delete(ticket);
+    this.streamingTickets.delete(ticket); // One-time atomic consumption
     if (Date.now() > data.expiresAt) return null;
     return { userId: data.userId, workspaceId: data.workspaceId };
   }

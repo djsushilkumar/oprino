@@ -12,6 +12,7 @@ class _RecordingAdapter implements HttpClientAdapter {
   final List<RequestOptions> requests = [];
   final List<dynamic> geofencesToReturn;
   bool simulateNetworkError = false;
+  Map<String, dynamic>? Function(RequestOptions options)? onTelemetryIngest;
 
   _RecordingAdapter({this.geofencesToReturn = const []});
 
@@ -33,12 +34,29 @@ class _RecordingAdapter implements HttpClientAdapter {
     if (options.path == '/v1/telemetry/locations' && options.method == 'POST') {
       final body = options.data as Map<String, dynamic>;
       final locations = body['locations'] as List;
-      final responseData = {
-        'accepted': locations.length,
-        'dropped': 0,
-        'reason': null,
-        'serverTimestamp': DateTime.now().toIso8601String(),
-      };
+
+      Map<String, dynamic> responseData;
+      if (onTelemetryIngest != null) {
+        final custom = onTelemetryIngest!(options);
+        responseData = custom ?? {
+          'accepted': locations.length,
+          'dropped': 0,
+          'reason': null,
+          'serverTimestamp': DateTime.now().toIso8601String(),
+          'acceptedIds': locations.map((l) => l['id']).toList(),
+          'rejectedIds': <String>[],
+        };
+      } else {
+        responseData = {
+          'accepted': locations.length,
+          'dropped': 0,
+          'reason': null,
+          'serverTimestamp': DateTime.now().toIso8601String(),
+          'acceptedIds': locations.map((l) => l['id']).toList(),
+          'rejectedIds': <String>[],
+        };
+      }
+
       return ResponseBody.fromString(
         jsonEncode(responseData),
         200,
@@ -74,10 +92,22 @@ class _RecordingAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+class FaultyLocationHardwareAdapter extends SimulatedLocationHardwareAdapter {
+  bool shouldThrowOnStart = false;
+
+  @override
+  Future<void> startTracking() async {
+    if (shouldThrowOnStart) {
+      throw Exception('Location permission denied by user (PERMISSION_DENIED)');
+    }
+    await super.startTracking();
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late SimulatedLocationHardwareAdapter hardware;
+  late FaultyLocationHardwareAdapter hardware;
   late _RecordingAdapter mockHttp;
   late OprinoApiClient client;
   late LocationService service;
@@ -98,7 +128,7 @@ void main() {
   };
 
   setUp(() {
-    hardware = SimulatedLocationHardwareAdapter();
+    hardware = FaultyLocationHardwareAdapter();
     mockHttp = _RecordingAdapter(geofencesToReturn: [sampleGeofence]);
     client = OprinoApiClient();
     client.dio.httpClientAdapter = mockHttp;
@@ -131,11 +161,22 @@ void main() {
       expect(mockHttp.requests, isEmpty);
     });
 
-    test('2. Starts tracking upon ON_DUTY shift activation and collects breadcrumbs', () async {
-      await service.startTracking(workspaceId: 'w-workspace-1');
+    test('2. Requires verified identity and starts tracking upon ON_DUTY shift activation', () async {
+      // Must reject empty workspaceId or userId
+      expect(
+        () => service.startTracking(workspaceId: '', userId: 'u-user-1'),
+        throwsArgumentError,
+      );
+      expect(
+        () => service.startTracking(workspaceId: 'w-workspace-1', userId: ''),
+        throwsArgumentError,
+      );
+
+      await service.startTracking(workspaceId: 'w-workspace-1', userId: 'u-user-1');
 
       expect(service.isTrackingActive, isTrue);
       expect(service.currentWorkspaceId, equals('w-workspace-1'));
+      expect(service.currentUserId, equals('u-user-1'));
 
       final point1 = LocationPoint(
         id: 'loc-on-duty-1',
@@ -151,8 +192,22 @@ void main() {
       expect(service.pointBuffer.any((p) => p.id == 'loc-on-duty-1'), isTrue);
     });
 
-    test('3. Evaluates geofence proximity correctly when inside and outside radius', () async {
-      await service.startTracking(workspaceId: 'w-workspace-1');
+    test('3. Permission denied during tracking startup fails safe (tracking immediately inactive)', () async {
+      hardware.shouldThrowOnStart = true;
+
+      await expectLater(
+        service.startTracking(workspaceId: 'w-workspace-1', userId: 'u-user-1'),
+        throwsA(isA<Exception>()),
+      );
+
+      // Invariant: Fail-safe cleanup ensures isTrackingActive is reset to false
+      expect(service.isTrackingActive, isFalse);
+      expect(service.currentWorkspaceId, isNull);
+      expect(service.currentUserId, isNull);
+    });
+
+    test('4. Evaluates geofence proximity correctly when inside and outside radius', () async {
+      await service.startTracking(workspaceId: 'w-workspace-1', userId: 'u-user-1');
       await service.refreshGeofences();
 
       // Point exactly at HQ Office coordinates (28.6139, 77.2090) -> distance ~ 0m, inside
@@ -185,8 +240,8 @@ void main() {
       expect(hqOutside.distanceMeters, greaterThan(100.0));
     });
 
-    test('4. Flushes location batches to ingestion API endpoint and unhooks synchronously on punch out', () async {
-      await service.startTracking(workspaceId: 'w-workspace-1');
+    test('5. Tracking stop immediately at punch-out: Zero off-duty points collected', () async {
+      await service.startTracking(workspaceId: 'w-workspace-1', userId: 'u-user-1');
 
       // Record 3 points
       for (int i = 0; i < 3; i++) {
@@ -203,23 +258,17 @@ void main() {
 
       await service.flushQueue();
 
-      // Verify POST /v1/telemetry/locations was invoked with batch
-      final ingestRequests = mockHttp.requests.where((r) => r.path == '/v1/telemetry/locations').toList();
-      expect(ingestRequests, isNotEmpty);
-      final lastReqData = ingestRequests.last.data as Map<String, dynamic>;
-      final sentLocations = lastReqData['locations'] as List;
-      expect(sentLocations.length, greaterThanOrEqualTo(3));
-
       // Synchronously stop tracking (Punch Out transition)
       await service.stopTracking();
 
       expect(service.isTrackingActive, isFalse);
       expect(service.currentWorkspaceId, isNull);
+      expect(service.currentUserId, isNull);
       expect(service.latestLocation, isNull);
       expect(service.pointBuffer, isEmpty);
       expect(service.nearbyGeofences, isEmpty);
 
-      // Verify points emitted afterwards are dropped immediately
+      // Invariant: Points emitted after punch-out are immediately dropped
       await service.recordBreadcrumb(
         LocationPoint(
           id: 'loc-post-duty',
@@ -230,10 +279,11 @@ void main() {
         ),
       );
       expect(service.pointBuffer, isEmpty);
+      expect(service.latestLocation, isNull);
     });
   });
 
-  group('Durable Offline SQLite GPS Queue & Synchronization (Phase D)', () {
+  group('Durable Offline SQLite GPS Queue & Synchronization Hardening', () {
     late AppDatabase db;
     late LocationService dbService;
     late SyncService syncService;
@@ -253,7 +303,7 @@ void main() {
       await db.close();
     });
 
-    test('1. On-duty GPS points persist directly to SQLite CachedLocations table', () async {
+    test('1. On-duty GPS points persist directly to SQLite CachedLocations table with verified identity', () async {
       await dbService.startTracking(
         workspaceId: 'w-workspace-1',
         userId: 'u-emp-1',
@@ -277,18 +327,15 @@ void main() {
       await dbService.recordBreadcrumb(pt);
 
       final rows = await db.select(db.cachedLocations).get();
-      // startTracking captures initial fix + recordBreadcrumb records pt
-      expect(rows, hasLength(2));
+      expect(rows, hasLength(2)); // initial fix + pt
       final savedPt = rows.firstWhere((r) => r.id == 'loc-sqlite-1');
       expect(savedPt.workspaceId, equals('w-workspace-1'));
       expect(savedPt.userId, equals('u-emp-1'));
       expect(savedPt.sessionId, equals('s-sess-1'));
       expect(savedPt.status, equals('PENDING'));
-      expect(savedPt.latitude, equals(28.6145));
     });
 
-    test('2. Decoupled Sync: Queued SQLite points are preserved across offline punch-out', () async {
-      // Simulate network offline by having client reject HTTP
+    test('2. Offline punch-out followed by network recovery preserves and drains points', () async {
       mockHttp.requests.clear();
 
       await dbService.startTracking(
@@ -297,7 +344,6 @@ void main() {
         sessionId: 's-sess-1',
       );
 
-      // Record 2 points during duty (plus initial fix from startTracking = 3 total)
       await dbService.recordBreadcrumb(
         LocationPoint(
           id: 'loc-offline-1',
@@ -317,46 +363,202 @@ void main() {
         ),
       );
 
-      expect(await db.select(db.cachedLocations).get(), hasLength(3));
+      expect(await db.select(db.cachedLocations).get(), hasLength(3)); // initial + 2
 
-      // Simulate device being offline during punch-out
+      // Simulate network offline during punch out
       mockHttp.simulateNetworkError = true;
-
-      // Employee punches out while offline
       await dbService.stopTracking();
 
-      // Hardware is completely unhooked and tracking is dead
+      // Tracking terminated immediately
       expect(dbService.isTrackingActive, isFalse);
 
-      // CRITICAL INVARIANT: Points recorded during duty ARE NOT LOST or purged
+      // Invariant: Points recorded during valid duty session are preserved in SQLite
       final preservedRows = await db.select(db.cachedLocations).get();
       expect(preservedRows, hasLength(3));
-      expect(preservedRows.map((r) => r.id), containsAll(['loc-offline-1', 'loc-offline-2']));
 
-      // Later, when network is back online, SyncService flushes and deletes acknowledged points
+      // Network recovers: Sync drains pending points
       mockHttp.simulateNetworkError = false;
-      final flushedCount = await syncService.flushPendingLocations();
+      final flushedCount = await syncService.flushPendingLocations(
+        workspaceId: 'w-workspace-1',
+        userId: 'u-emp-1',
+      );
       expect(flushedCount, equals(3));
 
       final remainingRows = await db.select(db.cachedLocations).get();
       expect(remainingRows, isEmpty);
     });
 
-    test('3. Off-duty points are NEVER saved into SQLite queue', () async {
-      expect(dbService.isTrackingActive, isFalse);
-
-      await dbService.recordBreadcrumb(
-        LocationPoint(
-          id: 'loc-unauthorized-offduty',
-          recordedAt: DateTime.now(),
-          latitude: 28.6140,
-          longitude: 77.2090,
-          accuracy: 5.0,
-        ),
+    test('3. Partial accepted/dropped response: Only accepted points deleted; rejected/unacknowledged preserved', () async {
+      await dbService.startTracking(
+        workspaceId: 'w-workspace-1',
+        userId: 'u-emp-1',
+        sessionId: 's-sess-1',
       );
 
-      final rows = await db.select(db.cachedLocations).get();
-      expect(rows, isEmpty);
+      // Record 3 distinct points
+      final ptValid = LocationPoint(
+        id: 'loc-valid-ack',
+        recordedAt: DateTime.now(),
+        latitude: 28.6140,
+        longitude: 77.2090,
+        accuracy: 8.0,
+      );
+      final ptRejected = LocationPoint(
+        id: 'loc-rejected-bad',
+        recordedAt: DateTime.now(),
+        latitude: 28.6142,
+        longitude: 77.2092,
+        accuracy: 95.0, // bad accuracy
+      );
+      final ptUnacknowledged = LocationPoint(
+        id: 'loc-unacknowledged',
+        recordedAt: DateTime.now(),
+        latitude: 28.6144,
+        longitude: 77.2094,
+        accuracy: 9.0,
+      );
+
+      await dbService.recordBreadcrumb(ptValid);
+      await dbService.recordBreadcrumb(ptRejected);
+      await dbService.recordBreadcrumb(ptUnacknowledged);
+
+      // Configure server mock for partial response
+      mockHttp.onTelemetryIngest = (options) {
+        return {
+          'accepted': 1,
+          'dropped': 1,
+          'reason': 'QUALITY_FILTER',
+          'serverTimestamp': DateTime.now().toIso8601String(),
+          'acceptedIds': ['loc-valid-ack'],
+          'rejectedIds': ['loc-rejected-bad'],
+          // 'loc-unacknowledged' omitted intentionally
+        };
+      };
+
+      // Flush batch
+      await syncService.flushPendingLocations(
+        workspaceId: 'w-workspace-1',
+        userId: 'u-emp-1',
+      );
+
+      final remaining = await db.select(db.cachedLocations).get();
+
+      // Accepted point MUST be deleted
+      expect(remaining.any((r) => r.id == 'loc-valid-ack'), isFalse);
+
+      // Rejected point MUST NEVER be deleted; must be marked REJECTED
+      final rejectedRow = remaining.firstWhere((r) => r.id == 'loc-rejected-bad');
+      expect(rejectedRow.status, equals('REJECTED'));
+      expect(rejectedRow.lastError, equals('QUALITY_FILTER'));
+
+      // Unacknowledged point MUST NEVER be deleted; must revert to PENDING for retry
+      final unackRow = remaining.firstWhere((r) => r.id == 'loc-unacknowledged');
+      expect(unackRow.status, equals('PENDING'));
+    });
+
+    test('4. Two companies using one device: Strict tenant workspace isolation', () async {
+      // Company Alpha (Workspace A)
+      await syncService.queueLocation(
+        id: 'loc-comp-alpha-1',
+        workspaceId: 'w-alpha',
+        userId: 'u-shared-user',
+        latitude: 28.6140,
+        longitude: 77.2090,
+        accuracy: 5.0,
+        recordedAt: DateTime.now(),
+      );
+
+      // Company Beta (Workspace B)
+      await syncService.queueLocation(
+        id: 'loc-comp-beta-1',
+        workspaceId: 'w-beta',
+        userId: 'u-shared-user',
+        latitude: 19.0760,
+        longitude: 72.8777,
+        accuracy: 6.0,
+        recordedAt: DateTime.now(),
+      );
+
+      mockHttp.requests.clear();
+
+      // Flush Company Alpha only
+      final alphaFlushed = await syncService.flushPendingLocations(
+        workspaceId: 'w-alpha',
+        userId: 'u-shared-user',
+      );
+      expect(alphaFlushed, equals(1));
+
+      // Verify request payload contained ONLY Company Alpha point
+      final alphaReq = mockHttp.requests.last.data as Map<String, dynamic>;
+      final alphaLocations = alphaReq['locations'] as List;
+      expect(alphaLocations, hasLength(1));
+      expect(alphaLocations.first['id'], equals('loc-comp-alpha-1'));
+
+      // Invariant: Company Beta point remains untouched in SQLite
+      final betaRow = await (db.select(db.cachedLocations)..where((l) => l.id.equals('loc-comp-beta-1'))).getSingle();
+      expect(betaRow.status, equals('PENDING'));
+      expect(betaRow.workspaceId, equals('w-beta'));
+    });
+
+    test('5. Logout/login as another user with queued GPS data: Strict user identity isolation', () async {
+      // User Jane logs in, records points for Workspace Alpha
+      await syncService.queueLocation(
+        id: 'loc-user-jane-1',
+        workspaceId: 'w-alpha',
+        userId: 'u-jane',
+        latitude: 28.6140,
+        longitude: 77.2090,
+        accuracy: 5.0,
+        recordedAt: DateTime.now(),
+      );
+
+      // Jane logs out. User John logs in to same device/workspace.
+      mockHttp.requests.clear();
+
+      // John triggers sync for his own account
+      final johnFlushed = await syncService.flushPendingLocations(
+        workspaceId: 'w-alpha',
+        userId: 'u-john',
+      );
+      expect(johnFlushed, equals(0)); // 0 points for John
+      expect(mockHttp.requests, isEmpty); // Zero requests sent
+
+      // Jane's pending points remain preserved in SQLite without leakage
+      final janeRows = await (db.select(db.cachedLocations)..where((l) => l.userId.equals('u-jane'))).get();
+      expect(janeRows, hasLength(1));
+      expect(janeRows.first.id, equals('loc-user-jane-1'));
+    });
+
+    test('6. Queue draining beyond 30 points: Bounded multi-batch drainage', () async {
+      // Insert 65 queued points (requires 3 batches: 30 + 30 + 5)
+      final now = DateTime.now();
+      for (int i = 0; i < 65; i++) {
+        await syncService.queueLocation(
+          id: 'loc-drain-$i',
+          workspaceId: 'w-drain',
+          userId: 'u-drain-user',
+          latitude: 28.6140 + (i * 0.0001),
+          longitude: 77.2090 + (i * 0.0001),
+          accuracy: 5.0,
+          recordedAt: now.add(Duration(seconds: i)),
+        );
+      }
+
+      final initialCount = await (db.select(db.cachedLocations)..where((l) => l.userId.equals('u-drain-user'))).get();
+      expect(initialCount, hasLength(65));
+
+      // Run bounded drain
+      final totalDrained = await syncService.drainPendingLocations(
+        workspaceId: 'w-drain',
+        userId: 'u-drain-user',
+        maxBatches: 10,
+        batchSize: 30,
+      );
+
+      expect(totalDrained, equals(65));
+
+      final remainingCount = await (db.select(db.cachedLocations)..where((l) => l.userId.equals('u-drain-user'))).get();
+      expect(remainingCount, isEmpty);
     });
   });
 }

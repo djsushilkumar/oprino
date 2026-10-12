@@ -213,6 +213,7 @@ class LocationService {
 
   bool get isTrackingActive => _isTrackingActive;
   String? get currentWorkspaceId => _currentWorkspaceId;
+  String? get currentUserId => _currentUserId;
   LocationPoint? get latestLocation => _latestLocation;
   List<CheckGeofenceProximityResponse> get nearbyGeofences => List.unmodifiable(_nearbyGeofences);
   List<LocationPoint> get pointBuffer => List.unmodifiable(_pointBuffer);
@@ -227,12 +228,21 @@ class LocationService {
   Stream<List<CheckGeofenceProximityResponse>> get geofenceProximityStream => _geofenceController.stream;
 
   /// Activates GPS pipeline when an employee punches in (Duty State: ON_DUTY).
+  /// Requires verified authenticated workspace and user identity. Never accepts placeholders.
+  /// Lifecycle is fail-safe: any adapter/permission error immediately cleans up tracking state.
   Future<void> startTracking({
     required String workspaceId,
-    String? userId,
+    required String userId,
     String? sessionId,
   }) async {
-    if (_isTrackingActive && _currentWorkspaceId == workspaceId) return;
+    if (workspaceId.trim().isEmpty) {
+      throw ArgumentError.value(workspaceId, 'workspaceId', 'workspaceId cannot be empty');
+    }
+    if (userId.trim().isEmpty) {
+      throw ArgumentError.value(userId, 'userId', 'userId cannot be empty');
+    }
+
+    if (_isTrackingActive && _currentWorkspaceId == workspaceId && _currentUserId == userId) return;
 
     _isTrackingActive = true;
     _currentWorkspaceId = workspaceId;
@@ -240,21 +250,28 @@ class LocationService {
     _currentSessionId = sessionId;
     _trackingStateController.add(true);
 
-    _hardwareSub?.cancel();
-    _hardwareSub = adapter.locationStream.listen((point) {
-      recordBreadcrumb(point);
-    });
+    try {
+      _hardwareSub?.cancel();
+      _hardwareSub = adapter.locationStream.listen((point) {
+        recordBreadcrumb(point);
+      });
 
-    await adapter.startTracking();
+      await adapter.startTracking();
 
-    // Capture initial fix
-    final initialPos = await adapter.getCurrentPosition();
-    if (initialPos != null) {
-      await recordBreadcrumb(initialPos);
+      // Capture initial fix
+      final initialPos = await adapter.getCurrentPosition();
+      if (initialPos != null) {
+        await recordBreadcrumb(initialPos);
+      }
+
+      // Load workspace geofences
+      await refreshGeofences();
+    } catch (err) {
+      // Fail-safe cleanup: If adapter throws (e.g. Permission Denied or hardware failure),
+      // ensure tracking state is synchronously reset to inactive so tracking is NEVER left active unexpectedly.
+      await stopTracking();
+      rethrow;
     }
-
-    // Load workspace geofences
-    await refreshGeofences();
   }
 
   /// Synchronously terminates GPS tracking and unhooks hardware when punching out (Duty State: OFF_DUTY).
@@ -266,34 +283,38 @@ class LocationService {
     await _hardwareSub?.cancel();
     _hardwareSub = null;
 
-    await adapter.stopTracking();
+    try {
+      await adapter.stopTracking();
+    } catch (_) {}
 
-    // 2. Transmit any remaining on-duty points before deactivating tracking
-    if (_pointBuffer.isNotEmpty || db != null) {
-      await flushQueue();
-    }
+    final flushingWs = _currentWorkspaceId;
+    final flushingUser = _currentUserId;
 
-    // 3. Mark tracking inactive and reset duty context
+    // 2. Mark tracking inactive and reset duty context BEFORE flush so zero off-duty points can be accepted
     _isTrackingActive = false;
     _currentWorkspaceId = null;
     _currentUserId = null;
     _currentSessionId = null;
     _trackingStateController.add(false);
 
-    // 4. Reset in-memory volatile point buffer.
-    // NOTE: Durable points in Drift SQLite are kept until server acknowledgement.
+    // 3. Reset in-memory volatile point buffer.
     _pointBuffer.clear();
     _latestLocation = null;
     _locationController.add(null);
     _nearbyGeofences = [];
     _geofenceController.add([]);
+
+    // 4. Transmit any remaining on-duty points with specific workspace and user scope
+    if (flushingWs != null && flushingUser != null) {
+      await flushQueue(workspaceId: flushingWs, userId: flushingUser);
+    }
   }
 
   /// Ingests a raw GPS fix.
-  /// Enforces Duty-Hours-Only Invariant: Points while OFF_DUTY are immediately hard-dropped.
+  /// Enforces Duty-Hours-Only Invariant: Points while OFF_DUTY or without verified user identity are immediately hard-dropped.
   Future<void> recordBreadcrumb(LocationPoint point) async {
-    if (!_isTrackingActive || _currentWorkspaceId == null) {
-      // Hard drop off-duty points
+    if (!_isTrackingActive || _currentWorkspaceId == null || _currentUserId == null) {
+      // Hard drop off-duty points or unauthenticated telemetry
       return;
     }
 
@@ -308,7 +329,7 @@ class LocationService {
               CachedLocationsCompanion.insert(
                 id: point.id,
                 workspaceId: _currentWorkspaceId!,
-                userId: _currentUserId ?? 'device_user',
+                userId: _currentUserId!,
                 sessionId: Value(_currentSessionId),
                 latitude: point.latitude,
                 longitude: point.longitude,
@@ -334,15 +355,28 @@ class LocationService {
 
     // Auto-flush batch when queue reaches 5 points
     if (_pointBuffer.length >= 5) {
-      await flushQueue();
+      await flushQueue(workspaceId: _currentWorkspaceId, userId: _currentUserId);
     }
   }
 
   /// Flushes pending location points to server ingestion endpoint.
-  Future<void> flushQueue() async {
+  /// Filters strictly by authenticated workspaceId and userId to prevent multi-tenant cross-contamination.
+  /// Implements lossless per-point acknowledgment semantics.
+  Future<void> flushQueue({String? workspaceId, String? userId}) async {
+    final targetWorkspaceId = workspaceId ?? _currentWorkspaceId;
+    final targetUserId = userId ?? _currentUserId;
+
+    if (targetWorkspaceId == null || targetUserId == null) {
+      // Cannot flush without authenticated tenant/user scope
+      return;
+    }
+
     if (db != null) {
       final pending = await (db!.select(db!.cachedLocations)
-            ..where((l) => l.status.equals('PENDING') | l.status.equals('FAILED'))
+            ..where((l) =>
+                l.workspaceId.equals(targetWorkspaceId) &
+                l.userId.equals(targetUserId) &
+                (l.status.equals('PENDING') | l.status.equals('FAILED')))
             ..orderBy([(l) => OrderingTerm.asc(l.recordedAt)])
             ..limit(30))
           .get();
@@ -371,9 +405,38 @@ class LocationService {
       final ids = pending.map((l) => l.id).toList();
 
       try {
-        await client.ingestLocationBreadcrumbs(batch);
-        // Server acknowledged receipt: delete acknowledged points
-        await (db!.delete(db!.cachedLocations)..where((l) => l.id.isIn(ids))).go();
+        final response = await client.ingestLocationBreadcrumbs(batch);
+
+        final acceptedSet = response.acceptedIds != null
+            ? response.acceptedIds!.toSet()
+            : (response.accepted == batch.length ? ids.toSet() : <String>{});
+        final rejectedSet = response.rejectedIds?.toSet() ?? <String>{};
+
+        // 1. Lossless per-point acknowledgment: delete ONLY server-accepted records
+        if (acceptedSet.isNotEmpty) {
+          await (db!.delete(db!.cachedLocations)..where((l) => l.id.isIn(acceptedSet))).go();
+        }
+
+        // 2. Never delete rejected records: mark them as REJECTED for auditability
+        if (rejectedSet.isNotEmpty) {
+          await (db!.update(db!.cachedLocations)..where((l) => l.id.isIn(rejectedSet))).write(
+            CachedLocationsCompanion(
+              status: const Value('REJECTED'),
+              lastError: Value(response.reason ?? 'Server rejected point'),
+            ),
+          );
+        }
+
+        // 3. Unresolved / unacknowledged records remain safe: revert to PENDING for retry
+        final unresolved = ids.where((id) => !acceptedSet.contains(id) && !rejectedSet.contains(id)).toList();
+        if (unresolved.isNotEmpty) {
+          await (db!.update(db!.cachedLocations)..where((l) => l.id.isIn(unresolved))).write(
+            const CachedLocationsCompanion(
+              status: Value('PENDING'),
+            ),
+          );
+        }
+
         _pointBuffer.clear();
       } catch (_) {
         // Network error: points remain safely persisted in SQLite

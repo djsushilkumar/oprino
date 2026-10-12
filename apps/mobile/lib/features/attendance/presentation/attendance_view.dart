@@ -72,6 +72,13 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
   }
 
   Future<void> _handlePunchIn(String workspaceId) async {
+    final auth = ref.read(authStateProvider);
+    final userId = auth.context?.user.id;
+    if (userId == null || userId.isEmpty) {
+      setState(() => _actionError = 'Cannot punch in: Unauthenticated user identity.');
+      return;
+    }
+
     setState(() {
       _isActioning = true;
       _actionError = null;
@@ -84,7 +91,10 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
         note: 'Punched in from mobile',
       );
       if (workspaceId.isNotEmpty) {
-        await ref.read(locationServiceProvider).startTracking(workspaceId: workspaceId);
+        await ref.read(locationServiceProvider).startTracking(
+              workspaceId: workspaceId,
+              userId: userId,
+            );
       }
     } catch (e) {
       setState(() => _actionError = e.toString());
@@ -105,7 +115,15 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
         workspaceId: workspaceId,
         note: 'Punched out from mobile',
       );
+      // Immediately terminate GPS tracking to honor Duty-Hours-Only Invariant: Zero off-duty points captured
       await ref.read(locationServiceProvider).stopTracking();
+
+      // Durably drain any remaining on-duty points without collecting new off-duty telemetry
+      final auth = ref.read(authStateProvider);
+      final userId = auth.context?.user.id;
+      if (userId != null && workspaceId.isNotEmpty) {
+        sync.drainPendingLocations(workspaceId: workspaceId, userId: userId).ignore();
+      }
     } catch (e) {
       setState(() => _actionError = e.toString());
     } finally {
@@ -118,6 +136,7 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
     final auth = ref.watch(authStateProvider);
     final workspace = auth.context?.activeWorkspace;
     final workspaceId = workspace?.id ?? '';
+    final userId = auth.context?.user.id;
     final sync = ref.watch(syncServiceProvider);
     final isTracking = ref.watch(isTrackingActiveProvider);
     final latestLocation = ref.watch(latestLocationProvider);
@@ -132,10 +151,14 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
 
         if (isOnDuty) {
           _startTicker();
-          if (!isTracking && workspaceId.isNotEmpty) {
+          if (!isTracking && workspaceId.isNotEmpty && userId != null && userId.isNotEmpty) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
-                ref.read(locationServiceProvider).startTracking(workspaceId: workspaceId);
+                ref.read(locationServiceProvider).startTracking(
+                      workspaceId: workspaceId,
+                      userId: userId,
+                      sessionId: attendance?.activeSessionId,
+                    );
               }
             });
           }

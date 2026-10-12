@@ -158,7 +158,7 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
       ],
     },
     async (request, reply) => {
-      const ticket = pubsub.createStreamingTicket(request.user!.id, request.workspaceId!);
+      const ticket = await pubsub.createStreamingTicket(request.user!.id, request.workspaceId!);
       return reply.status(200).send({ ticket, expiresInSeconds: 60 });
     },
   );
@@ -176,7 +176,7 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
 
       // 1. Single-use ticket authentication
       if (query?.ticket) {
-        const ticketData = pubsub.consumeStreamingTicket(query.ticket);
+        const ticketData = await pubsub.consumeStreamingTicket(query.ticket);
         if (!ticketData) {
           return reply.status(401).send({
             statusCode: 401,

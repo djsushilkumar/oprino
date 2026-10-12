@@ -78,6 +78,7 @@ export class TelemetryService {
   ) {
     // 1. Quality pre-filter & timestamp validation
     const candidatePoints: (LocationPointInput & { recDate: Date })[] = [];
+    const rejectedPointIds: string[] = [];
     let droppedCount = 0;
     const nowMs = Date.now();
     const maxFutureMs = nowMs + 60000; // 60s clock skew allowance
@@ -88,18 +89,21 @@ export class TelemetryService {
       // Check valid date
       if (isNaN(recDate.getTime())) {
         droppedCount++;
+        rejectedPointIds.push(loc.id);
         continue;
       }
 
       // Check future-dated timestamps
       if (recDate.getTime() > maxFutureMs) {
         droppedCount++;
+        rejectedPointIds.push(loc.id);
         continue;
       }
 
       // Accuracy filter: reject points with accuracy > 50m or negative
       if (loc.accuracy < 0 || loc.accuracy > 50) {
         droppedCount++;
+        rejectedPointIds.push(loc.id);
         continue;
       }
 
@@ -111,12 +115,14 @@ export class TelemetryService {
         loc.longitude > 180
       ) {
         droppedCount++;
+        rejectedPointIds.push(loc.id);
         continue;
       }
 
       // Speed anomaly / teleportation check (speed > 45 m/s = 162 km/h)
       if (loc.speed !== undefined && loc.speed !== null && (loc.speed < 0 || loc.speed > 45)) {
         droppedCount++;
+        rejectedPointIds.push(loc.id);
         continue;
       }
 
@@ -131,17 +137,20 @@ export class TelemetryService {
         dropped: locations.length,
         reason: 'QUALITY_FILTER',
         serverTimestamp: nowIso,
+        acceptedIds: [],
+        rejectedIds: rejectedPointIds,
       };
     }
 
-    // 2. Duty Session Verification with Historical Reconciliation
+    // 2. Duty Session Verification with 7-Day Historical Reconciliation
     // Allows offline GPS points recorded during a valid shift to be synced even after punch-out
     const maxRecDate = new Date(Math.max(...candidatePoints.map((p) => p.recDate.getTime())));
+    const sevenDaysAgo = new Date(nowMs - 7 * 24 * 60 * 60 * 1000);
 
     const { validPoints, liveSessionToBroadcast } = await this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 
-      // Retrieve all matching user sessions in workspace covering the batch timeframe
+      // Retrieve all matching user sessions in workspace covering the batch timeframe (bounded to last 7 days)
       const candidateSessions = await tx
         .select()
         .from(attendanceSessions)
@@ -149,6 +158,7 @@ export class TelemetryService {
           and(
             eq(attendanceSessions.workspaceId, workspaceId),
             eq(attendanceSessions.userId, userId),
+            gte(attendanceSessions.punchInTime, sevenDaysAgo),
             lte(attendanceSessions.punchInTime, maxRecDate),
           ),
         );
@@ -172,6 +182,7 @@ export class TelemetryService {
         } else {
           // Off-duty point: Hard drop with zero DB writes
           droppedCount++;
+          rejectedPointIds.push(p.id);
         }
       }
 
@@ -200,7 +211,7 @@ export class TelemetryService {
         newPoints.sort((a, b) => a.recDate.getTime() - b.recDate.getTime());
 
         // Insert new locations
-        await tx
+        const insertedRows = await tx
           .insert(employeeLocations)
           .values(
             newPoints.map((p) => ({
@@ -221,100 +232,107 @@ export class TelemetryService {
               isMoving: p.isMoving ?? false,
             })),
           )
-          .onConflictDoNothing({ target: employeeLocations.id });
+          .onConflictDoNothing({ target: employeeLocations.id })
+          .returning({ id: employeeLocations.id });
 
-        // Calculate travel distance delta incrementally only for newly ingested points
-        // Fetch last known location prior to newPoints[0] to link trajectory
-        const [lastKnown] = await tx
-          .select({
-            latitude: employeeLocations.latitude,
-            longitude: employeeLocations.longitude,
-            recordedAt: employeeLocations.recordedAt,
-          })
-          .from(employeeLocations)
-          .where(
-            and(
-              eq(employeeLocations.workspaceId, workspaceId),
-              eq(employeeLocations.userId, userId),
-              lt(employeeLocations.recordedAt, newPoints[0].recDate),
-            ),
-          )
-          .orderBy(desc(employeeLocations.recordedAt))
-          .limit(1);
+        const actuallyInsertedSet = new Set(insertedRows.map((r) => r.id));
+        const confirmedNewPoints = newPoints.filter((p) => actuallyInsertedSet.has(p.id));
 
-        // Calculate distance delta across newly inserted points
-        const dateDistanceMap = new Map<string, { distance: number; count: number; maxDate: Date; minDate: Date }>();
-
-        let prevLat = lastKnown ? lastKnown.latitude : null;
-        let prevLon = lastKnown ? lastKnown.longitude : null;
-        let prevTime = lastKnown ? lastKnown.recordedAt.getTime() : null;
-
-        for (const curr of newPoints) {
-          const dateKey = curr.recDate.toISOString().slice(0, 10);
-          if (!dateDistanceMap.has(dateKey)) {
-            dateDistanceMap.set(dateKey, {
-              distance: 0,
-              count: 0,
-              maxDate: curr.recDate,
-              minDate: curr.recDate,
-            });
-          }
-          const dateBucket = dateDistanceMap.get(dateKey)!;
-          dateBucket.count++;
-          if (curr.recDate > dateBucket.maxDate) dateBucket.maxDate = curr.recDate;
-          if (curr.recDate < dateBucket.minDate) dateBucket.minDate = curr.recDate;
-
-          if (prevLat !== null && prevLon !== null && prevTime !== null) {
-            const dist = calculateHaversineMeters(prevLat, prevLon, curr.latitude, curr.longitude);
-            const timeDeltaSec = (curr.recDate.getTime() - prevTime) / 1000;
-
-            // Anomaly filter: ignore jump if impossible travel speed (> 45 m/s)
-            if (timeDeltaSec <= 0 || dist / timeDeltaSec <= 45) {
-              dateBucket.distance += dist;
-            }
-          }
-
-          prevLat = curr.latitude;
-          prevLon = curr.longitude;
-          prevTime = curr.recDate.getTime();
-        }
-
-        // Rollup into dailyTravelSummaries idempotently per date
-        for (const [dateKey, bucket] of dateDistanceMap.entries()) {
-          const [existingSummary] = await tx
-            .select()
-            .from(dailyTravelSummaries)
+        if (confirmedNewPoints.length > 0) {
+          // Calculate travel distance delta incrementally only for confirmed newly inserted points
+          // Fetch last known location prior to confirmedNewPoints[0] to link trajectory
+          const [lastKnown] = await tx
+            .select({
+              latitude: employeeLocations.latitude,
+              longitude: employeeLocations.longitude,
+              recordedAt: employeeLocations.recordedAt,
+            })
+            .from(employeeLocations)
             .where(
               and(
-                eq(dailyTravelSummaries.workspaceId, workspaceId),
-                eq(dailyTravelSummaries.userId, userId),
-                eq(dailyTravelSummaries.date, dateKey),
+                eq(employeeLocations.workspaceId, workspaceId),
+                eq(employeeLocations.userId, userId),
+                lt(employeeLocations.recordedAt, confirmedNewPoints[0].recDate),
               ),
-            );
+            )
+            .orderBy(desc(employeeLocations.recordedAt))
+            .limit(1);
 
-          if (existingSummary) {
-            await tx
-              .update(dailyTravelSummaries)
-              .set({
-                totalDistanceMeters: existingSummary.totalDistanceMeters + bucket.distance,
-                pointCount: existingSummary.pointCount + bucket.count,
-                lastPointAt:
-                  !existingSummary.lastPointAt || bucket.maxDate > existingSummary.lastPointAt
-                    ? bucket.maxDate
-                    : existingSummary.lastPointAt,
-                updatedAt: new Date(),
-              })
-              .where(eq(dailyTravelSummaries.id, existingSummary.id));
-          } else {
-            await tx.insert(dailyTravelSummaries).values({
-              workspaceId,
-              userId,
-              date: dateKey,
-              totalDistanceMeters: bucket.distance,
-              pointCount: bucket.count,
-              firstPointAt: bucket.minDate,
-              lastPointAt: bucket.maxDate,
-            });
+          // Calculate distance delta across confirmed new points
+          const dateDistanceMap = new Map<string, { distance: number; count: number; maxDate: Date; minDate: Date }>();
+
+          let prevLat = lastKnown ? lastKnown.latitude : null;
+          let prevLon = lastKnown ? lastKnown.longitude : null;
+          let prevTime = lastKnown ? lastKnown.recordedAt.getTime() : null;
+
+          for (const curr of confirmedNewPoints) {
+            const dateKey = curr.recDate.toISOString().slice(0, 10);
+            if (!dateDistanceMap.has(dateKey)) {
+              dateDistanceMap.set(dateKey, {
+                distance: 0,
+                count: 0,
+                maxDate: curr.recDate,
+                minDate: curr.recDate,
+              });
+            }
+            const dateBucket = dateDistanceMap.get(dateKey)!;
+            dateBucket.count++;
+            if (curr.recDate > dateBucket.maxDate) dateBucket.maxDate = curr.recDate;
+            if (curr.recDate < dateBucket.minDate) dateBucket.minDate = curr.recDate;
+
+            if (prevLat !== null && prevLon !== null && prevTime !== null) {
+              const dist = calculateHaversineMeters(prevLat, prevLon, curr.latitude, curr.longitude);
+              const timeDeltaSec = (curr.recDate.getTime() - prevTime) / 1000;
+
+              // Anomaly filter: ignore jump if impossible travel speed (> 45 m/s)
+              if (timeDeltaSec <= 0 || dist / timeDeltaSec <= 45) {
+                dateBucket.distance += dist;
+              }
+            }
+
+            prevLat = curr.latitude;
+            prevLon = curr.longitude;
+            prevTime = curr.recDate.getTime();
+          }
+
+          // Rollup into dailyTravelSummaries idempotently per date with row-level locking
+          for (const [dateKey, bucket] of dateDistanceMap.entries()) {
+            const [existingSummary] = await tx
+              .select()
+              .from(dailyTravelSummaries)
+              .where(
+                and(
+                  eq(dailyTravelSummaries.workspaceId, workspaceId),
+                  eq(dailyTravelSummaries.userId, userId),
+                  eq(dailyTravelSummaries.date, dateKey),
+                ),
+              )
+              .for('update');
+
+            if (existingSummary) {
+              await tx
+                .update(dailyTravelSummaries)
+                .set({
+                  totalDistanceMeters: existingSummary.totalDistanceMeters + bucket.distance,
+                  pointCount: existingSummary.pointCount + bucket.count,
+                  lastPointAt:
+                    !existingSummary.lastPointAt || bucket.maxDate > existingSummary.lastPointAt
+                      ? bucket.maxDate
+                      : existingSummary.lastPointAt,
+                  updatedAt: new Date(),
+                })
+                .where(eq(dailyTravelSummaries.id, existingSummary.id));
+            } else {
+              await tx.insert(dailyTravelSummaries).values({
+                workspaceId,
+                userId,
+                date: dateKey,
+                totalDistanceMeters: bucket.distance,
+                pointCount: bucket.count,
+                firstPointAt: bucket.minDate,
+                lastPointAt: bucket.maxDate,
+              });
+            }
           }
         }
       }
@@ -340,6 +358,8 @@ export class TelemetryService {
         dropped: locations.length,
         reason: 'OFF_DUTY_FILTER',
         serverTimestamp: nowIso,
+        acceptedIds: [],
+        rejectedIds: rejectedPointIds,
       };
     }
 
@@ -365,6 +385,8 @@ export class TelemetryService {
       dropped: droppedCount,
       reason: droppedCount > 0 ? 'PARTIAL_DROPPED_BY_FILTER' : null,
       serverTimestamp: nowIso,
+      acceptedIds: validPoints.map((p) => p.id),
+      rejectedIds: rejectedPointIds,
     };
   }
 

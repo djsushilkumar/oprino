@@ -1273,12 +1273,16 @@ class LocationIngestResponse {
   final int dropped;
   final String? reason;
   final DateTime serverTimestamp;
+  final List<String>? acceptedIds;
+  final List<String>? rejectedIds;
 
   const LocationIngestResponse({
     required this.accepted,
     required this.dropped,
     this.reason,
     required this.serverTimestamp,
+    this.acceptedIds,
+    this.rejectedIds,
   });
 
   factory LocationIngestResponse.fromJson(Map<String, dynamic> json) {
@@ -1287,6 +1291,8 @@ class LocationIngestResponse {
       dropped: json['dropped'] as int? ?? 0,
       reason: json['reason'] as String?,
       serverTimestamp: DateTime.parse(json['serverTimestamp'] as String),
+      acceptedIds: (json['acceptedIds'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      rejectedIds: (json['rejectedIds'] as List<dynamic>?)?.map((e) => e as String).toList(),
     );
   }
 
@@ -1295,6 +1301,8 @@ class LocationIngestResponse {
         'dropped': dropped,
         if (reason != null) 'reason': reason,
         'serverTimestamp': serverTimestamp.toIso8601String(),
+        if (acceptedIds != null) 'acceptedIds': acceptedIds,
+        if (rejectedIds != null) 'rejectedIds': rejectedIds,
       };
 }
 

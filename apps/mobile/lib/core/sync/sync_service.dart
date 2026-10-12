@@ -770,10 +770,21 @@ class SyncService {
   }
 
   /// Flushes pending GPS locations in batches from SQLite to the server ingestion endpoint.
-  /// Retains points across crashes and offline shifts until server acknowledges receipt.
-  Future<int> flushPendingLocations({int batchSize = 30}) async {
+  /// Strictly filters by authenticated workspaceId and userId to prevent cross-tenant/user data leakage.
+  /// Implements lossless per-point acknowledgment semantics:
+  /// - ONLY points acknowledged in response.acceptedIds are deleted.
+  /// - Points in response.rejectedIds are updated to REJECTED with error reason (never deleted).
+  /// - Points unacknowledged in response are returned to PENDING for retry.
+  Future<int> flushPendingLocations({
+    required String workspaceId,
+    required String userId,
+    int batchSize = 30,
+  }) async {
     final pending = await (db.select(db.cachedLocations)
-          ..where((l) => l.status.equals('PENDING') | l.status.equals('FAILED'))
+          ..where((l) =>
+              l.workspaceId.equals(workspaceId) &
+              l.userId.equals(userId) &
+              (l.status.equals('PENDING') | l.status.equals('FAILED')))
           ..orderBy([(l) => OrderingTerm.asc(l.recordedAt)])
           ..limit(batchSize))
         .get();
@@ -805,13 +816,41 @@ class SyncService {
     );
 
     try {
-      await client.ingestLocationBreadcrumbs(batch);
+      final response = await client.ingestLocationBreadcrumbs(batch);
 
-      // Server acknowledged receipt: clean up acknowledged points
-      await (db.delete(db.cachedLocations)..where((l) => l.id.isIn(ids))).go();
-      return batch.length;
+      final acceptedSet = response.acceptedIds != null
+          ? response.acceptedIds!.toSet()
+          : (response.accepted == batch.length ? ids.toSet() : <String>{});
+      final rejectedSet = response.rejectedIds?.toSet() ?? <String>{};
+
+      // 1. Lossless per-point acknowledgment: delete ONLY server-accepted records
+      if (acceptedSet.isNotEmpty) {
+        await (db.delete(db.cachedLocations)..where((l) => l.id.isIn(acceptedSet))).go();
+      }
+
+      // 2. Never delete rejected records: mark them as REJECTED for auditability
+      if (rejectedSet.isNotEmpty) {
+        await (db.update(db.cachedLocations)..where((l) => l.id.isIn(rejectedSet))).write(
+          CachedLocationsCompanion(
+            status: const Value('REJECTED'),
+            lastError: Value(response.reason ?? 'Server rejected point'),
+          ),
+        );
+      }
+
+      // 3. Unresolved / unacknowledged records remain safe: revert to PENDING for retry
+      final unresolved = ids.where((id) => !acceptedSet.contains(id) && !rejectedSet.contains(id)).toList();
+      if (unresolved.isNotEmpty) {
+        await (db.update(db.cachedLocations)..where((l) => l.id.isIn(unresolved))).write(
+          const CachedLocationsCompanion(
+            status: Value('PENDING'),
+          ),
+        );
+      }
+
+      return acceptedSet.length;
     } catch (err) {
-      // Offline fallback: mark as FAILED and increment attemptCount
+      // Offline fallback: mark as FAILED and increment attemptCount; NEVER delete records
       for (final l in pending) {
         await (db.update(db.cachedLocations)..where((row) => row.id.equals(l.id))).write(
           CachedLocationsCompanion(
@@ -825,10 +864,45 @@ class SyncService {
     }
   }
 
-  Stream<List<CachedLocation>> watchPendingLocations() {
-    return (db.select(db.cachedLocations)
-          ..where((l) => l.status.equals('PENDING') | l.status.equals('SYNCING'))
-          ..orderBy([(l) => OrderingTerm.asc(l.recordedAt)]))
-        .watch();
+  /// Drains pending GPS locations across multiple bounded batches without collecting new off-duty points.
+  /// Bounded to [maxBatches] (default 10) to prevent infinite loops during large queues.
+  Future<int> drainPendingLocations({
+    required String workspaceId,
+    required String userId,
+    int maxBatches = 10,
+    int batchSize = 30,
+  }) async {
+    int totalSynced = 0;
+    int batchesRun = 0;
+
+    while (batchesRun < maxBatches) {
+      final synced = await flushPendingLocations(
+        workspaceId: workspaceId,
+        userId: userId,
+        batchSize: batchSize,
+      );
+      if (synced == 0) break;
+      totalSynced += synced;
+      batchesRun++;
+    }
+
+    return totalSynced;
+  }
+
+  Stream<List<CachedLocation>> watchPendingLocations({String? workspaceId, String? userId}) {
+    final query = db.select(db.cachedLocations);
+    if (workspaceId != null && userId != null) {
+      query.where((l) =>
+          l.workspaceId.equals(workspaceId) &
+          l.userId.equals(userId) &
+          (l.status.equals('PENDING') | l.status.equals('SYNCING')));
+    } else if (workspaceId != null) {
+      query.where((l) =>
+          l.workspaceId.equals(workspaceId) &
+          (l.status.equals('PENDING') | l.status.equals('SYNCING')));
+    } else {
+      query.where((l) => l.status.equals('PENDING') | l.status.equals('SYNCING'));
+    }
+    return (query..orderBy([(l) => OrderingTerm.asc(l.recordedAt)])).watch();
   }
 }

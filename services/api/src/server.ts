@@ -1,3 +1,4 @@
+import http from 'node:http';
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
@@ -197,6 +198,41 @@ export function buildServer(options?: {
   app.register(schedulingRoutes, { schedulingService, authMiddleware });
   app.register(reportRoutes, { reportService, authMiddleware });
   app.register(notificationRoutes, { notificationService, authMiddleware });
+
+  // Security-hardened error handler: suppress stack traces and internal errors in production
+  app.setErrorHandler((error: any, request, reply) => {
+    const statusCode =
+      error.statusCode && error.statusCode >= 400 && error.statusCode < 600
+        ? error.statusCode
+        : 500;
+    const isProduction = env.NODE_ENV === 'production';
+
+    request.log.error(error);
+
+    if (statusCode === 500 && isProduction) {
+      return reply.status(500).send({
+        statusCode: 500,
+        error: 'Internal Server Error',
+        message: 'An unexpected internal error occurred.',
+      });
+    }
+
+    const errorTitle =
+      error.error ||
+      (http.STATUS_CODES[statusCode] ? http.STATUS_CODES[statusCode] : error.name || 'Error');
+
+    const responsePayload: Record<string, any> = {
+      statusCode,
+      error: errorTitle,
+      message: error.message,
+    };
+
+    if (!isProduction && error.stack) {
+      responsePayload.stack = error.stack;
+    }
+
+    return reply.status(statusCode).send(responsePayload);
+  });
 
   return {
     app,
