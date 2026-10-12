@@ -90,8 +90,11 @@ export default function LiveMapPage() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     try {
-      // Establish EventSource
-      const es = new EventSource(`${apiUrl}/v1/telemetry/stream`);
+      // Establish EventSource with authentication credentials in query params
+      const streamUrl = new URL(`${apiUrl}/v1/telemetry/stream`);
+      streamUrl.searchParams.set('token', token);
+      streamUrl.searchParams.set('workspaceId', workspaceId);
+      const es = new EventSource(streamUrl.toString());
       sseRef.current = es;
 
       es.onopen = () => {

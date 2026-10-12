@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
-import { webApi, getStoredToken } from '../../lib/api';
+import { webApi, getStoredToken, type WorkspaceMember } from '../../lib/api';
 import type {
   MeResponse,
   TaskResponse,
@@ -18,6 +18,7 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [sitesByCustomer, setSitesByCustomer] = useState<Record<string, CustomerSite[]>>({});
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -33,8 +34,14 @@ export default function TasksPage() {
   const [newSiteId, setNewSiteId] = useState('');
   const [newRequiresPhotoProof, setNewRequiresPhotoProof] = useState(false);
   const [newRequiresSignature, setNewRequiresSignature] = useState(false);
+  const [newAssigneeIds, setNewAssigneeIds] = useState<string[]>([]);
   const [newChecklist, setNewChecklist] = useState<string[]>(['']);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Assign Task Modal State
+  const [assigningTask, setAssigningTask] = useState<TaskResponse | null>(null);
+  const [editAssigneeIds, setEditAssigneeIds] = useState<string[]>([]);
+  const [isSubmittingAssign, setIsSubmittingAssign] = useState(false);
 
   // Verification Review Modal State
   const [reviewTask, setReviewTask] = useState<TaskResponse | null>(null);
@@ -64,12 +71,14 @@ export default function TasksPage() {
       if (statusFilter !== 'ALL') params.status = statusFilter;
       if (priorityFilter !== 'ALL') params.priority = priorityFilter;
 
-      const [tasksRes, customersRes] = await Promise.all([
+      const [tasksRes, customersRes, membersRes] = await Promise.all([
         webApi.listTasks(params),
         webApi.listCustomers(),
+        webApi.listWorkspaceMembers().catch(() => ({ members: [] })),
       ]);
       setTasks(tasksRes.tasks);
       setCustomers(customersRes.customers);
+      setMembers(membersRes.members);
     } catch (err: any) {
       if (err.status === 401) {
         router.push('/auth/signin');
@@ -126,6 +135,7 @@ export default function TasksPage() {
         siteId: newSiteId || undefined,
         requiresPhotoProof: newRequiresPhotoProof,
         requiresSignature: newRequiresSignature,
+        assigneeIds: newAssigneeIds.length > 0 ? newAssigneeIds : undefined,
         checklist: checklistItems.length > 0 ? checklistItems : undefined,
       });
 
@@ -138,12 +148,37 @@ export default function TasksPage() {
       setNewSiteId('');
       setNewRequiresPhotoProof(false);
       setNewRequiresSignature(false);
+      setNewAssigneeIds([]);
       setNewChecklist(['']);
       await loadData();
     } catch (err: any) {
       setError(err.message || 'Failed to create task');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const openAssignModal = (task: TaskResponse) => {
+    setAssigningTask(task);
+    setEditAssigneeIds(task.assignees.map((a) => a.id));
+  };
+
+  const handleSaveAssignees = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assigningTask) return;
+    try {
+      setIsSubmittingAssign(true);
+      setError(null);
+      await webApi.updateTask(assigningTask.id, {
+        assigneeIds: editAssigneeIds,
+        version: assigningTask.version,
+      });
+      setAssigningTask(null);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update assignees');
+    } finally {
+      setIsSubmittingAssign(false);
     }
   };
 
@@ -430,27 +465,46 @@ export default function TasksPage() {
                     <td style={{ padding: '1rem' }}>{getStatusBadge(task.status)}</td>
                     <td style={{ padding: '1rem' }}>{getPriorityBadge(task.priority)}</td>
                     <td style={{ padding: '1rem' }}>
-                      {task.assignees.length === 0 ? (
-                        <span style={{ color: '#94A3B8', fontSize: '0.8125rem' }}>Unassigned</span>
-                      ) : (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                          {task.assignees.map((a) => (
-                            <span
-                              key={a.id}
-                              style={{
-                                padding: '0.15rem 0.5rem',
-                                backgroundColor: '#F1F5F9',
-                                color: '#334155',
-                                borderRadius: '4px',
-                                fontSize: '0.75rem',
-                                fontWeight: 500,
-                              }}
-                            >
-                              {a.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {task.assignees.length === 0 ? (
+                          <span style={{ color: '#94A3B8', fontSize: '0.8125rem' }}>Unassigned</span>
+                        ) : (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                            {task.assignees.map((a) => (
+                              <span
+                                key={a.id}
+                                style={{
+                                  padding: '0.15rem 0.5rem',
+                                  backgroundColor: '#F1F5F9',
+                                  color: '#334155',
+                                  borderRadius: '4px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {a.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => openAssignModal(task)}
+                          title="Assign or edit team members"
+                          style={{
+                            padding: '0.15rem 0.45rem',
+                            border: '1px solid #CBD5E1',
+                            borderRadius: '4px',
+                            backgroundColor: '#FFFFFF',
+                            color: '#2563EB',
+                            fontSize: '0.7rem',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {task.assignees.length === 0 ? '+ Assign' : 'Edit'}
+                        </button>
+                      </div>
                     </td>
                     <td style={{ padding: '1rem', fontSize: '0.8125rem', color: '#64748B' }}>
                       {task.dueAt ? new Date(task.dueAt).toLocaleDateString() : '—'}
@@ -674,6 +728,52 @@ export default function TasksPage() {
                       }}
                     />
                   </div>
+                </div>
+
+                {/* Assign Team Members Selector */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                    Assign Team Members
+                  </label>
+                  {members.length === 0 ? (
+                    <div style={{ fontSize: '0.8125rem', color: '#94A3B8' }}>No team members available in this workspace.</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', maxHeight: '110px', overflowY: 'auto', padding: '0.5rem', border: '1px solid #CBD5E1', borderRadius: '6px' }}>
+                      {members.map((m) => {
+                        const isSelected = newAssigneeIds.includes(m.id);
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setNewAssigneeIds(newAssigneeIds.filter((id) => id !== m.id));
+                              } else {
+                                setNewAssigneeIds([...newAssigneeIds, m.id]);
+                              }
+                            }}
+                            style={{
+                              padding: '0.25rem 0.55rem',
+                              borderRadius: '16px',
+                              border: isSelected ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                              backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
+                              color: isSelected ? '#1D4ED8' : '#334155',
+                              fontSize: '0.75rem',
+                              fontWeight: isSelected ? 600 : 500,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                            }}
+                          >
+                            <span>{isSelected ? '✓' : '+'}</span>
+                            <span>{m.name}</span>
+                            <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>({m.roleName})</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Proof Requirements Toggles */}
@@ -1055,6 +1155,118 @@ export default function TasksPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Assign / Reassign Task Modal */}
+        {assigningTask && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.65)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 110,
+              padding: '1.5rem',
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                maxWidth: '480px',
+                width: '100%',
+                padding: '2rem',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              }}
+            >
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: '#0F172A' }}>
+                Assign Task: {assigningTask.title}
+              </h3>
+              <p style={{ fontSize: '0.8125rem', color: '#64748B', margin: '0 0 1rem 0' }}>
+                Select workspace members to assign to this task.
+              </p>
+              <form onSubmit={handleSaveAssignees}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', maxHeight: '180px', overflowY: 'auto', padding: '0.6rem', border: '1px solid #CBD5E1', borderRadius: '6px', marginBottom: '1.25rem' }}>
+                  {members.length === 0 ? (
+                    <div style={{ fontSize: '0.8125rem', color: '#94A3B8' }}>No members available in this workspace.</div>
+                  ) : (
+                    members.map((m) => {
+                      const isSelected = editAssigneeIds.includes(m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setEditAssigneeIds(editAssigneeIds.filter((id) => id !== m.id));
+                            } else {
+                              setEditAssigneeIds([...editAssigneeIds, m.id]);
+                            }
+                          }}
+                          style={{
+                            padding: '0.3rem 0.65rem',
+                            borderRadius: '16px',
+                            border: isSelected ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                            backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
+                            color: isSelected ? '#1D4ED8' : '#334155',
+                            fontSize: '0.8125rem',
+                            fontWeight: isSelected ? 600 : 500,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                          }}
+                        >
+                          <span>{isSelected ? '✓' : '+'}</span>
+                          <span>{m.name}</span>
+                          <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>({m.roleName})</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setAssigningTask(null)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      backgroundColor: '#FFFFFF',
+                      color: '#475569',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingAssign}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: '#2563EB',
+                      color: '#FFFFFF',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: isSubmittingAssign ? 'not-allowed' : 'pointer',
+                      opacity: isSubmittingAssign ? 0.7 : 1,
+                    }}
+                  >
+                    {isSubmittingAssign ? 'Saving...' : 'Save Assignments'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

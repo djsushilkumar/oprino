@@ -7,6 +7,7 @@ import {
   workspaceMemberships,
   auditLogs,
   sessions,
+  users,
 } from '@oprino/database/schema';
 import { DEFAULT_ROLE_TEMPLATES } from '../auth/permissions.js';
 
@@ -252,4 +253,31 @@ export class WorkspaceService {
       };
     });
   }
+
+  /**
+   * List all members of a workspace with user profile details and assigned role.
+   */
+  async listWorkspaceMembers(workspaceId: string) {
+    return this.db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        image: users.image,
+        membershipId: workspaceMemberships.id,
+        roleId: workspaceMemberships.roleId,
+        roleName: roles.name,
+        status: workspaceMemberships.status,
+      })
+      .from(workspaceMemberships)
+      .innerJoin(users, eq(workspaceMemberships.userId, users.id))
+      .innerJoin(roles, eq(workspaceMemberships.roleId, roles.id))
+      .where(
+        and(
+          eq(workspaceMemberships.workspaceId, workspaceId),
+          ne(workspaceMemberships.status, 'removed'),
+        ),
+      );
+  }
 }
+

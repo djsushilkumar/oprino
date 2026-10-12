@@ -15,6 +15,35 @@ import type {
   BulkImportResult,
 } from '@oprino/contracts';
 
+/**
+ * RFC 4180 compliant CSV line tokenizer that respects quoted strings containing commas.
+ */
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++; // skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
 export class ReportService {
   constructor(private db: Database) {}
 
@@ -285,7 +314,7 @@ export class ReportService {
       const errors: string[] = [];
 
       for (let i = 0; i < rows.length; i++) {
-        const parts = rows[i].split(',').map((p) => p.replace(/^"|"$/g, '').trim());
+        const parts = parseCsvLine(rows[i]).map((p) => p.replace(/^"|"$/g, '').trim());
         const [name, address, latStr, lngStr, contactName, contactPhone] = parts;
 
         if (!name || !address) {

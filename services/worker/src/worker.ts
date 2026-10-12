@@ -60,12 +60,58 @@ export function createWorkerManager(options?: {
 
         let generated = 0;
         for (const t of (templates as any[])) {
-          const [_task] = (await dbClient.client`
-            INSERT INTO tasks (workspace_id, title, description, priority, customer_id, site_id, requires_signature, requires_photo_proof, created_by)
-            VALUES (${t.workspace_id}, ${t.title}, ${t.description}, ${t.priority}, ${t.customer_id}, ${t.site_id}, ${t.requires_signature}, ${t.requires_photo_proof}, ${t.created_by})
+          // 1. Insert Task with ASSIGNED status
+          const [newTask] = (await dbClient.client`
+            INSERT INTO tasks (workspace_id, title, description, status, priority, customer_id, site_id, requires_signature, requires_photo_proof, created_by)
+            VALUES (${t.workspace_id}, ${t.title}, ${t.description}, 'ASSIGNED', ${t.priority}, ${t.customer_id}, ${t.site_id}, ${t.requires_signature}, ${t.requires_photo_proof}, ${t.created_by})
             RETURNING id;
           `) as unknown as [{ id: string }];
 
+          // 2. Copy Assignees
+          const assigneeIds: string[] = Array.isArray(t.assignee_ids)
+            ? t.assignee_ids
+            : typeof t.assignee_ids === 'string'
+              ? JSON.parse(t.assignee_ids)
+              : [];
+
+          for (const uid of assigneeIds) {
+            await dbClient.client`
+              INSERT INTO task_assignees (workspace_id, task_id, user_id, assigned_by)
+              VALUES (${t.workspace_id}, ${newTask.id}, ${uid}, ${t.created_by})
+              ON CONFLICT DO NOTHING;
+            `;
+          }
+
+          // 3. Copy Checklist Items
+          const checklist: Array<{ title: string; sort_order?: number; sortOrder?: number }> =
+            Array.isArray(t.checklist_template)
+              ? t.checklist_template
+              : typeof t.checklist_template === 'string'
+                ? JSON.parse(t.checklist_template)
+                : [];
+
+          for (let i = 0; i < checklist.length; i++) {
+            const itemTitle = checklist[i].title;
+            const sortOrder = checklist[i].sort_order ?? checklist[i].sortOrder ?? i;
+            if (itemTitle) {
+              await dbClient.client`
+                INSERT INTO task_checklist_items (workspace_id, task_id, title, sort_order)
+                VALUES (${t.workspace_id}, ${newTask.id}, ${itemTitle}, ${sortOrder});
+              `;
+            }
+          }
+
+          // 4. Record Task Activity
+          const activityDetails = JSON.stringify({
+            templateId: t.id,
+            generatedAt: now.toISOString(),
+          });
+          await dbClient.client`
+            INSERT INTO task_activity (workspace_id, task_id, actor_id, action, details)
+            VALUES (${t.workspace_id}, ${newTask.id}, ${t.created_by}, 'task.recurring_generated', ${activityDetails}::jsonb);
+          `;
+
+          // 5. Advance next_run_at
           const nextRun = new Date(now);
           if (t.recurrence_frequency === 'WEEKLY') {
             nextRun.setDate(nextRun.getDate() + 7 * (t.recurrence_interval || 1));
@@ -104,11 +150,24 @@ export function createWorkerManager(options?: {
         let notified = 0;
         for (const ot of overdueTasks) {
           if (ot.user_id) {
-            await dbClient.client`
-              INSERT INTO notifications (workspace_id, user_id, type, title, body, entity_type, entity_id)
-              VALUES (${ot.workspace_id}, ${ot.user_id}, 'TASK_OVERDUE', 'Task Overdue SLA Alert', ${'Task "' + ot.title + '" is past its scheduled due date.'}, 'task', ${ot.id});
-            `;
-            notified++;
+            // Deduplication check: only insert if no TASK_OVERDUE notification exists within the last 24h
+            const [existing] = (await dbClient.client`
+              SELECT id FROM notifications
+              WHERE workspace_id = ${ot.workspace_id}
+                AND user_id = ${ot.user_id}
+                AND type = 'TASK_OVERDUE'
+                AND entity_id = ${ot.id}
+                AND created_at >= NOW() - INTERVAL '24 hours'
+              LIMIT 1;
+            `) as unknown as Array<{ id: string }>;
+
+            if (!existing) {
+              await dbClient.client`
+                INSERT INTO notifications (workspace_id, user_id, type, title, body, entity_type, entity_id)
+                VALUES (${ot.workspace_id}, ${ot.user_id}, 'TASK_OVERDUE', 'Task Overdue SLA Alert', ${'Task "' + ot.title + '" is past its scheduled due date.'}, 'task', ${ot.id});
+              `;
+              notified++;
+            }
           }
         }
 

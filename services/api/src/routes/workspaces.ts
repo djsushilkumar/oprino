@@ -89,4 +89,23 @@ export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async
       }
     },
   );
+
+  // GET /v1/workspaces/members - List members of active workspace
+  app.get(
+    '/v1/workspaces/members',
+    { preHandler: [authMiddleware.authenticate, authMiddleware.requireWorkspace] },
+    async (req, reply) => {
+      try {
+        const members = await workspaceService.listWorkspaceMembers(req.workspaceId!);
+        return reply.status(200).send({ members });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to list workspace members');
+        return reply.status(500).send({
+          statusCode: 500,
+          error: 'Internal Server Error',
+          message: 'Failed to retrieve workspace members',
+        });
+      }
+    },
+  );
 };

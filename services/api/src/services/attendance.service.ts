@@ -196,14 +196,37 @@ export class AttendanceService {
       }
 
       if (shiftRecord) {
-        // Compare shift start time with punch-in time in UTC
+        // Compare shift start time with punch-in time in shift's target timezone
         const [shiftHours, shiftMins] = shiftRecord.startTime.split(':').map(Number);
-        const punchHours = serverTimestamp.getUTCHours();
-        const punchMins = serverTimestamp.getUTCMinutes();
+        const shiftTz = shiftRecord.timezone || 'UTC';
+        let punchHours = serverTimestamp.getUTCHours();
+        let punchMins = serverTimestamp.getUTCMinutes();
+
+        try {
+          const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: shiftTz,
+            hour: 'numeric',
+            minute: 'numeric',
+            hourCycle: 'h23',
+          }).formatToParts(serverTimestamp);
+
+          for (const p of parts) {
+            if (p.type === 'hour') {
+              punchHours = Number(p.value);
+            } else if (p.type === 'minute') {
+              punchMins = Number(p.value);
+            }
+          }
+        } catch {
+          // If timezone string is invalid, fallback to UTC
+          punchHours = serverTimestamp.getUTCHours();
+          punchMins = serverTimestamp.getUTCMinutes();
+        }
+
         const shiftTotalMins = shiftHours * 60 + shiftMins;
         const punchTotalMins = punchHours * 60 + punchMins;
 
-        // If punch occurs after shift start time on regular same-day start
+        // If punch occurs after shift start time on regular same-day start (with 5 min grace)
         if (punchTotalMins > shiftTotalMins + 5) {
           isLate = true;
           lateMinutes = punchTotalMins - shiftTotalMins;

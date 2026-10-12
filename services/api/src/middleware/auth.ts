@@ -42,8 +42,14 @@ export function createAuthMiddleware(auth: Auth, deviceService: DeviceService, d
    */
   async function authenticate(req: FastifyRequest, reply: FastifyReply) {
     try {
+      const query = req.query as Record<string, string> | undefined;
+      const headers = { ...(req.headers as Record<string, string>) };
+      if (!headers.authorization && query?.token) {
+        headers.authorization = `Bearer ${query.token}`;
+      }
+
       const session = await auth.api.getSession({
-        headers: req.headers as Record<string, string>,
+        headers,
       });
 
       if (!session || !session.user) {
@@ -58,7 +64,8 @@ export function createAuthMiddleware(auth: Auth, deviceService: DeviceService, d
       req.session = session.session as any;
 
       // Stage 1B: Device / Installation Governance Check
-      const installationId = req.headers['x-installation-id'] as string | undefined;
+      const installationId =
+        (req.headers['x-installation-id'] as string | undefined) || query?.installationId;
       if (installationId) {
         req.installationId = installationId;
         const isRevoked = await deviceService.isInstallationRevoked(req.user!.id, installationId);
@@ -95,8 +102,10 @@ export function createAuthMiddleware(auth: Auth, deviceService: DeviceService, d
       });
     }
 
+    const query = req.query as Record<string, string> | undefined;
     const requestedWorkspaceId =
       (req.headers['x-workspace-id'] as string | undefined) ||
+      query?.workspaceId ||
       req.session?.activeWorkspaceId ||
       undefined;
 

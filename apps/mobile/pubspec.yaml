@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  sdk: '>=3.13.0 <4.0.0'
+  sdk: '>=3.4.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -24,7 +24,7 @@ dependencies:
   drift: ^2.28.0
   drift_flutter: ^0.2.4
   path_provider: ^2.1.5
-  path: ^1.9.1
+  path: ^1.9.0
 
   # Secure Enclave / Keystore Storage
   flutter_secure_storage: ^9.2.4

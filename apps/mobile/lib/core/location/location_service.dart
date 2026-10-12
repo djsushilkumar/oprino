@@ -237,16 +237,23 @@ class LocationService {
   /// Synchronously terminates GPS tracking and unhooks hardware when punching out (Duty State: OFF_DUTY).
   /// Strictly respects Duty-Hours-Only Invariant: Zero off-duty breadcrumbs collected or sent.
   Future<void> stopTracking() async {
-    _isTrackingActive = false;
-    _currentWorkspaceId = null;
-    _trackingStateController.add(false);
-
+    // 1. Immediately unhook hardware to prevent collecting off-duty points
     await _hardwareSub?.cancel();
     _hardwareSub = null;
 
     await adapter.stopTracking();
 
-    // Drop and clear any un-transmitted points to prevent leakage outside shift
+    // 2. Transmit any remaining on-duty points before deactivating tracking
+    if (_pointBuffer.isNotEmpty) {
+      await flushQueue();
+    }
+
+    // 3. Mark tracking inactive and reset duty context
+    _isTrackingActive = false;
+    _currentWorkspaceId = null;
+    _trackingStateController.add(false);
+
+    // 4. Drop and clear any remaining un-transmitted points to prevent leakage outside shift
     _pointBuffer.clear();
     _latestLocation = null;
     _locationController.add(null);

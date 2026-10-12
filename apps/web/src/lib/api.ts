@@ -69,6 +69,17 @@ import {
   type MarkNotificationReadResponse,
 } from '@oprino/contracts';
 
+export interface WorkspaceMember {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  membershipId: string;
+  roleId: string;
+  roleName: string;
+  status: string;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 const TOKEN_KEY = 'oprino_web_auth_token';
@@ -209,6 +220,10 @@ export const webApi = {
     });
     setStoredWorkspaceId(res.activeWorkspaceId);
     return res;
+  },
+
+  async listWorkspaceMembers(workspaceId?: string | null): Promise<{ members: WorkspaceMember[] }> {
+    return request<{ members: WorkspaceMember[] }>('/v1/workspaces/members', { method: 'GET' }, workspaceId);
   },
 
   // Phase 02B: Tasks

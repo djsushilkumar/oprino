@@ -404,6 +404,9 @@ class SyncService {
         final result = resultMap[m.id];
         if (result != null &&
             (result.status == 'APPLIED' ||
+                result.status == 'DUPLICATE_ACK' ||
+                result.status == 'APPLIED_OVERRIDE' ||
+                result.status == 'MERGED_PARTIAL' ||
                 result.status == 'DUPLICATE' ||
                 result.status == 'CONFLICT')) {
           await (db.update(db.outboxMutations)..where((row) => row.id.equals(m.id))).write(
@@ -412,11 +415,12 @@ class SyncService {
               updatedAt: Value(DateTime.now()),
             ),
           );
-        } else if (result != null && result.status == 'ERROR') {
+        } else if (result != null &&
+            (result.status == 'REJECTED_STALE' || result.status == 'ERROR')) {
           await (db.update(db.outboxMutations)..where((row) => row.id.equals(m.id))).write(
             OutboxMutationsCompanion(
               status: const Value('FAILED'),
-              lastError: Value(result.error),
+              lastError: Value(result.error ?? result.status),
               updatedAt: Value(DateTime.now()),
             ),
           );

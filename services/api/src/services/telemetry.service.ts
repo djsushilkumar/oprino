@@ -153,6 +153,24 @@ export class TelemetryService {
     await this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 
+      // Fetch latest point of current session prior to inserting new batch, to compute distance delta for validPoints[0]
+      const [lastKnownLocation] = await tx
+        .select({
+          id: employeeLocations.id,
+          latitude: employeeLocations.latitude,
+          longitude: employeeLocations.longitude,
+        })
+        .from(employeeLocations)
+        .where(
+          and(
+            eq(employeeLocations.workspaceId, workspaceId),
+            eq(employeeLocations.userId, userId),
+            eq(employeeLocations.sessionId, activeSession.id),
+          ),
+        )
+        .orderBy(desc(employeeLocations.recordedAt))
+        .limit(1);
+
       // Insert locations (idempotent on conflict)
       await tx
         .insert(employeeLocations)
@@ -177,8 +195,16 @@ export class TelemetryService {
         )
         .onConflictDoNothing({ target: employeeLocations.id });
 
-      // Calculate travel distance delta between consecutive points in batch
+      // Calculate travel distance delta between previous known point and incoming batch
       let batchDistanceMeters = 0;
+      if (lastKnownLocation && lastKnownLocation.id !== validPoints[0].id) {
+        batchDistanceMeters += calculateHaversineMeters(
+          lastKnownLocation.latitude,
+          lastKnownLocation.longitude,
+          validPoints[0].latitude,
+          validPoints[0].longitude,
+        );
+      }
       for (let i = 1; i < validPoints.length; i++) {
         const prev = validPoints[i - 1];
         const curr = validPoints[i];
