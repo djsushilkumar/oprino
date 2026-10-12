@@ -4,6 +4,7 @@ import {
   varchar,
   text,
   boolean,
+  integer,
   timestamp,
   jsonb,
   unique,
@@ -19,6 +20,8 @@ export const workspaces = pgTable('workspaces', {
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 100 }).notNull().unique(),
   status: varchar('status', { length: 50 }).notNull().default('ACTIVE'),
+  locationRetentionDays: integer('location_retention_days').notNull().default(30), // 7 | 30 | 90 | 180
+  attendancePolicy: varchar('attendance_policy', { length: 50 }).notNull().default('SIMPLE'), // 'SIMPLE' | 'GPS_REQUIRED' | 'SELFIE_REQUIRED' | 'GPS_AND_SELFIE_REQUIRED' | 'GEOFENCE_REQUIRED'
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
@@ -72,12 +75,44 @@ export const workspaceMemberships = pgTable(
     roleId: uuid('role_id')
       .notNull()
       .references(() => roles.id, { onDelete: 'restrict' }),
+    managerId: uuid('manager_id').references(() => users.id, { onDelete: 'set null' }),
     status: varchar('status', { length: 32 }).notNull().default('active'), // 'invited' | 'active' | 'suspended' | 'removed'
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     unique('workspace_memberships_workspace_user_idx').on(table.workspaceId, table.userId),
+  ],
+);
+
+/**
+ * TENANT-SCOPED: Workspace Invitations Table
+ * Tracks secure, single-use, cryptographically hashed employee invitation tokens.
+ */
+export const workspaceInvitations = pgTable(
+  'workspace_invitations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    email: varchar('email', { length: 255 }).notNull(),
+    name: varchar('name', { length: 255 }),
+    roleId: uuid('role_id')
+      .notNull()
+      .references(() => roles.id, { onDelete: 'cascade' }),
+    invitedBy: uuid('invited_by')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: varchar('token_hash', { length: 64 }).notNull().unique(), // SHA-256 hex
+    status: varchar('status', { length: 32 }).notNull().default('PENDING'), // 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED'
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique('workspace_invitations_token_hash_idx').on(table.tokenHash),
   ],
 );
 
@@ -133,7 +168,10 @@ export type RolePermission = typeof rolePermissions.$inferSelect;
 export type NewRolePermission = typeof rolePermissions.$inferInsert;
 export type WorkspaceMembership = typeof workspaceMemberships.$inferSelect;
 export type NewWorkspaceMembership = typeof workspaceMemberships.$inferInsert;
+export type WorkspaceInvitation = typeof workspaceInvitations.$inferSelect;
+export type NewWorkspaceInvitation = typeof workspaceInvitations.$inferInsert;
 export type UserDevice = typeof userDevices.$inferSelect;
 export type NewUserDevice = typeof userDevices.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;
+

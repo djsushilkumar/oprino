@@ -1,17 +1,23 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Auth } from '../auth/better-auth.js';
 import type { Database } from '@oprino/database';
-import { SignUpRequestSchema, SignInRequestSchema } from '@oprino/contracts';
+import type { WorkspaceService } from '../services/workspace.service.js';
+import {
+  SignUpRequestSchema,
+  SignInRequestSchema,
+  AcceptInvitationRequestSchema,
+} from '@oprino/contracts';
 import { workspaceMemberships } from '@oprino/database/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
 export interface AuthRoutesOptions {
   auth: Auth;
   db: Database;
+  workspaceService?: WorkspaceService;
 }
 
 export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, options) => {
-  const { auth, db } = options;
+  const { auth, db, workspaceService } = options;
 
   // Mount Better Auth Native Handler for /api/auth/* routes (Cookies, OAuth, session introspection)
   app.all('/api/auth/*', async (req, reply) => {
@@ -185,4 +191,76 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
       return reply.status(200).send({ success: true });
     }
   });
+
+  // GET /v1/auth/invitations/:token/validate - BLK-002: Validate activation token
+  app.get('/v1/auth/invitations/:token/validate', async (req, reply) => {
+    const { token } = req.params as { token: string };
+    if (!token || token.length < 16) {
+      return reply.status(400).send({
+        valid: false,
+        reason: 'INVALID_TOKEN_FORMAT',
+      });
+    }
+
+    try {
+      if (!workspaceService) {
+        return reply.status(500).send({ error: 'Workspace service not initialized' });
+      }
+
+      const result = await workspaceService.validateInvitationToken(token);
+      return reply.status(200).send(result);
+    } catch (err: any) {
+      req.log.error(err, 'Failed to validate invitation token');
+      return reply.status(500).send({
+        valid: false,
+        reason: 'VALIDATION_ERROR',
+      });
+    }
+  });
+
+  // POST /v1/auth/invitations/accept - BLK-002: Accept invitation and set own password
+  app.post(
+    '/v1/auth/invitations/accept',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: 60000,
+        },
+      },
+    },
+    async (req, reply) => {
+      const parsed = AcceptInvitationRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid invitation acceptance payload',
+          details: parsed.error.issues,
+        });
+      }
+
+      try {
+        if (!workspaceService) {
+          return reply.status(500).send({ error: 'Workspace service not initialized' });
+        }
+
+        const result = await workspaceService.acceptInvitation(parsed.data, auth);
+        return reply.status(200).send({
+          success: true,
+          message: 'Account successfully activated! You can now log in with your credentials.',
+          data: result,
+        });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to accept invitation');
+        const status = err.statusCode || 400;
+        return reply.status(status).send({
+          statusCode: status,
+          error: err.code || 'ACCEPT_INVITATION_FAILED',
+          message: err.message || 'Failed to activate account',
+        });
+      }
+    },
+  );
 };
+
