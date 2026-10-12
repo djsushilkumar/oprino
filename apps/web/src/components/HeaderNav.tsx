@@ -25,6 +25,7 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
     { label: 'Attendance', href: '/attendance', icon: 'attendance' },
     { label: 'Team', href: '/team', icon: 'team' },
     { label: 'Reports', href: '/reports', icon: 'reports' },
+    { label: 'Settings', href: '/settings', icon: 'settings' },
   ];
 
   return (
