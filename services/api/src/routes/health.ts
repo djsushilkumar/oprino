@@ -25,7 +25,7 @@ export const healthRoutes: FastifyPluginAsync<HealthRouteOptions> = async (app, 
       if (dbClient) {
         try {
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('DB health query timed out')), 2000),
+            setTimeout(() => reject(new Error('DB health query timed out')), 5000),
           );
           const queryPromise = dbClient.client`SELECT 1 as alive;`;
           await Promise.race([queryPromise, timeoutPromise]);

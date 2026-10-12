@@ -60,11 +60,16 @@ async function runSmokeTest() {
 
   // 1. Health check
   console.log('1. Checking Fastify API, PostgreSQL & Redis Health...');
-  const healthRes = await api('/health/ready', { headers: {} });
-  if (healthRes.status === 200 && healthRes.body.status === 'ok') {
+  let healthRes = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    healthRes = await api('/health/ready', { headers: {} });
+    if (healthRes.status === 200 && healthRes.body?.status === 'ok') break;
+    if (attempt < 3) await new Promise((r) => setTimeout(r, 2000));
+  }
+  if (healthRes && healthRes.status === 200 && healthRes.body?.status === 'ok') {
     pass(`API is healthy: db=${healthRes.body.services.database}, redis=${healthRes.body.services.redis}`);
   } else {
-    fail('Health check failed', healthRes.body);
+    fail('Health check failed', healthRes?.body);
   }
 
   // 1b. Validate/Bootstrap Session & Workspace
