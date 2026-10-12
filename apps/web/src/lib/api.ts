@@ -7,6 +7,8 @@ import {
   type WorkspaceResponse,
   type ListWorkspacesResponse,
   type SwitchWorkspaceResponse,
+  type AddWorkspaceMemberRequest,
+  type AddWorkspaceMemberResponse,
   // Phase 02B Tasks
   type TaskResponse,
   type ListTasksResponse,
@@ -227,6 +229,20 @@ export const webApi = {
 
   async listWorkspaceMembers(workspaceId?: string | null): Promise<{ members: WorkspaceMember[] }> {
     return request<{ members: WorkspaceMember[] }>('/v1/workspaces/members', { method: 'GET' }, workspaceId);
+  },
+
+  async addWorkspaceMember(
+    data: AddWorkspaceMemberRequest,
+    workspaceId?: string | null,
+  ): Promise<AddWorkspaceMemberResponse> {
+    return request<AddWorkspaceMemberResponse>(
+      '/v1/workspaces/members',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      workspaceId,
+    );
   },
 
   // Phase 02B: Tasks

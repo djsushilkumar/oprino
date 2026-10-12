@@ -22,6 +22,7 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
     { label: 'Visits', href: '/visits' },
     { label: 'Customers', href: '/customers' },
     { label: 'Attendance', href: '/attendance' },
+    { label: 'Team', href: '/team' },
     { label: 'Reports', href: '/reports' },
   ];
 

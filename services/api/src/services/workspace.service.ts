@@ -1,4 +1,5 @@
 import { eq, and, ne, sql } from 'drizzle-orm';
+import crypto from 'node:crypto';
 import type { Database } from '@oprino/database';
 import {
   workspaces,
@@ -10,6 +11,7 @@ import {
   users,
 } from '@oprino/database/schema';
 import { DEFAULT_ROLE_TEMPLATES } from '../auth/permissions.js';
+import type { Auth } from '../auth/better-auth.js';
 
 export interface CreateWorkspaceInput {
   name: string;
@@ -278,6 +280,139 @@ export class WorkspaceService {
           ne(workspaceMemberships.status, 'removed'),
         ),
       );
+  }
+
+  /**
+   * Add a new member to an active workspace with specified role.
+   */
+  async addWorkspaceMember(
+    workspaceId: string,
+    actorId: string,
+    input: {
+      name: string;
+      email: string;
+      password?: string;
+      roleName: 'Employee' | 'Manager';
+    },
+    auth?: Auth,
+  ) {
+    const email = input.email.toLowerCase().trim();
+    const name = input.name.trim();
+
+    // 1. Look for existing user by email
+    const [existingUser] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    let targetUserId: string;
+
+    if (existingUser) {
+      targetUserId = existingUser.id;
+
+      // Check if user already holds active membership in this workspace
+      const [existingMembership] = await this.db
+        .select()
+        .from(workspaceMemberships)
+        .where(
+          and(
+            eq(workspaceMemberships.workspaceId, workspaceId),
+            eq(workspaceMemberships.userId, targetUserId),
+          ),
+        )
+        .limit(1);
+
+      if (existingMembership && existingMembership.status === 'active') {
+        const error: any = new Error('This user is already an active member of this workspace');
+        error.statusCode = 409;
+        throw error;
+      }
+    } else {
+      // Create user via Better-Auth if auth is provided, else direct insert
+      if (auth && input.password) {
+        const created = await auth.api.signUpEmail({
+          body: {
+            email,
+            password: input.password,
+            name,
+          },
+        });
+        targetUserId = created.user.id;
+      } else {
+        const [newUser] = await this.db
+          .insert(users)
+          .values({
+            id: crypto.randomUUID(),
+            name,
+            email,
+            emailVerified: false,
+          })
+          .returning();
+        targetUserId = newUser.id;
+      }
+    }
+
+    return this.db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
+
+      // 2. Find target role in workspace
+      const targetRoleName = input.roleName === 'Manager' ? 'Manager' : 'Employee';
+      const [targetRole] = await tx
+        .select()
+        .from(roles)
+        .where(and(eq(roles.workspaceId, workspaceId), eq(roles.name, targetRoleName)))
+        .limit(1);
+
+      if (!targetRole) {
+        throw new Error(`Role '${targetRoleName}' not found in workspace`);
+      }
+
+      // 3. Create or update membership
+      const [membership] = await tx
+        .insert(workspaceMemberships)
+        .values({
+          workspaceId,
+          userId: targetUserId,
+          roleId: targetRole.id,
+          status: 'active',
+        })
+        .onConflictDoUpdate({
+          target: [workspaceMemberships.workspaceId, workspaceMemberships.userId],
+          set: {
+            roleId: targetRole.id,
+            status: 'active',
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+
+      // 4. Audit Log
+      await tx.insert(auditLogs).values({
+        workspaceId,
+        actorId,
+        action: 'member.added',
+        targetType: 'user',
+        targetId: targetUserId,
+        metadata: {
+          roleId: targetRole.id,
+          roleName: targetRole.name,
+          email,
+          name,
+        },
+      });
+
+      return {
+        id: targetUserId,
+        name,
+        email,
+        image: null,
+        membershipId: membership.id,
+        roleId: targetRole.id,
+        roleName: targetRole.name,
+        status: 'active',
+      };
+    });
   }
 }
 

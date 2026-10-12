@@ -1,15 +1,22 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { WorkspaceService } from '../services/workspace.service.js';
 import type { createAuthMiddleware } from '../middleware/auth.js';
-import { CreateWorkspaceRequestSchema, SwitchWorkspaceRequestSchema } from '@oprino/contracts';
+import type { Auth } from '../auth/better-auth.js';
+import {
+  CreateWorkspaceRequestSchema,
+  SwitchWorkspaceRequestSchema,
+  AddWorkspaceMemberRequestSchema,
+} from '@oprino/contracts';
+import { PERMISSIONS } from '../auth/permissions.js';
 
 export interface WorkspaceRoutesOptions {
   workspaceService: WorkspaceService;
   authMiddleware: ReturnType<typeof createAuthMiddleware>;
+  auth?: Auth;
 }
 
 export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async (app, options) => {
-  const { workspaceService, authMiddleware } = options;
+  const { workspaceService, authMiddleware, auth } = options;
 
   // POST /v1/workspaces - Create Workspace atomically
   app.post('/v1/workspaces', { preHandler: [authMiddleware.authenticate] }, async (req, reply) => {
@@ -104,6 +111,51 @@ export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async
           statusCode: 500,
           error: 'Internal Server Error',
           message: 'Failed to retrieve workspace members',
+        });
+      }
+    },
+  );
+
+  // POST /v1/workspaces/members - Add a new member to the active workspace
+  app.post(
+    '/v1/workspaces/members',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.MEMBERS_MANAGE),
+      ],
+    },
+    async (req, reply) => {
+      const parsed = AddWorkspaceMemberRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid member payload',
+          details: parsed.error.issues,
+        });
+      }
+
+      try {
+        const result = await workspaceService.addWorkspaceMember(
+          req.workspaceId!,
+          req.user!.id,
+          parsed.data,
+          auth,
+        );
+
+        return reply.status(201).send({
+          member: result,
+          message: `${result.roleName} added successfully`,
+        });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to add workspace member');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: err.code || 'ADD_MEMBER_FAILED',
+          message: err.message || 'Failed to add workspace member',
         });
       }
     },

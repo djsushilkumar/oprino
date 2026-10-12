@@ -59,9 +59,48 @@ export const SwitchWorkspaceResponseSchema = z
   })
   .openapi('SwitchWorkspaceResponse');
 
+export const AddWorkspaceMemberRequestSchema = z
+  .object({
+    name: z.string().min(2).max(255).openapi({ example: 'Ramesh Kumar' }),
+    email: z.string().email().openapi({ example: 'ramesh@oprino.com' }),
+    password: z.string().min(8).openapi({ example: 'Password123!' }),
+    roleName: z.enum(['Employee', 'Manager']).default('Employee').openapi({ example: 'Employee' }),
+  })
+  .openapi('AddWorkspaceMemberRequest');
+
+export const WorkspaceMemberSchema = z
+  .object({
+    id: z.string().uuid().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    name: z.string().openapi({ example: 'Ramesh Kumar' }),
+    email: z.string().email().openapi({ example: 'ramesh@oprino.com' }),
+    image: z.string().nullable().optional(),
+    membershipId: z.string().uuid().openapi({ example: 'm1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    roleId: z.string().uuid().openapi({ example: 'r1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    roleName: z.string().openapi({ example: 'Employee' }),
+    status: z.string().openapi({ example: 'active' }),
+  })
+  .openapi('WorkspaceMember');
+
+export const AddWorkspaceMemberResponseSchema = z
+  .object({
+    member: WorkspaceMemberSchema,
+    message: z.string().openapi({ example: 'Member added successfully' }),
+  })
+  .openapi('AddWorkspaceMemberResponse');
+
+export const ListWorkspaceMembersResponseSchema = z
+  .object({
+    members: z.array(WorkspaceMemberSchema),
+  })
+  .openapi('ListWorkspaceMembersResponse');
+
 export type CreateWorkspaceRequest = z.infer<typeof CreateWorkspaceRequestSchema>;
 export type WorkspaceResponse = z.infer<typeof WorkspaceResponseSchema>;
 export type WorkspaceListItem = z.infer<typeof WorkspaceListItemSchema>;
 export type ListWorkspacesResponse = z.infer<typeof ListWorkspacesResponseSchema>;
 export type SwitchWorkspaceRequest = z.infer<typeof SwitchWorkspaceRequestSchema>;
 export type SwitchWorkspaceResponse = z.infer<typeof SwitchWorkspaceResponseSchema>;
+export type AddWorkspaceMemberRequest = z.infer<typeof AddWorkspaceMemberRequestSchema>;
+export type WorkspaceMember = z.infer<typeof WorkspaceMemberSchema>;
+export type AddWorkspaceMemberResponse = z.infer<typeof AddWorkspaceMemberResponseSchema>;
+export type ListWorkspaceMembersResponse = z.infer<typeof ListWorkspaceMembersResponseSchema>;
