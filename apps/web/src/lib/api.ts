@@ -83,15 +83,6 @@ export function getApiBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3001';
-    }
-    return 'https://oprino-api.onrender.com';
-  }
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3001';
-  }
   return 'https://oprino-api.onrender.com';
 }
 
@@ -151,7 +142,6 @@ async function request<T>(
   const res = await fetch(`${baseUrl}${endpoint}`, {
     ...options,
     headers,
-    credentials: 'include',
   });
 
   const contentType = res.headers.get('content-type');
