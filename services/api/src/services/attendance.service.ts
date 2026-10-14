@@ -7,11 +7,12 @@ import {
   attendanceEvents,
   users,
 } from '@oprino/database/schema';
+import type { MediaService } from './media.service.js';
 
 export interface CreateShiftDto {
   name: string;
   startTime: string; // "09:00" or "22:00"
-  endTime: string;   // "17:00" or "06:00"
+  endTime: string; // "17:00" or "06:00"
   timezone?: string;
 }
 
@@ -31,7 +32,10 @@ export interface PunchOutDto {
 }
 
 export class AttendanceService {
-  constructor(private db: Database) {}
+  constructor(
+    private db: Database,
+    private mediaService?: MediaService,
+  ) {}
 
   /**
    * Creates a tenant-scoped shift schedule.
@@ -77,7 +81,9 @@ export class AttendanceService {
       const rows = await tx
         .select()
         .from(attendanceShifts)
-        .where(and(eq(attendanceShifts.workspaceId, workspaceId), eq(attendanceShifts.isActive, true)))
+        .where(
+          and(eq(attendanceShifts.workspaceId, workspaceId), eq(attendanceShifts.isActive, true)),
+        )
         .orderBy(desc(attendanceShifts.createdAt));
 
       return {
@@ -253,7 +259,9 @@ export class AttendanceService {
 
       if (policy === 'SELFIE_REQUIRED' || policy === 'GPS_AND_SELFIE_REQUIRED') {
         if (!input.selfieMediaKey) {
-          const error: any = new Error('A verified selfie photo is required to punch in under company attendance policy.');
+          const error: any = new Error(
+            'A verified selfie photo is required to punch in under company attendance policy.',
+          );
           error.statusCode = 400;
           error.code = 'MISSING_REQUIRED_SELFIE';
           throw error;
@@ -262,7 +270,9 @@ export class AttendanceService {
 
       if (policy === 'GPS_REQUIRED' || policy === 'GPS_AND_SELFIE_REQUIRED') {
         if (input.latitude === undefined || input.longitude === undefined) {
-          const error: any = new Error('GPS coordinates are required to punch in under company attendance policy.');
+          const error: any = new Error(
+            'GPS coordinates are required to punch in under company attendance policy.',
+          );
           error.statusCode = 400;
           error.code = 'MISSING_REQUIRED_GPS';
           throw error;
@@ -272,10 +282,28 @@ export class AttendanceService {
       if (input.selfieMediaKey) {
         // Validate tenant barrier: must start with workspaceId/
         if (!input.selfieMediaKey.startsWith(`${workspaceId}/`)) {
-          const error: any = new Error('Security barrier violation: selfie photo must belong to active workspace');
+          const error: any = new Error(
+            'Security barrier violation: selfie photo must belong to active workspace',
+          );
           error.statusCode = 403;
           error.code = 'FORBIDDEN_MEDIA_ACCESS';
           throw error;
+        }
+
+        // Validate storage existence: ensure image binary was actually uploaded to storage
+        if (this.mediaService) {
+          const exists = await this.mediaService.verifyMediaExists(
+            workspaceId,
+            input.selfieMediaKey,
+          );
+          if (!exists) {
+            const error: any = new Error(
+              'Selfie photo binary does not exist in storage. The direct binary upload must complete before punching in.',
+            );
+            error.statusCode = 400;
+            error.code = 'MISSING_SELFIE_BINARY';
+            throw error;
+          }
         }
 
         // Prevent replay of unrelated selfie evidence across sessions
@@ -292,7 +320,9 @@ export class AttendanceService {
           .limit(1);
 
         if (existingWithSelfie) {
-          const error: any = new Error('Replay detected: This selfie evidence has already been submitted for another session.');
+          const error: any = new Error(
+            'Replay detected: This selfie evidence has already been submitted for another session.',
+          );
           error.statusCode = 400;
           error.code = 'SELFIE_REPLAY_DETECTED';
           throw error;
@@ -339,12 +369,7 @@ export class AttendanceService {
 
       const [user] = await tx.select().from(users).where(eq(users.id, userId));
 
-      return this.formatSession(
-        newSession,
-        user?.name,
-        user?.email,
-        shiftRecord?.name,
-      );
+      return this.formatSession(newSession, user?.name, user?.email, shiftRecord?.name);
     });
   }
 
@@ -512,20 +537,10 @@ export class AttendanceService {
       return {
         dutyState,
         activeSession: active
-          ? this.formatSession(
-              active.session,
-              active.userName,
-              active.userEmail,
-              active.shiftName,
-            )
+          ? this.formatSession(active.session, active.userName, active.userEmail, active.shiftName)
           : null,
         lastSession: last
-          ? this.formatSession(
-              last.session,
-              last.userName,
-              last.userEmail,
-              last.shiftName,
-            )
+          ? this.formatSession(last.session, last.userName, last.userEmail, last.shiftName)
           : null,
         assignedShift: null,
         serverTime,

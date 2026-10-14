@@ -19,6 +19,16 @@ export const EnvSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
   ENABLE_PROMETHEUS: z.coerce.boolean().default(true),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
+
+  // Object Storage (Cloudflare R2 / AWS S3 / Local Dev Storage)
+  STORAGE_DRIVER: z.enum(['s3', 'local']).default('local'),
+  S3_ENDPOINT: z.string().url().optional(),
+  S3_BUCKET_NAME: z.string().optional(),
+  S3_REGION: z.string().default('auto'),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  S3_FORCE_PATH_STYLE: z.coerce.boolean().default(false),
+  LOCAL_STORAGE_DIR: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -29,5 +39,23 @@ export function validateEnv(customEnv?: Record<string, unknown>): Env {
     console.error('❌ Invalid API environment variables:', result.error.format());
     throw new Error('Invalid API environment configuration');
   }
+
+  // Security Invariant: Never allow fake or unconfigured storage in production
+  if (result.data.NODE_ENV === 'production') {
+    const isMissingS3 =
+      !result.data.S3_BUCKET_NAME ||
+      !result.data.S3_ACCESS_KEY_ID ||
+      !result.data.S3_SECRET_ACCESS_KEY;
+
+    if (result.data.STORAGE_DRIVER !== 's3' || isMissingS3) {
+      console.error(
+        '❌ Production Storage Misconfiguration: Real S3/R2 object storage credentials (S3_BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY) are strictly mandatory in production.',
+      );
+      throw new Error(
+        'Production environment requires valid S3/R2 storage configuration. Silent fallback to mock storage is strictly forbidden.',
+      );
+    }
+  }
+
   return result.data;
 }

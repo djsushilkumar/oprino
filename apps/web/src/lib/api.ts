@@ -245,7 +245,11 @@ export const webApi = {
   },
 
   async listWorkspaceMembers(workspaceId?: string | null): Promise<{ members: WorkspaceMember[] }> {
-    return request<{ members: WorkspaceMember[] }>('/v1/workspaces/members', { method: 'GET' }, workspaceId);
+    return request<{ members: WorkspaceMember[] }>(
+      '/v1/workspaces/members',
+      { method: 'GET' },
+      workspaceId,
+    );
   },
 
   async addWorkspaceMember(
@@ -379,19 +383,25 @@ export const webApi = {
     fileName: string;
     contentType: string;
   }): Promise<{ uploadUrl: string; mediaKey: string }> {
-    return request<{ uploadUrl: string; mediaKey: string }>(
-      '/v1/media/attendance-selfie-url',
+    return request<{ uploadUrl: string; mediaKey: string }>('/v1/media/attendance-selfie-url', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getMediaDownloadUrl(mediaKey: string): Promise<string> {
+    const res = await request<{ downloadUrl: string; fileKey: string; expiresInSeconds: number }>(
+      '/v1/media/download-url',
       {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ fileKey: mediaKey }),
       },
     );
+    return res.downloadUrl;
   },
 
   getMediaFileUrl(mediaKey: string): string {
-    const token = getStoredToken();
-    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
-    return `${getApiBaseUrl()}/v1/media/files/${encodeURIComponent(mediaKey)}${tokenParam}`;
+    return `${getApiBaseUrl()}/v1/media/files/${encodeURIComponent(mediaKey)}`;
   },
 
   // Phase 02B: Tasks
@@ -748,4 +758,3 @@ export const webApi = {
     });
   },
 };
-

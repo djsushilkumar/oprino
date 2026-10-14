@@ -41,11 +41,13 @@ import { syncRoutes } from './routes/sync.js';
 import { schedulingRoutes } from './routes/scheduling.js';
 import { reportRoutes } from './routes/reports.js';
 import { notificationRoutes } from './routes/notifications.js';
+import { createStorageDriver, type StorageDriver } from './storage/index.js';
 
 export function buildServer(options?: {
   env?: Record<string, unknown>;
   logger?: boolean;
   dbClient?: ReturnType<typeof createDatabaseClient>;
+  storageDriver?: StorageDriver;
 }): {
   app: FastifyInstance;
   env: Env;
@@ -58,6 +60,7 @@ export function buildServer(options?: {
   customerService: CustomerService;
   visitService: VisitService;
   mediaService: MediaService;
+  storageDriver: StorageDriver;
   syncService: SyncService;
   schedulingService: SchedulingService;
   reportService: ReportService;
@@ -90,11 +93,12 @@ export function buildServer(options?: {
   const deviceService = new DeviceService(dbClient.db);
   const workspaceService = new WorkspaceService(dbClient.db);
   const taskService = new TaskService(dbClient.db);
-  const attendanceService = new AttendanceService(dbClient.db);
+  const storageDriver = options?.storageDriver ?? createStorageDriver(env);
+  const mediaService = new MediaService(dbClient.db, storageDriver, env.API_PUBLIC_URL);
+  const attendanceService = new AttendanceService(dbClient.db, mediaService);
   const telemetryService = new TelemetryService(dbClient.db, pubsub);
   const customerService = new CustomerService(dbClient.db);
   const visitService = new VisitService(dbClient.db);
-  const mediaService = new MediaService(dbClient.db, env.API_PUBLIC_URL);
   const syncService = new SyncService(dbClient.db);
   const schedulingService = new SchedulingService(dbClient.db);
   const reportService = new ReportService(dbClient.db);
@@ -137,7 +141,9 @@ export function buildServer(options?: {
     'oprino://app',
   ];
   if (env.CORS_ORIGINS) {
-    const extraOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+    const extraOrigins = env.CORS_ORIGINS.split(',')
+      .map((o) => o.trim())
+      .filter(Boolean);
     allowedOrigins.push(...extraOrigins);
   }
 
@@ -246,6 +252,7 @@ export function buildServer(options?: {
     customerService,
     visitService,
     mediaService,
+    storageDriver,
     syncService,
     schedulingService,
     reportService,

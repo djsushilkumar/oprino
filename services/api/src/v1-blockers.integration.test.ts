@@ -329,7 +329,11 @@ describe('V1 Release Blockers Remediation Integration Tests (BLK-002 through BLK
     test('4. Batch with duplicates, invalid emails, and formula injection sanitization', async () => {
       const duplicateEmail = `dupe.${Date.now()}@example.com`;
       const mixedBatch = [
-        { name: '=cmd|"/c calc"!A0', email: `safe.${Date.now()}@example.com`, role: 'Employee' as const },
+        {
+          name: '=cmd|"/c calc"!A0',
+          email: `safe.${Date.now()}@example.com`,
+          role: 'Employee' as const,
+        },
         { name: 'Duplicate One', email: duplicateEmail, role: 'Employee' as const },
         { name: 'Duplicate Two', email: duplicateEmail, role: 'Employee' as const },
         { name: 'Invalid Email Person', email: 'not-an-email', role: 'Employee' as const },
@@ -370,7 +374,9 @@ describe('V1 Release Blockers Remediation Integration Tests (BLK-002 through BLK
           'x-workspace-id': workspaceAId,
         },
         payload: {
-          members: [{ name: 'Unauthorized', email: `unauth.${Date.now()}@example.com`, role: 'Employee' }],
+          members: [
+            { name: 'Unauthorized', email: `unauth.${Date.now()}@example.com`, role: 'Employee' },
+          ],
         },
       });
 
@@ -482,7 +488,7 @@ describe('V1 Release Blockers Remediation Integration Tests (BLK-002 through BLK
           idempotencyKey: `punch-with-selfie-${Date.now()}`,
           selfieMediaKey: fileKey,
           latitude: 28.6139,
-          longitude: 77.2090,
+          longitude: 77.209,
           accuracy: 8.5,
           note: 'Punch in with front-camera selfie',
         },
@@ -493,7 +499,7 @@ describe('V1 Release Blockers Remediation Integration Tests (BLK-002 through BLK
       assert.strictEqual(session.status, 'ON_DUTY');
       assert.strictEqual(session.selfieMediaKey, fileKey);
       assert.strictEqual(session.punchInLatitude, 28.6139);
-      assert.strictEqual(session.punchInLongitude, 77.2090);
+      assert.strictEqual(session.punchInLongitude, 77.209);
 
       // Punch out
       await app.inject({
@@ -518,6 +524,14 @@ describe('V1 Release Blockers Remediation Integration Tests (BLK-002 through BLK
         },
       });
       const { fileKey } = uploadUrlRes.json();
+
+      // Upload selfie binary to storage
+      await app.inject({
+        method: 'PUT',
+        url: `/v1/media/storage/upload/${encodeURIComponent(fileKey)}`,
+        headers: { 'content-type': 'image/jpeg' },
+        payload: Buffer.from('fake-selfie-bytes-replay-test'),
+      });
 
       // First punch with fileKey
       await app.inject({

@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
 import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken } from '../../lib/api';
-import type { MeResponse, TeamAttendanceResponse, AttendanceSessionResponse } from '@oprino/contracts';
+import type {
+  MeResponse,
+  TeamAttendanceResponse,
+  AttendanceSessionResponse,
+} from '@oprino/contracts';
 
 export default function AttendancePage() {
   const router = useRouter();
@@ -16,6 +20,39 @@ export default function AttendancePage() {
 
   // Selfie Preview Modal State (BLK-004)
   const [previewSession, setPreviewSession] = useState<AttendanceSessionResponse | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [isLoadingPreviewImage, setIsLoadingPreviewImage] = useState(false);
+
+  useEffect(() => {
+    if (!previewSession?.selfieMediaKey) {
+      setPreviewImageUrl(null);
+      setIsLoadingPreviewImage(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingPreviewImage(true);
+    setPreviewImageUrl(null);
+
+    webApi
+      .getMediaDownloadUrl(previewSession.selfieMediaKey)
+      .then((url) => {
+        if (isMounted) {
+          setPreviewImageUrl(url);
+          setIsLoadingPreviewImage(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setPreviewImageUrl(webApi.getMediaFileUrl(previewSession.selfieMediaKey!));
+          setIsLoadingPreviewImage(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [previewSession]);
 
   const loadData = useCallback(async () => {
     const token = getStoredToken();
@@ -80,14 +117,44 @@ export default function AttendancePage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#F8FAFC',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <HeaderNav context={context} onSignOut={handleSignOut} />
 
-      <main style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '2rem 1.5rem', flex: 1 }}>
+      <main
+        style={{
+          maxWidth: '1200px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '2rem 1.5rem',
+          flex: 1,
+        }}
+      >
         {/* Top Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.5rem',
+          }}
+        >
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+            <h1
+              style={{
+                fontSize: '1.75rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                margin: 0,
+                letterSpacing: '-0.02em',
+              }}
+            >
               Attendance & Duty Hours
             </h1>
             <p style={{ color: '#64748B', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
@@ -146,67 +213,204 @@ export default function AttendancePage() {
         )}
 
         {/* Metric Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-          <div style={{ padding: '1.25rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '1.25rem',
+            marginBottom: '2rem',
+          }}
+        >
+          <div
+            style={{
+              padding: '1.25rem',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '10px',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                color: '#64748B',
+                textTransform: 'uppercase',
+              }}
+            >
               Currently On Duty
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10B981', marginTop: '0.5rem' }}>
+            <div
+              style={{ fontSize: '2rem', fontWeight: 800, color: '#10B981', marginTop: '0.5rem' }}
+            >
               {teamData?.onDutyCount ?? 0}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '0.25rem' }}>Active staff on shift</div>
+            <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '0.25rem' }}>
+              Active staff on shift
+            </div>
           </div>
 
-          <div style={{ padding: '1.25rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>
+          <div
+            style={{
+              padding: '1.25rem',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '10px',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                color: '#64748B',
+                textTransform: 'uppercase',
+              }}
+            >
               Punched Out (Recent)
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#475569', marginTop: '0.5rem' }}>
+            <div
+              style={{ fontSize: '2rem', fontWeight: 800, color: '#475569', marginTop: '0.5rem' }}
+            >
               {teamData?.offDutyCount ?? 0}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '0.25rem' }}>Completed shifts recorded</div>
+            <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '0.25rem' }}>
+              Completed shifts recorded
+            </div>
           </div>
         </div>
 
         {/* Section 1: Active On-Duty Staff */}
         <div style={{ marginBottom: '2.5rem' }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem' }}>
+          <h2
+            style={{
+              fontSize: '1.125rem',
+              fontWeight: 700,
+              color: '#0F172A',
+              marginBottom: '1rem',
+            }}
+          >
             Currently On Duty ({teamData?.activeSessions.length ?? 0})
           </h2>
 
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '8px',
+              border: '1px solid #E2E8F0',
+              overflow: 'hidden',
+            }}
+          >
             {isLoading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#64748B', fontSize: '0.875rem' }}>
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#64748B',
+                  fontSize: '0.875rem',
+                }}
+              >
                 Loading attendance...
               </div>
             ) : teamData?.activeSessions.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#64748B', fontSize: '0.875rem' }}>
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#64748B',
+                  fontSize: '0.875rem',
+                }}
+              >
                 No workers currently on duty in this workspace.
               </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Worker</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Status</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Shift</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Punch In Time</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Verification Evidence</th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Worker
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Shift
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Punch In Time
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Verification Evidence
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {teamData?.activeSessions.map((session: AttendanceSessionResponse) => {
                     const hasSelfie = !!session.selfieMediaKey;
-                    const hasGps = session.punchInLatitude !== null && session.punchInLatitude !== undefined;
+                    const hasGps =
+                      session.punchInLatitude !== null && session.punchInLatitude !== undefined;
 
                     return (
                       <tr key={session.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                         <td style={{ padding: '1rem' }}>
-                          <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.875rem' }}>{session.userName || 'Employee'}</div>
-                          <div style={{ color: '#64748B', fontSize: '0.75rem' }}>{session.userEmail}</div>
+                          <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.875rem' }}>
+                            {session.userName || 'Employee'}
+                          </div>
+                          <div style={{ color: '#64748B', fontSize: '0.75rem' }}>
+                            {session.userEmail}
+                          </div>
                         </td>
                         <td style={{ padding: '1rem' }}>
-                          <span style={{ padding: '0.2rem 0.5rem', backgroundColor: '#ECFDF5', color: '#059669', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          <span
+                            style={{
+                              padding: '0.2rem 0.5rem',
+                              backgroundColor: '#ECFDF5',
+                              color: '#059669',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                            }}
+                          >
                             ON DUTY
                           </span>
                         </td>
@@ -214,10 +418,21 @@ export default function AttendancePage() {
                           {session.shiftName || 'General Shift'}
                         </td>
                         <td style={{ padding: '1rem', fontSize: '0.8125rem', color: '#334155' }}>
-                          {new Date(session.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(session.punchInTime).toLocaleDateString()})
+                          {new Date(session.punchInTime).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}{' '}
+                          ({new Date(session.punchInTime).toLocaleDateString()})
                         </td>
                         <td style={{ padding: '1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              flexWrap: 'wrap',
+                            }}
+                          >
                             {hasSelfie && (
                               <button
                                 onClick={() => setPreviewSession(session)}
@@ -256,7 +471,9 @@ export default function AttendancePage() {
                             )}
 
                             {!hasSelfie && !hasGps && (
-                              <span style={{ color: '#94A3B8', fontSize: '0.75rem' }}>Standard Punch</span>
+                              <span style={{ color: '#94A3B8', fontSize: '0.75rem' }}>
+                                Standard Punch
+                              </span>
                             )}
                           </div>
                         </td>
@@ -271,58 +488,169 @@ export default function AttendancePage() {
 
         {/* Section 2: Completed Shifts History */}
         <div>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem' }}>
+          <h2
+            style={{
+              fontSize: '1.125rem',
+              fontWeight: 700,
+              color: '#0F172A',
+              marginBottom: '1rem',
+            }}
+          >
             Recent Duty Sessions ({teamData?.history.length ?? 0})
           </h2>
 
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '8px',
+              border: '1px solid #E2E8F0',
+              overflow: 'hidden',
+            }}
+          >
             {isLoading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#64748B', fontSize: '0.875rem' }}>
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#64748B',
+                  fontSize: '0.875rem',
+                }}
+              >
                 Loading session history...
               </div>
             ) : teamData?.history.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#64748B', fontSize: '0.875rem' }}>
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#64748B',
+                  fontSize: '0.875rem',
+                }}
+              >
                 No completed duty sessions logged yet.
               </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Worker</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Shift</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Punch In</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Punch Out</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Duration</th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Verification Evidence</th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Worker
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Shift
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Punch In
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Punch Out
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Duration
+                    </th>
+                    <th
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#64748B',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Verification Evidence
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {teamData?.history.map((session: AttendanceSessionResponse) => {
                     const hasSelfie = !!session.selfieMediaKey;
-                    const hasGps = session.punchInLatitude !== null && session.punchInLatitude !== undefined;
+                    const hasGps =
+                      session.punchInLatitude !== null && session.punchInLatitude !== undefined;
 
                     return (
                       <tr key={session.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                         <td style={{ padding: '1rem' }}>
-                          <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.875rem' }}>{session.userName || 'Employee'}</div>
-                          <div style={{ color: '#64748B', fontSize: '0.75rem' }}>{session.userEmail}</div>
+                          <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.875rem' }}>
+                            {session.userName || 'Employee'}
+                          </div>
+                          <div style={{ color: '#64748B', fontSize: '0.75rem' }}>
+                            {session.userEmail}
+                          </div>
                         </td>
                         <td style={{ padding: '1rem', fontSize: '0.8125rem', color: '#475569' }}>
                           {session.shiftName || 'General Shift'}
                         </td>
                         <td style={{ padding: '1rem', fontSize: '0.8125rem', color: '#334155' }}>
-                          {new Date(session.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(session.punchInTime).toLocaleDateString()})
+                          {new Date(session.punchInTime).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}{' '}
+                          ({new Date(session.punchInTime).toLocaleDateString()})
                         </td>
                         <td style={{ padding: '1rem', fontSize: '0.8125rem', color: '#334155' }}>
                           {session.punchOutTime
                             ? `${new Date(session.punchOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (${new Date(session.punchOutTime).toLocaleDateString()})`
                             : '—'}
                         </td>
-                        <td style={{ padding: '1rem', fontSize: '0.8125rem', fontWeight: 600, color: '#0F172A' }}>
+                        <td
+                          style={{
+                            padding: '1rem',
+                            fontSize: '0.8125rem',
+                            fontWeight: 600,
+                            color: '#0F172A',
+                          }}
+                        >
                           {formatDuration(session.durationMinutes)}
                         </td>
                         <td style={{ padding: '1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              flexWrap: 'wrap',
+                            }}
+                          >
                             {hasSelfie && (
                               <button
                                 onClick={() => setPreviewSession(session)}
@@ -361,7 +689,9 @@ export default function AttendancePage() {
                             )}
 
                             {!hasSelfie && !hasGps && (
-                              <span style={{ color: '#94A3B8', fontSize: '0.75rem' }}>Standard Punch</span>
+                              <span style={{ color: '#94A3B8', fontSize: '0.75rem' }}>
+                                Standard Punch
+                              </span>
                             )}
                           </div>
                         </td>
@@ -420,13 +750,27 @@ export default function AttendancePage() {
               </div>
               <button
                 onClick={() => setPreviewSession(null)}
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748B', cursor: 'pointer' }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.25rem',
+                  color: '#64748B',
+                  cursor: 'pointer',
+                }}
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <div
+              style={{
+                padding: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem',
+              }}
+            >
               {previewSession.selfieMediaKey ? (
                 <div
                   style={{
@@ -441,40 +785,86 @@ export default function AttendancePage() {
                     justifyContent: 'center',
                   }}
                 >
-                  <img
-                    src={webApi.getMediaFileUrl(previewSession.selfieMediaKey)}
-                    alt="Attendance Selfie"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => {
-                      // Fallback placeholder if image not accessible
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
+                  {isLoadingPreviewImage ? (
+                    <div style={{ color: '#64748B', fontSize: '0.875rem' }}>
+                      Loading verified photo...
+                    </div>
+                  ) : previewImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={previewImageUrl}
+                      alt="Attendance Selfie"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div style={{ color: '#DC2626', fontSize: '0.875rem' }}>
+                      Unable to load selfie
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div style={{ color: '#64748B', padding: '2rem' }}>No photo recorded for this session.</div>
+                <div style={{ color: '#64748B', padding: '2rem' }}>
+                  No photo recorded for this session.
+                </div>
               )}
 
-              <div style={{ width: '100%', backgroundColor: '#F8FAFC', borderRadius: '10px', padding: '1rem', fontSize: '0.8125rem', color: '#334155' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+              <div
+                style={{
+                  width: '100%',
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: '10px',
+                  padding: '1rem',
+                  fontSize: '0.8125rem',
+                  color: '#334155',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.35rem',
+                  }}
+                >
                   <span style={{ color: '#64748B' }}>Worker:</span>
                   <span style={{ fontWeight: 600 }}>{previewSession.userName || 'Employee'}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.35rem',
+                  }}
+                >
                   <span style={{ color: '#64748B' }}>Punch In Time:</span>
-                  <span style={{ fontWeight: 600 }}>{new Date(previewSession.punchInTime).toLocaleString()}</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {new Date(previewSession.punchInTime).toLocaleString()}
+                  </span>
                 </div>
-                {previewSession.punchInLatitude !== null && previewSession.punchInLatitude !== undefined && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                    <span style={{ color: '#64748B' }}>GPS Coordinates:</span>
-                    <span style={{ fontWeight: 600 }}>
-                      {previewSession.punchInLatitude.toFixed(5)}, {previewSession.punchInLongitude?.toFixed(5)} (±{Math.round(previewSession.punchInAccuracy ?? 0)}m)
-                    </span>
-                  </div>
-                )}
+                {previewSession.punchInLatitude !== null &&
+                  previewSession.punchInLatitude !== undefined && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginBottom: '0.35rem',
+                      }}
+                    >
+                      <span style={{ color: '#64748B' }}>GPS Coordinates:</span>
+                      <span style={{ fontWeight: 600 }}>
+                        {previewSession.punchInLatitude.toFixed(5)},{' '}
+                        {previewSession.punchInLongitude?.toFixed(5)} (±
+                        {Math.round(previewSession.punchInAccuracy ?? 0)}m)
+                      </span>
+                    </div>
+                  )}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#64748B' }}>Shift:</span>
-                  <span style={{ fontWeight: 600 }}>{previewSession.shiftName || 'General Shift'}</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {previewSession.shiftName || 'General Shift'}
+                  </span>
                 </div>
               </div>
 
@@ -490,11 +880,20 @@ export default function AttendancePage() {
                   border: '1px solid #FEF3C7',
                 }}
               >
-                <strong>Compliance Notice:</strong> This photographic proof is stored in multi-tenant isolated media storage and provided for manager visual verification under company policy. Automated biometric facial identification is not conducted.
+                <strong>Compliance Notice:</strong> This photographic proof is stored in
+                multi-tenant isolated media storage and provided for manager visual verification
+                under company policy. Automated biometric facial identification is not conducted.
               </div>
             </div>
 
-            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'flex-end' }}>
+            <div
+              style={{
+                padding: '1rem 1.5rem',
+                borderTop: '1px solid #E2E8F0',
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}
+            >
               <button
                 onClick={() => setPreviewSession(null)}
                 style={{
