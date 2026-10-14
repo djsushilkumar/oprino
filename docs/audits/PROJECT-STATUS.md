@@ -104,6 +104,11 @@ Despite positive integration test results, our repository audit revealed major g
 ### G. SaaS Subscription & Billing Engine is Missing
 - There are no database tables, Stripe/Razorpay webhooks, or tier gating in the codebase. Subscription billing is deferred to post-pilot.
 
+### H. Mobile Dart Client Contract Desynchronization on Punch-In (CI Discovery)
+- **Finding:** In GitHub Actions CI (Run ID `38538192275`), TypeScript tests (122/122) and the full E2E smoke test pass 100% green, but `flutter analyze` failed with `undefined_named_parameter`.
+- **Root Cause:** In branch `feat/v1-blockers-remediation`, `apps/mobile/lib/core/sync/sync_service.dart` was updated to pass `selfieMediaKey`, `latitude`, `longitude`, and `accuracy` to `client.punchIn()`. However, `packages/contracts/scripts/generate-dart-client.ts` was not updated to generate these parameters in `generated/dart-api/lib/src/api_client.dart`.
+- **Remediation Requirement:** Add `selfieMediaKey`, `latitude`, `longitude`, and `accuracy` parameters to `punchIn()` inside `generate-dart-client.ts` during feature branch consolidation before merging.
+
 ---
 
 ## 5. Deployed Cloud State vs. Git Feature Branches

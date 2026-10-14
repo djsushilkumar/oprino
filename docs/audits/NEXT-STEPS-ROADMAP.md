@@ -66,10 +66,14 @@ Every operational gate must be validated against its designated verification tie
   - **Transactional Email Delivery (Resend / SMTP):**
     - Wire Resend SDK or SMTP transporter in `services/api/src/services/email.service.ts`.
     - Automatically deliver employee activation emails containing the single-use token link upon member creation.
-- **Verification Tier:** **Tier 1 (Local Integration Tests with Mock S3/R2 & Mailpit)**.
+  - **Dart API Client Synchronization (`punchIn` contract):**
+    - Update `packages/contracts/scripts/generate-dart-client.ts` to accept `selfieMediaKey`, `latitude`, `longitude`, and `accuracy` parameters on `client.punchIn()`.
+    - Regenerate `generated/dart-api` and verify `flutter analyze` passes 100% green in CI.
+- **Verification Tier:** **Tier 1 (Local Integration Tests)** & **Tier 3 (GitHub Actions CI Mobile Matrix)**.
 - **Acceptance Criteria:**
   - Integration tests verify presigned URL generation, tenant prefix boundaries, and upload confirmation.
   - Mock media upload endpoint `/v1/media/mock-upload/*` is completely eliminated.
+  - `flutter analyze` passes with 0 errors in CI.
 
 ---
 
