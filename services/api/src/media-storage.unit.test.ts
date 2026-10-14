@@ -532,6 +532,47 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
       assert.strictEqual(env.STORAGE_DRIVER, 's3');
       assert.strictEqual(env.S3_BUCKET_NAME, 'oprino-prod-media');
     });
+
+    test('validateEnv throws fatal error in NODE_ENV=staging if S3 credentials are missing', () => {
+      assert.throws(
+        () =>
+          validateEnv({
+            NODE_ENV: 'staging',
+            PORT: 3001,
+            HOST: '0.0.0.0',
+            API_PUBLIC_URL: 'https://api.staging.oprino.com',
+            BETTER_AUTH_SECRET: 'staging_secret_must_be_very_long_and_secure_123456789',
+            BETTER_AUTH_URL: 'https://api.staging.oprino.com',
+            DATABASE_URL: 'postgresql://oprino_admin:password@localhost:5432/oprino_staging_db',
+            REDIS_URL: 'redis://localhost:6379',
+            // Missing S3 credentials!
+          }),
+        /Staging environment requires valid S3\/R2 storage configuration/,
+      );
+    });
+
+    test('validateEnv succeeds in NODE_ENV=staging when complete S3 credentials are provided', () => {
+      const env = validateEnv({
+        NODE_ENV: 'staging',
+        PORT: 3001,
+        HOST: '0.0.0.0',
+        API_PUBLIC_URL: 'https://api.staging.oprino.com',
+        BETTER_AUTH_SECRET: 'staging_secret_must_be_very_long_and_secure_123456789',
+        BETTER_AUTH_URL: 'https://api.staging.oprino.com',
+        DATABASE_URL: 'postgresql://oprino_admin:password@localhost:5432/oprino_staging_db',
+        REDIS_URL: 'redis://localhost:6379',
+        STORAGE_DRIVER: 's3',
+        S3_ENDPOINT: 'https://cf-staging-account.r2.cloudflarestorage.com',
+        S3_BUCKET_NAME: 'oprino-staging-media',
+        S3_REGION: 'auto',
+        S3_ACCESS_KEY_ID: 'staging-access-key-id',
+        S3_SECRET_ACCESS_KEY: 'staging-secret-access-key',
+      });
+
+      assert.strictEqual(env.NODE_ENV, 'staging');
+      assert.strictEqual(env.STORAGE_DRIVER, 's3');
+      assert.strictEqual(env.S3_BUCKET_NAME, 'oprino-staging-media');
+    });
   });
 
   describe('5. Fastify HTTP Direct Storage Upload & Download Endpoints (Negative & Regression Tests)', () => {

@@ -1,0 +1,165 @@
+# Oprino SaaS — Staging Environment & Cloudflare R2 Storage Guide
+
+**Target Audience:** DevOps Engineers, Cloud Architects, QA Leads  
+**Governing Architecture:** [`docs/architecture/ENVIRONMENT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/ENVIRONMENT-STRATEGY.md) & [`ADR-012`](file:///workspace/oprino/docs/architecture/ADR-012-file-storage.md)  
+**Security Classification:** Isolated Staging / Zero Production Cross-Contamination  
+**Date:** October 2026  
+
+---
+
+## 1. Staging Environment Architecture & Isolation Topology
+
+To preserve production tenant data integrity and prevent cross-contamination, the staging environment operates in complete physical isolation from production.
+
+```mermaid
+flowchart TD
+    subgraph Staging Clients
+        StagingWeb["💻 Staging Web Dashboard<br>(Vercel Preview / app.staging.oprino.com)"]
+        StagingMobile["📱 Staging Mobile Build<br>(Internal Track APK / API_BASE_URL pointing to staging)"]
+    end
+
+    subgraph Isolated Staging Cloud Infrastructure
+        StagingAPI["⚡ Staging Fastify API<br>(Render Web Service: oprino-api-staging)"]
+        StagingDB["🐘 Staging PostgreSQL 18 + PostGIS<br>(Neon Isolated Branch / Supabase Staging)"]
+        StagingRedis["🔴 Staging Redis 7<br>(Upstash Isolated Database: oprino-cache-staging)"]
+        StagingR2["🪣 Cloudflare R2 Private Bucket<br>(oprino-staging-media)"]
+    end
+
+    StagingWeb -->|HTTPS REST| StagingAPI
+    StagingMobile -->|HTTPS REST| StagingAPI
+    StagingAPI -->|Transactional RLS| StagingDB
+    StagingAPI -->|Pub/Sub & Queues| StagingRedis
+    StagingAPI -.->|Issues 10-min PUT & 15-min GET Presigned URLs| StagingWeb
+    StagingWeb -->|Direct PUT Binary Upload / GET Display| StagingR2
+    StagingMobile -->|Direct PUT Binary Upload| StagingR2
+```
+
+### Staging Isolation Invariants:
+1. **Database Isolation:** Staging runs on a separate database branch (`oprino_staging_db`). No production tenant records, shifts, or GPS logs are ever queried or modified during staging tests.
+2. **Storage Isolation:** Staging writes exclusively to a dedicated private bucket (`oprino-staging-media`). Production bucket (`oprino-prod-media`) is completely inaccessible.
+3. **Secrets Isolation:** Staging uses distinct cryptographic secrets (`BETTER_AUTH_SECRET`, R2 tokens, and database credentials).
+4. **Synthetic Data Only:** All staging users, workspaces, customers, and attendance sessions are synthetic test entities.
+
+---
+
+## 2. Cloudflare R2 Staging Bucket Setup
+
+### 2.1 Bucket Provisioning
+1. Log into the Cloudflare Dashboard and navigate to **R2**.
+2. Click **Create bucket**:
+   - **Bucket name:** `oprino-staging-media`
+   - **Location hint:** Automatic or APAC (closest to operational workforce).
+   - **Storage class:** Standard.
+3. Verify that **Public Access** is **DISABLED** (100% private bucket). No public URL or anonymous object listing is allowed.
+
+### 2.2 CORS Policy Configuration
+To allow the web dashboard to upload photos directly from the browser without proxying megabytes through the API server, configure CORS in bucket settings:
+
+```json
+[
+  {
+    "AllowedOrigins": [
+      "https://app.staging.oprino.com",
+      "https://oprino-staging.vercel.app",
+      "http://localhost:3000"
+    ],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": [
+      "Content-Type",
+      "x-amz-content-sha256",
+      "x-amz-date",
+      "Authorization"
+    ],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+### 2.3 R2 API Token Provisioning
+1. In Cloudflare Dashboard -> **R2** -> **Manage R2 API Tokens**, click **Create API Token**.
+2. Set token permissions:
+   - **Permissions:** `Object Read & Write`
+   - **Bucket scope:** Specific bucket -> `oprino-staging-media`
+   - **TTL:** 12 months (or company policy).
+3. Record the generated credentials securely:
+   - **S3 Endpoint:** `https://<account-id>.r2.cloudflarestorage.com`
+   - **Access Key ID:** `S3_ACCESS_KEY_ID`
+   - **Secret Access Key:** `S3_SECRET_ACCESS_KEY`
+
+---
+
+## 3. Staging Environment Variables
+
+Configure these environment variables in Render (`oprino-api-staging`) and staging deployment runners:
+
+| Variable | Staging Value | Purpose |
+|---|---|---|
+| `NODE_ENV` | `staging` | Enforces mandatory S3 storage validation at boot |
+| `PORT` | `3001` | Fastify HTTP port |
+| `HOST` | `0.0.0.0` | Bind address |
+| `API_PUBLIC_URL` | `https://api.staging.oprino.com` | Authoritative public API URL |
+| `BETTER_AUTH_SECRET` | `staging_secret_min_32_characters_random_string` | Cryptographic session & token secret |
+| `BETTER_AUTH_URL` | `https://api.staging.oprino.com` | Auth redirect base URL |
+| `DATABASE_URL` | `postgresql://.../oprino_staging_db` | Isolated staging Postgres + PostGIS connection string |
+| `REDIS_URL` | `rediss://default:...@...upstash.io:6379` | Isolated staging Redis connection string |
+| `CORS_ORIGINS` | `https://app.staging.oprino.com,https://oprino-staging.vercel.app,http://localhost:3000` | Whitelisted browser origins |
+| `STORAGE_DRIVER` | `s3` | Activates `S3StorageDriver` |
+| `S3_ENDPOINT` | `https://<account-id>.r2.cloudflarestorage.com` | Cloudflare R2 S3-compatible endpoint |
+| `S3_BUCKET_NAME` | `oprino-staging-media` | Private staging media bucket |
+| `S3_REGION` | `auto` | Cloudflare R2 region |
+| `S3_ACCESS_KEY_ID` | `<staging-r2-access-key-id>` | Scoped R2 token key |
+| `S3_SECRET_ACCESS_KEY` | `<staging-r2-secret-access-key>` | Scoped R2 token secret |
+| `S3_FORCE_PATH_STYLE` | `false` | Cloudflare R2 virtual-hosted bucket style |
+
+---
+
+## 4. Automated Verification Procedures
+
+### 4.1 Cloud Storage Integration Test (`cloud-storage.integration.test.ts`)
+Once credentials are injected into the staging runner:
+```bash
+S3_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com" \
+S3_BUCKET_NAME="oprino-staging-media" \
+S3_ACCESS_KEY_ID="<key>" \
+S3_SECRET_ACCESS_KEY="<secret>" \
+node --test dist/cloud-storage.integration.test.js
+```
+This test automatically performs:
+1. Direct binary upload to R2 using 10-minute presigned PUT URL.
+2. `headObject` verification of stored physical bytes.
+3. 15-minute presigned GET URL generation.
+4. Byte-for-byte binary download comparison.
+5. Object deletion and existence verification.
+
+### 4.2 End-to-End Staging Smoke Test
+```bash
+API_BASE_URL="https://api.staging.oprino.com" \
+WEB_BASE_URL="https://app.staging.oprino.com" \
+node scripts/smoke_test.mjs
+```
+
+---
+
+## 5. Security Review: Web Session Tokens in `localStorage`
+
+### 5.1 Identified Risk
+In `apps/web/src/lib/api.ts`, session tokens are stored in `localStorage` under `TOKEN_KEY = 'oprino_web_auth_token'` and transmitted via `Authorization: Bearer <token>`.
+
+- **Vulnerability:** `localStorage` is accessible to any JavaScript running on the same origin. An XSS vulnerability (e.g. from an unpinned third-party library or malicious script injection) could read and exfiltrate the session token.
+- **Why it was initially adopted:** The frontend (`oprino-app.vercel.app`) and backend (`oprino-api.onrender.com`) are hosted on distinct top-level domains, making third-party cross-site cookies subject to strict browser ITP (Intelligent Tracking Prevention) blocks.
+
+### 5.2 Defense-in-Depth Protections Applied
+1. **Strict HTTP Security Headers:** Added to `apps/web/next.config.mjs`:
+   - `X-Content-Type-Options: nosniff` (prevents MIME sniffing)
+   - `X-Frame-Options: DENY` (prevents clickjacking)
+   - `Referrer-Policy: strict-origin-when-cross-origin` (prevents token leakage in Referer headers)
+   - `Permissions-Policy: camera=(), microphone=(), geolocation=()` (restricts unauthorized hardware access)
+2. **Short Token Lifetimes & Revocation:** Session tokens in Redis expire automatically and can be revoked instantly (<1 second).
+
+### 5.3 Production Remediation Strategy (ADR-006 Compliance)
+For commercial production, configure a unified custom domain:
+- Web Dashboard: `app.oprino.com`
+- Backend API: `api.oprino.com`
+
+This allows Better Auth to issue `HttpOnly`, `Secure`, `SameSite=Lax` cookies scoped to `.oprino.com`. JavaScript running in the browser will have **zero access** to the session cookie, eliminating XSS token theft entirely.
