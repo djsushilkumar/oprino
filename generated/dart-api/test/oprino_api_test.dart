@@ -165,7 +165,7 @@ void main() {
       expect(task.checklist.first.title, equals('Turn off power'));
     });
 
-    test('CurrentAttendanceResponse deserializes properly', () {
+    test('CurrentAttendanceResponse and AttendanceSessionResponse deserialize and serialize properly with selfie and GPS', () {
       final json = {
         'dutyState': 'ON_DUTY',
         'activeSession': {
@@ -176,6 +176,10 @@ void main() {
           'status': 'ON_DUTY',
           'punchInTime': '2026-10-05T09:00:00.000Z',
           'durationMinutes': 120,
+          'selfieMediaKey': 'w1-uuid/attendance/u1-uuid/selfie-123.jpg',
+          'punchInLatitude': 28.6139,
+          'punchInLongitude': 77.2090,
+          'punchInAccuracy': 10.5,
           'isLate': false,
           'lateMinutes': 0,
           'isManualAdjustment': false,
@@ -189,6 +193,16 @@ void main() {
       expect(current.dutyState, equals('ON_DUTY'));
       expect(current.activeSession?.userName, equals('Jane Tech'));
       expect(current.activeSession?.durationMinutes, equals(120));
+      expect(current.activeSession?.selfieMediaKey, equals('w1-uuid/attendance/u1-uuid/selfie-123.jpg'));
+      expect(current.activeSession?.punchInLatitude, equals(28.6139));
+      expect(current.activeSession?.punchInLongitude, equals(77.2090));
+      expect(current.activeSession?.punchInAccuracy, equals(10.5));
+
+      final serialized = current.activeSession!.toJson();
+      expect(serialized['selfieMediaKey'], equals('w1-uuid/attendance/u1-uuid/selfie-123.jpg'));
+      expect(serialized['punchInLatitude'], equals(28.6139));
+      expect(serialized['punchInLongitude'], equals(77.2090));
+      expect(serialized['punchInAccuracy'], equals(10.5));
     });
 
     test('LocationPoint and LocationIngestResponse serialize and deserialize properly', () {

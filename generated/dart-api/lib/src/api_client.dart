@@ -400,6 +400,10 @@ class OprinoApiClient {
     required String idempotencyKey,
     String? shiftId,
     String? note,
+    String? selfieMediaKey,
+    double? latitude,
+    double? longitude,
+    double? accuracy,
   }) async {
     try {
       final response = await dio.post<Map<String, dynamic>>(
@@ -408,6 +412,10 @@ class OprinoApiClient {
           'idempotencyKey': idempotencyKey,
           if (shiftId != null) 'shiftId': shiftId,
           if (note != null) 'note': note,
+          if (selfieMediaKey != null) 'selfieMediaKey': selfieMediaKey,
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
+          if (accuracy != null) 'accuracy': accuracy,
         },
       );
       return AttendanceSessionResponse.fromJson(response.data!);
