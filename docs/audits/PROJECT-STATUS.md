@@ -41,23 +41,32 @@ Across the polyglot monorepo (managed with Turborepo and pnpm 11), the following
 
 ## 3. What is Verified & Working (Evidence-Based)
 
-All claims below are backed by direct, repeatable test and build execution:
+### 3.1 Five-Tier Verification Architecture
 
-1. **Automated Backend Integration Test Suite:**
+Every claim of stability or readiness is mapped to one of five verification tiers:
+
+1. **Tier 1: Local Automated Integration Tests (Local Workstation / Docker Containers):**
    - **122 of 122 tests pass** (0 failures, duration ~46s) executing against live PostgreSQL with PostGIS and Redis service containers.
-   - Verified domains: Multi-tenant RLS default-deny, Better Auth session governance, Task optimistic concurrency (version checks), Attendance punch idempotency, GPS duty-boundary cutoffs (off-duty points dropped with 0 DB writes), Lossless telemetry ACK queues, and BLK-002 through BLK-006 blocker remediations.
-2. **Monorepo Typecheck & Linting:**
-   - `turbo typecheck` succeeds across all 8 packages and services with **0 errors**.
+   - `turbo typecheck` passes across 8 packages/services with **0 errors**.
    - `eslint` executes across the entire repository with **0 errors**.
-3. **Web Production Compilation:**
-   - Next.js 15 production build compiles cleanly and generates 14 static and dynamic routes.
-4. **V1 Release Blockers Remediated (Branch `feat/v1-blockers-remediation`):**
-   - **BLK-001:** Zero-cost open-source GPS pipeline (`geolocator` foreground service), tenant-isolated queues, and cryptographic single-use tickets for Server-Sent Events (SSE).
-   - **BLK-002:** Secure employee invitation flow with single-use SHA-256 tokens and user-set passwords; hardcoded developer credentials (`Welcome@123`) completely eliminated.
-   - **BLK-003:** Employee bulk CSV import with CSV formula sanitization (`=`, `+`, `-`, `@` escaping), batch limits (up to 100 employees), and partial-error reporting.
-   - **BLK-004:** Selfie-verified attendance with front-camera preview, anti-replay token validation, and workspace policy enforcement (`SIMPLE`, `GPS_REQUIRED`, `SELFIE_REQUIRED`, `GPS_AND_SELFIE_REQUIRED`).
-   - **BLK-005:** Member lifecycle controls (role changes, manager assignment, employee suspension with device session revocation, and Last-Active-Owner protection).
-   - **BLK-006:** Tenant-configurable location retention (7, 30, 90, 180 days) wired into nightly BullMQ worker pruning.
+   - Next.js 15 production build compiles cleanly.
+   - `pnpm docs:check-links` passes with **0 broken links**.
+2. **Tier 2: Vercel Preview Checks (Ephemeral Cloud Web Deployments):**
+   - Automated preview deployments for branch pushes validate Next.js App Router bundling, SSR/SSG rendering, and static asset distribution in a real CDN environment.
+3. **Tier 3: GitHub Actions CI (Automated Matrix Pipelines):**
+   - Automated pipelines (`.github/workflows/ci.yml`) spin up isolated Postgres 17 (PostGIS) and Redis 7 containers on Ubuntu runners, validating all PRs and main branches prior to merge.
+4. **Tier 4: Real-Device Testing (Physical Android & iOS Hardware):**
+   - Field testing on physical OEM smartphones (Samsung One UI, Xiaomi HyperOS, Google Pixel) validating background location foreground service, Doze mode battery drain (< 3.5%/hr), Drift SQLite offline queueing, and camera hardware.
+5. **Tier 5: Production Cloud Verification (Live Multi-Cloud Infrastructure):**
+   - Live production services: Neon PostgreSQL, Render Web Service (`https://oprino-api.onrender.com`), Vercel Production (`https://oprino.vercel.app`), Cloudflare R2, and Upstash Redis. Validated with `/health/ready` probe and live smoke test.
+
+### 3.2 V1 Release Blockers Remediated (Branch `feat/v1-blockers-remediation`):
+- **BLK-001:** Zero-cost open-source GPS pipeline (`geolocator` foreground service), tenant-isolated queues, and cryptographic single-use tickets for Server-Sent Events (SSE).
+- **BLK-002:** Secure employee invitation flow with single-use SHA-256 tokens and user-set passwords; hardcoded developer credentials (`Welcome@123`) completely eliminated.
+- **BLK-003:** Employee bulk CSV import with CSV formula sanitization (`=`, `+`, `-`, `@` escaping), batch limits (up to 100 employees), and partial-error reporting.
+- **BLK-004:** Selfie-verified attendance with front-camera preview, anti-replay token validation, and workspace policy enforcement (`SIMPLE`, `GPS_REQUIRED`, `SELFIE_REQUIRED`, `GPS_AND_SELFIE_REQUIRED`).
+- **BLK-005:** Member lifecycle controls (role changes, manager assignment, employee suspension with device session revocation, and Last-Active-Owner protection).
+- **BLK-006:** Tenant-configurable location retention (7, 30, 90, 180 days) wired into nightly BullMQ worker pruning.
 
 ---
 
@@ -125,14 +134,13 @@ There is a critical discrepancy between what is deployed in the cloud and what e
 
 ---
 
-## 6. Current Milestone & Next Gate
+## 6. Current Milestone & Next Gate (Staging-First Sequence)
 
 - **Current State:** Monorepo architecture stabilized; V1 blockers remediated in feature branches; test suite passing 100%.
-- **Active Gate:** **Documentation Alignment & PR Merge Preparation**.
-- **Immediate Next Step:**
-  1. Complete this documentation organization audit and clean up broken links and stale references.
-  2. Review and merge PR #1 (`feat/zero-cost-gps-field-ops`) into `main`.
-  3. Open and merge a clean PR for `feat/v1-blockers-remediation` into `main`.
-  4. Run `0005` migration on production Neon database and deploy latest unified build to Render and Vercel.
-  5. Replace mock media storage with real Cloudflare R2 / AWS S3 presigned URLs.
-  6. Execute physical Android walking test with the signed release APK.
+- **Active Gate:** **Documentation Alignment & PR #2 Draft Review**.
+- **Immediate Next Steps (Staging-First):**
+  1. Complete documentation audit PR #2 review, verify Git mode `120000` symlinks and links, and merge into `feat/v1-blockers-remediation`.
+  2. Implement real Cloudflare R2 / AWS S3 presigned URL storage in `MediaService.ts` and transactional email delivery, eliminating the `/v1/media/mock-upload/*` stub.
+  3. Deploy feature branches to an isolated **Staging** environment, apply migration `0005` to Staging Neon database, and validate with automated smoke tests.
+  4. Perform real physical device testing on Samsung, Xiaomi, and Pixel hardware against Staging.
+  5. Consolidate and merge PR #1 and `feat/v1-blockers-remediation` into `main`, apply migration `0005` to live production Neon database, and deploy to production Render/Vercel.

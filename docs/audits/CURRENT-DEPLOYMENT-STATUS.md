@@ -121,21 +121,46 @@ Oprino utilizes a multi-cloud serverless and free-tier infrastructure architectu
 
 ---
 
-## 4. Production Deployment Sequence to Reconcile Differences
+---
 
-To bring the live cloud deployment into full parity with the verified feature branches:
+## 4. Five-Tier Verification Framework for Cloud Release
 
-1. **Step 1: Merge PR #1 (`feat/zero-cost-gps-field-ops`) into `main`.**
-2. **Step 2: Merge `feat/v1-blockers-remediation` into `main`.**
-3. **Step 3: Run Database Migration `0005` on Live Neon:**
-   ```bash
-   pnpm --filter @oprino/database migrate
-   ```
-4. **Step 4: Provision Cloudflare R2 or AWS S3 Bucket:**
-   - Configure environment variables on Render: `S3_BUCKET_NAME`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`.
-   - Update `MediaService.ts` to generate authentic presigned URLs.
-5. **Step 5: Trigger Render and Vercel Production Re-deployments from `main`.**
-6. **Step 6: Run Live Cloud Smoke Test:**
-   ```bash
-   node scripts/smoke_test.mjs
-   ```
+To eliminate deployment risks, changes are validated across 5 distinct tiers:
+1. **Tier 1 (Local Automated Tests):** 122/122 backend tests against local Docker PostgreSQL/PostGIS & Redis containers, monorepo typecheck (8/8 packages), lint, and link verification.
+2. **Tier 2 (Vercel Preview Checks):** Ephemeral web builds validating Next.js 15 App Router compilation and UI rendering on cloud CDN.
+3. **Tier 3 (GitHub Actions CI):** Automated matrix pipeline on Ubuntu runners with isolated service containers validating PRs and `main`.
+4. **Tier 4 (Real-Device Testing):** Physical smartphones (Samsung, Xiaomi, Pixel) validating OEM battery optimization, GPS foreground tracking, camera selfies, and Drift SQLite offline queues.
+5. **Tier 5 (Production Cloud Verification):** Live multi-cloud infrastructure (Neon, Render, Vercel, R2, Upstash) validated via `/health/ready` and `scripts/smoke_test.mjs`.
+
+---
+
+## 5. Staging-First Deployment & Reconciliation Sequence
+
+Production Neon migrations and deployment from `main` must **NEVER** take place while media storage remains mocked. The authoritative reconciliation path is strictly sequential:
+
+1. **Step 1: Remediate Media Storage & Security Gaps (Pre-Staging):**
+   - Replace `/v1/media/mock-upload/*` stub with authentic pre-signed PUT/GET URLs using AWS S3 / Cloudflare R2 client in `MediaService.ts`.
+   - Validate tenant-scoped object keys (`${workspaceId}/proofs/...`) and MIME type constraints.
+   - Wire transactional email delivery for member invitations.
+2. **Step 2: Deploy & Validate in Isolated Staging Environment:**
+   - Deploy feature branches to Staging Render API (`oprino-api-staging`) and Staging Vercel.
+   - Apply migration `0005_v1_blockers_remediation.sql` to Staging Neon database branch.
+   - Execute cloud smoke test against Staging:
+     ```bash
+     API_BASE_URL=https://oprino-api-staging.onrender.com node scripts/smoke_test.mjs
+     ```
+   - Confirm photo proofs and selfies persist into Staging R2 bucket and render in web proof inspector.
+3. **Step 3: Real-Device Physical Validation against Staging:**
+   - Test release APK on physical Samsung, Xiaomi, and Pixel devices connected to Staging API.
+   - Verify Doze mode survival, battery drain (< 3.5%/hr), and offline queue sync after airplane mode.
+4. **Step 4: Commercial Production Consolidation & Migration:**
+   - Review and merge PR #1 (`feat/zero-cost-gps-field-ops`) and `feat/v1-blockers-remediation` into `main`.
+   - Apply migration `0005` to live production Neon PostgreSQL database.
+   - Inject production R2 credentials into Render production environment variables.
+   - Trigger Render (`oprino-api`) and Vercel (`oprino-web`) production re-deployments from `main`.
+5. **Step 5: Live Production Smoke Test & Health Sign-Off:**
+   - Run live cloud smoke test against production:
+     ```bash
+     API_BASE_URL=https://oprino-api.onrender.com node scripts/smoke_test.mjs
+     ```
+   - Verify `/health/ready` returns HTTP 200 OK.

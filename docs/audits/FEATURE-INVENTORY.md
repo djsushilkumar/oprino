@@ -36,7 +36,18 @@
 
 ---
 
-## 2. Detailed Module Audits
+## 2. Five-Tier Verification Framework
+
+All test evidence and readiness claims in this inventory are categorized across 5 distinct tiers:
+- **Tier 1 (Local Automated Tests):** 122 backend integration tests against Docker PostgreSQL/PostGIS & Redis containers, 8/8 package typechecks, ESLint, Next.js build, and docs link validation.
+- **Tier 2 (Vercel Preview Checks):** Ephemeral cloud builds on Vercel CDN validating web bundling, SSR/SSG rendering, and asset routes.
+- **Tier 3 (GitHub Actions CI):** Automated Ubuntu matrix runners with ephemeral services executing monorepo lint, typecheck, tests, and smoke tests on PRs and main.
+- **Tier 4 (Real-Device Testing):** Field validation on physical Android/iOS hardware (Samsung One UI, Xiaomi HyperOS, Google Pixel) for background GPS, Doze battery drain, camera selfies, and Drift SQLite offline queues.
+- **Tier 5 (Production Cloud Verification):** Live cloud verification on Neon, Render (`https://oprino-api.onrender.com`), Vercel, and Upstash via `/health/ready` probe and live smoke test.
+
+---
+
+## 3. Detailed Module Audits
 
 ### Module 1: Authentication and Workspace Management
 - **What it does (in simple language):** Allows users to register, log in, create company workspaces, switch between different companies they belong to, and register their mobile installation with a unique ID.

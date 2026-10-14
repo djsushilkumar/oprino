@@ -39,17 +39,18 @@ Architecture decision files appear in two locations:
 3. `docs/architecture/ADR/README.md` acts as the register and indexes all 21 ADRs.
 
 **Exact Comparison:**  
-Each file in `docs/architecture/ADR/` is **NOT** a duplicate document. It is a 1-line text file containing a relative path string pointing up one directory:
+Each file in `docs/architecture/ADR/` is **NOT** a duplicate document or defective stub. In the Git index, each file is recorded with mode `120000` (the standard Git tree mode for symbolic links), pointing to the corresponding document in the parent folder:
 ```text
 ../ADR-001-mobile-framework.md
 ```
-This occurred because symlinks were created or intended in a Linux/POSIX environment, but were checked into Git on Windows as literal plaintext stub files. Furthermore, `ADR-021-zero-cost-gps-pipeline.md` exists only in `docs/architecture/` and was never stubbed into `docs/architecture/ADR/`.
+On Windows workstations where `core.symlinks = false` by default, Git checks out the symlink target string as a small text file. On POSIX environments (Linux CI runners, Docker containers, macOS) and in the GitHub web interface, Git recognizes and traverses them as authentic symbolic links.
 
-**Authoritative Location Recommendation & Migration Plan:**
-- **Authoritative Location:** `docs/architecture/ADR/` is the standard industry convention for Architecture Decision Records (as referenced by `AGENTS.md`).
-- **Safe Migration Strategy (Two-Phase):**
-  - **Phase 1 (Non-Destructive — Immediate):** Preserve the 21 full ADR files in `docs/architecture/` where all existing internal documents reference them. Update `docs/architecture/ADR/README.md` to link properly to `../ADR-xxx.md`.
-  - **Phase 2 (Consolidation — Post-Approval):** Move all 21 full ADR files into `docs/architecture/ADR/`, delete the 20 stub files, add `ADR-021` directly to `ADR/`, and update references across `docs/` and `AGENTS.md`.
+To establish complete parity across all decisions, `docs/architecture/ADR/ADR-021-zero-cost-gps-pipeline.md` has also been provisioned with Git mode `120000` pointing to `../ADR-021-zero-cost-gps-pipeline.md`.
+
+**Authoritative Location Strategy & Preservation:**
+- **Authoritative Documents:** The canonical, comprehensive ADR documents reside in `docs/architecture/ADR-001-*.md` through `ADR-021-*.md`.
+- **Symlink Directory:** `docs/architecture/ADR/` contains the mode `120000` symlinks alongside `README.md`, satisfying tools and conventions that expect ADRs in an `ADR/` subfolder.
+- **Preservation Policy:** Both the canonical source documents in `docs/architecture/` and the mode `120000` symlinks in `docs/architecture/ADR/` are preserved. No destructive file moves or deletions are required.
 
 ---
 
@@ -154,10 +155,33 @@ Our rigorous code-and-evidence audit reconciles these claims against actual repo
 
 ---
 
-## 3. Corrective Action Plan
+### H. Distinguishing the Five Tiers of Verification
 
-1. **Convert all 328 nonportable links** to relative Markdown links.
-2. **Update root `README.md`** to modern 2026 monorepo standards.
-3. **Add historical banner** to `docs/audits/PROJECT-INVENTORY.md`.
-4. **Add supersession banner** to `docs/architecture/ADR-008-background-location.md`.
-5. **Publish comprehensive audit deliverables** (`PROJECT-STATUS.md`, `FEATURE-INVENTORY.md`, `CURRENT-DEPLOYMENT-STATUS.md`, `NEXT-STEPS-ROADMAP.md`, `docs/README.md`).
+To prevent premature readiness assertions, Oprino documentation now explicitly distinguishes between 5 separate verification tiers:
+
+1. **Tier 1: Local Automated Integration Tests (Local Workstation / Docker Containers):**
+   - Validates code compilation, TypeScript types, ESLint rules, database migrations locally, and API business logic.
+   - Evidence: 122/122 backend integration tests pass in ~46s against Docker PostgreSQL 17 (PostGIS) and Redis 7; 8/8 Turbo packages pass `typecheck`; `pnpm docs:check-links` passes with 0 broken links.
+2. **Tier 2: Vercel Preview Checks (Ephemeral Cloud Web Deployments):**
+   - Validates Next.js 15 App Router production bundling, SSR/SSG pages, and CDN asset distribution on ephemeral preview URLs for every pull request.
+3. **Tier 3: GitHub Actions CI (Automated Matrix Pipelines):**
+   - Automated gatekeeper executing on GitHub-hosted Ubuntu runners with isolated Postgres 17 and Redis service containers; runs lint, typecheck, build, test, and E2E smoke tests.
+   - Trigger configuration: safely validates all PRs (`branches: [main, 'feat/**', 'docs/**']`) without performing deployments.
+4. **Tier 4: Real-Device Testing (Physical Android & iOS Hardware):**
+   - Validates real-world field conditions that cannot be simulated in CI: physical GPS satellite fixes, OEM battery optimization (Doze mode on Samsung One UI, Xiaomi HyperOS, Google Pixel), Drift SQLite offline queueing during subway transit, and camera selfie capture.
+5. **Tier 5: Production Cloud Verification (Live Multi-Cloud Infrastructure):**
+   - Validates live production systems: Neon PostgreSQL (PostGIS), Render Web Service (`https://oprino-api.onrender.com`), Vercel Production (`https://oprino.vercel.app`), Cloudflare R2, and Upstash Redis.
+   - Evidence: `/health/ready` probe (HTTP 200 OK) and live cloud smoke test script (`scripts/smoke_test.mjs`).
+
+---
+
+## 3. Corrective Action Plan & Staging-First Principle
+
+1. **Convert all 328 nonportable links** to portable relative Markdown links.
+2. **Preserve Git mode `120000` symlinks** in `docs/architecture/ADR/` alongside canonical documents in `docs/architecture/` (and provision `ADR-021`).
+3. **Update root `README.md` and `docs/README.md`** with clear contributing guidelines (portable relative links, zero off-duty tracking).
+4. **Add historical archival banner** to `docs/audits/PROJECT-INVENTORY.md`.
+5. **Add supersession banner** to `docs/architecture/ADR-008-background-location.md` pointing to `ADR-021`.
+6. **Enforce Staging-First Release Sequence:** Remediate Cloudflare R2/S3 media storage and email delivery, deploy and validate on Staging (Tier 2/5) and Physical Hardware (Tier 4) BEFORE executing any commercial production merge or Neon migration.
+7. **Configure CI PR Validation:** Enable automated GitHub Actions CI for feature branches (`feat/**`, `docs/**`) to ensure continuous automated verification.
+

@@ -124,9 +124,11 @@ graph TD
 
 ## 4. Directory Inventory & Hygiene Findings
 
-### Finding 1: Duplicate ADR Folders
-- Architecture Decision Records exist in both `docs/architecture/ADR-001-*.md` through `ADR-021-*.md` (the real files) and `docs/architecture/ADR/ADR-001-*.md` through `ADR-020-*.md` (1-line stub text pointers containing `../ADR-xxx.md`).
-- **Recommendation:** Maintain `docs/architecture/` as canonical, or consolidate all 21 full ADR files into `docs/architecture/ADR/` and update references across documentation.
+### Finding 1: ADR Directory Structure & Git Mode 120000 Symbolic Links
+- Architecture Decision Records exist in both `docs/architecture/ADR-001-*.md` through `ADR-021-*.md` (canonical documents) and `docs/architecture/ADR/ADR-001-*.md` through `ADR-021-*.md`.
+- In the Git index, all 21 files under `docs/architecture/ADR/` are recorded with mode `120000` (Git's native tree mode for symbolic links), pointing to `../ADR-xxx.md`.
+- On Windows systems with default Git configuration (`core.symlinks = false`), Git checks out these entries as small text pointers containing the relative target path. On Linux/macOS environments, CI runners, and GitHub web, they resolve and navigate as native symbolic links.
+- **Preservation Policy:** Both canonical documents in `docs/architecture/` and the mode `120000` symlinks in `docs/architecture/ADR/` are preserved. `ADR-021-zero-cost-gps-pipeline.md` has been provisioned with matching mode `120000` symlink in `docs/architecture/ADR/`, guaranteeing full consistency across platforms without destructive migrations.
 
 ### Finding 2: Ephemeral Local Build Outputs (`apps/mobile/build/`)
 - During local testing, Flutter and Android Gradle generate several gigabytes under `apps/mobile/build/` and `apps/mobile/.dart_tool/`.

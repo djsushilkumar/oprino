@@ -94,7 +94,7 @@ Archival milestone completion reports:
 
 ## 3. Contributing Guidelines for Documentation
 
-1. **Relative Markdown Links Only:** Never commit absolute paths (such as `../` or Windows drive letters). Always use relative links (e.g. `../product/V1-SCOPE.md`).
+1. **Relative Markdown Links Only:** Never commit absolute local URI paths (such as `file:///workspace/oprino/` or Windows drive letters like `C:\` or `D:\`). Always use portable relative Markdown links (such as `../product/V1-SCOPE.md` or `./PROJECT-STATUS.md`).
 2. **Preserve Invariant Principles:** Off-duty location tracking must NEVER occur; multi-tenant isolation must remain strictly enforced.
 3. **Do Not Silently Alter Historical ADRs:** Superseded architecture decisions must be marked with a clear supersession note linking to the newer ADR, rather than modifying historical text.
 4. **Evidence-Based Claims:** When declaring a feature or gate "Complete" or "Verified", link directly to test files, CI run IDs, or source code.
