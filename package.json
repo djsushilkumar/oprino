@@ -12,7 +12,9 @@
     "test": "turbo test",
     "generate": "turbo generate",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "pilot:server": "node scripts/isolated_pilot_server.mjs",
+    "pilot:test": "node scripts/test_pilot_scenarios.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

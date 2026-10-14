@@ -6,7 +6,7 @@ import '../database/database.dart';
 import 'auth_interceptor.dart';
 
 final appConfigProvider = Provider<AppConfig>((ref) {
-  return AppConfig.development;
+  return AppConfig.fromEnvironment();
 });
 
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
