@@ -1,25 +1,30 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 import 'package:oprino_api/oprino_api.dart';
 import '../database/database.dart';
 import '../network/api_client_provider.dart';
+import '../network/media_upload_service.dart';
 import '../storage/secure_storage_service.dart';
 
 final syncServiceProvider = Provider<SyncService>((ref) {
   final db = ref.watch(databaseProvider);
   final client = ref.watch(apiClientProvider);
-  return SyncService(db: db, client: client);
+  final mediaService = ref.watch(mediaUploadServiceProvider);
+  return SyncService(db: db, client: client, mediaService: mediaService);
 });
 
 class SyncService {
   final AppDatabase db;
   final OprinoApiClient client;
+  final MediaUploadService? mediaService;
   final bool autoProcessOutbox;
 
   SyncService({
     required this.db,
     required this.client,
+    this.mediaService,
     this.autoProcessOutbox = true,
   });
 
@@ -33,6 +38,7 @@ class SyncService {
     String? shiftId,
     String? note,
     String? selfieMediaKey,
+    String? localFilePath,
     double? latitude,
     double? longitude,
     double? accuracy,
@@ -45,6 +51,7 @@ class SyncService {
       'shiftId': shiftId,
       'note': note,
       'selfieMediaKey': selfieMediaKey,
+      'localFilePath': localFilePath,
       'latitude': latitude,
       'longitude': longitude,
       'accuracy': accuracy,
@@ -318,6 +325,8 @@ class SyncService {
     required String proofType,
     required String fileKey,
     String? fileUrl,
+    String? localFilePath,
+    bool isBinaryUploaded = true,
     String? signerName,
     String? signerPhone,
     Map<String, dynamic>? watermarkMetadata,
@@ -332,6 +341,8 @@ class SyncService {
       'visitId': visitId,
       'proofType': proofType,
       'fileKey': fileKey,
+      'localFilePath': localFilePath,
+      'isBinaryUploaded': isBinaryUploaded,
       'signerName': signerName,
       'signerPhone': signerPhone,
       'watermarkMetadata': watermarkMetadata,
@@ -341,17 +352,17 @@ class SyncService {
     await db.transaction(() async {
       await db.into(db.outboxMutations).insert(
             OutboxMutationsCompanion.insert(
-              id: mutationId,
-              workspaceId: workspaceId,
-              entityType: 'PROOF',
-              entityId: mutationId,
-              mutationType: 'CONFIRM_PROOF',
-              payload: payload,
-              idempotencyKey: idempotencyKey,
-              createdAt: Value(now),
-              updatedAt: Value(now),
-            ),
-          );
+               id: mutationId,
+               workspaceId: workspaceId,
+               entityType: 'PROOF',
+               entityId: mutationId,
+               mutationType: 'CONFIRM_PROOF',
+               payload: payload,
+               idempotencyKey: idempotencyKey,
+               createdAt: Value(now),
+               updatedAt: Value(now),
+             ),
+           );
 
       await db.into(db.cachedTaskProofs).insertOnConflictUpdate(
             CachedTaskProofsCompanion.insert(
@@ -370,6 +381,55 @@ class SyncService {
               createdAt: now,
             ),
           );
+    });
+
+    if (autoProcessOutbox) processOutbox().ignore();
+    return idempotencyKey;
+  }
+
+  /// Queues Task Verification mutation by supervisor/manager.
+  Future<String> queueTaskVerification({
+    required String workspaceId,
+    required String taskId,
+    required String action, // 'APPROVE' or 'REJECT'
+    String? notes,
+  }) async {
+    final mutationId = SecureStorageService.generateUuidV4();
+    final idempotencyKey = 'mut-verify-$mutationId';
+    final now = DateTime.now();
+
+    final payload = jsonEncode({
+      'taskId': taskId,
+      'action': action,
+      'notes': notes,
+    });
+
+    await db.transaction(() async {
+      await db.into(db.outboxMutations).insert(
+            OutboxMutationsCompanion.insert(
+              id: mutationId,
+              workspaceId: workspaceId,
+              entityType: 'TASK',
+              entityId: taskId,
+              mutationType: 'VERIFY_TASK',
+              payload: payload,
+              idempotencyKey: idempotencyKey,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+
+      if (action == 'APPROVE') {
+        await (db.update(db.cachedTasks)..where((t) => t.id.equals(taskId))).write(
+          CachedTasksCompanion(
+            status: const Value('VERIFIED'),
+            verifierName: const Value('Supervisor'),
+            verifiedAt: Value(now),
+            verificationNotes: Value(notes),
+            updatedAt: Value(now),
+          ),
+        );
+      }
     });
 
     if (autoProcessOutbox) processOutbox().ignore();
@@ -464,15 +524,49 @@ class SyncService {
 
         switch (mutation.mutationType) {
           case 'PUNCH_IN':
+            String? selfieKey = data['selfieMediaKey'] as String?;
+            final localSelfiePath = data['localFilePath'] as String?;
+
+            // If selfie was captured offline and not yet uploaded to storage:
+            if (localSelfiePath != null && (selfieKey == null || selfieKey.isEmpty) && mediaService != null) {
+              final localFile = File(localSelfiePath);
+              if (await localFile.exists()) {
+                final bytes = await localFile.readAsBytes();
+                final uploadMeta = await mediaService!.requestAttendanceSelfieUploadUrl(
+                  fileName: 'selfie.jpg',
+                );
+                await mediaService!.uploadBinaryBytes(
+                  uploadUrl: uploadMeta.uploadUrl,
+                  bytes: bytes,
+                  contentType: 'image/jpeg',
+                );
+                selfieKey = uploadMeta.fileKey;
+
+                // Persist uploaded key in payload for retry resilience
+                data['selfieMediaKey'] = selfieKey;
+                await (db.update(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).write(
+                  OutboxMutationsCompanion(
+                    payload: Value(jsonEncode(data)),
+                    updatedAt: Value(DateTime.now()),
+                  ),
+                );
+              }
+            }
+
             await client.punchIn(
               idempotencyKey: mutation.idempotencyKey,
               shiftId: data['shiftId'] as String?,
               note: data['note'] as String?,
-              selfieMediaKey: data['selfieMediaKey'] as String?,
+              selfieMediaKey: selfieKey,
               latitude: (data['latitude'] as num?)?.toDouble(),
               longitude: (data['longitude'] as num?)?.toDouble(),
               accuracy: (data['accuracy'] as num?)?.toDouble(),
             );
+
+            // Cleanup local temporary selfie file after confirmed delivery
+            if (localSelfiePath != null && mediaService != null) {
+              await mediaService!.deleteLocalMediaFile(localSelfiePath);
+            }
             break;
 
           case 'PUNCH_OUT':
@@ -523,14 +617,67 @@ class SyncService {
             break;
 
           case 'CONFIRM_PROOF':
+            String fileKey = data['fileKey'] as String;
+            final localProofPath = data['localFilePath'] as String?;
+            final isBinaryUploaded = data['isBinaryUploaded'] as bool? ?? true;
+
+            // If proof photo was saved offline and binary not yet uploaded:
+            if (!isBinaryUploaded && localProofPath != null && mediaService != null) {
+              final localFile = File(localProofPath);
+              if (await localFile.exists()) {
+                final bytes = await localFile.readAsBytes();
+                final uploadMeta = await mediaService!.requestTaskProofUploadUrl(
+                  taskId: data['taskId'] as String,
+                  visitId: data['visitId'] as String?,
+                  proofType: data['proofType'] as String,
+                  fileName: 'photo_proof.jpg',
+                  mimeType: 'image/jpeg',
+                  fileSizeBytes: bytes.length,
+                );
+                await mediaService!.uploadBinaryBytes(
+                  uploadUrl: uploadMeta.uploadUrl,
+                  bytes: bytes,
+                  contentType: 'image/jpeg',
+                );
+                fileKey = uploadMeta.fileKey;
+                data['fileKey'] = fileKey;
+                data['isBinaryUploaded'] = true;
+
+                // Update cached proof entry with durable fileKey
+                await (db.update(db.cachedTaskProofs)..where((p) => p.id.equals(mutation.entityId))).write(
+                  CachedTaskProofsCompanion(fileKey: Value(fileKey)),
+                );
+
+                await (db.update(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).write(
+                  OutboxMutationsCompanion(
+                    payload: Value(jsonEncode(data)),
+                    updatedAt: Value(DateTime.now()),
+                  ),
+                );
+              }
+            }
+
             await client.confirmMediaUpload(
               taskId: data['taskId'] as String,
               visitId: data['visitId'] as String?,
               proofType: data['proofType'] as String,
-              fileKey: data['fileKey'] as String,
+              fileKey: fileKey,
               signerName: data['signerName'] as String?,
               signerPhone: data['signerPhone'] as String?,
               watermarkMetadata: data['watermarkMetadata'] as Map<String, dynamic>?,
+              notes: data['notes'] as String?,
+            );
+
+            // Cleanup local photo file after confirmed delivery
+            if (localProofPath != null && mediaService != null) {
+              await mediaService!.deleteLocalMediaFile(localProofPath);
+            }
+            break;
+
+          case 'VERIFY_TASK':
+            await client.verifyTask(
+              taskId: data['taskId'] as String,
+              action: data['action'] as String,
               notes: data['notes'] as String?,
             );
             break;

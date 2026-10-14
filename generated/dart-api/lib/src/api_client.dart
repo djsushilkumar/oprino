@@ -835,6 +835,40 @@ class OprinoApiClient {
     }
   }
 
+  Future<MediaUploadUrlResponse> requestAttendanceSelfieUploadUrl({
+    String fileName = 'selfie.jpg',
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/attendance-selfie-url',
+        data: {
+          'fileName': fileName,
+        },
+      );
+      return MediaUploadUrlResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<MediaDownloadUrlResponse> requestMediaDownloadUrl({
+    required String fileKey,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/download-url',
+        data: {
+          'fileKey': fileKey,
+        },
+      );
+      return MediaDownloadUrlResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
   Future<TaskProof> confirmMediaUpload({
     required String taskId,
     String? visitId,

@@ -122,3 +122,29 @@ class ListTaskProofsResponse {
         'proofs': proofs.map((p) => p.toJson()).toList(),
       };
 }
+
+class MediaDownloadUrlResponse {
+  final String downloadUrl;
+  final String fileKey;
+  final int expiresInSeconds;
+
+  const MediaDownloadUrlResponse({
+    required this.downloadUrl,
+    required this.fileKey,
+    required this.expiresInSeconds,
+  });
+
+  factory MediaDownloadUrlResponse.fromJson(Map<String, dynamic> json) {
+    return MediaDownloadUrlResponse(
+      downloadUrl: json['downloadUrl'] as String,
+      fileKey: json['fileKey'] as String,
+      expiresInSeconds: json['expiresInSeconds'] as int? ?? 900,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'downloadUrl': downloadUrl,
+        'fileKey': fileKey,
+        'expiresInSeconds': expiresInSeconds,
+      };
+}

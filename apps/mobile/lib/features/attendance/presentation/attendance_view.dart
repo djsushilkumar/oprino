@@ -93,7 +93,8 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
         currentLongitude: loc?.longitude,
         accuracy: loc?.accuracy,
         onConfirm: ({
-          required String selfieMediaKey,
+          String? selfieMediaKey,
+          String? localFilePath,
           required double? latitude,
           required double? longitude,
           required double? accuracy,
@@ -110,6 +111,7 @@ class _AttendanceViewState extends ConsumerState<AttendanceView>
               workspaceId: workspaceId,
               note: 'Punched in from mobile with selfie verification',
               selfieMediaKey: selfieMediaKey,
+              localFilePath: localFilePath,
               latitude: latitude,
               longitude: longitude,
               accuracy: accuracy,

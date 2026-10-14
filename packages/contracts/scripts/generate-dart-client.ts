@@ -2061,6 +2061,32 @@ class ListTaskProofsResponse {
         'proofs': proofs.map((p) => p.toJson()).toList(),
       };
 }
+
+class MediaDownloadUrlResponse {
+  final String downloadUrl;
+  final String fileKey;
+  final int expiresInSeconds;
+
+  const MediaDownloadUrlResponse({
+    required this.downloadUrl,
+    required this.fileKey,
+    required this.expiresInSeconds,
+  });
+
+  factory MediaDownloadUrlResponse.fromJson(Map<String, dynamic> json) {
+    return MediaDownloadUrlResponse(
+      downloadUrl: json['downloadUrl'] as String,
+      fileKey: json['fileKey'] as String,
+      expiresInSeconds: json['expiresInSeconds'] as int? ?? 900,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'downloadUrl': downloadUrl,
+        'fileKey': fileKey,
+        'expiresInSeconds': expiresInSeconds,
+      };
+}
 `;
 fs.writeFileSync(path.resolve(modelDir, 'proof_models.dart'), proofModelsContent, 'utf-8');
 
@@ -3014,6 +3040,40 @@ class OprinoApiClient {
         },
       );
       return MediaUploadUrlResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<MediaUploadUrlResponse> requestAttendanceSelfieUploadUrl({
+    String fileName = 'selfie.jpg',
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/attendance-selfie-url',
+        data: {
+          'fileName': fileName,
+        },
+      );
+      return MediaUploadUrlResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<MediaDownloadUrlResponse> requestMediaDownloadUrl({
+    required String fileKey,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/download-url',
+        data: {
+          'fileKey': fileKey,
+        },
+      );
+      return MediaDownloadUrlResponse.fromJson(response.data!);
     } on DioException catch (e) {
       _handleDioException(e);
       rethrow;

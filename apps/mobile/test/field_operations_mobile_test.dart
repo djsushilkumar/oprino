@@ -7,11 +7,47 @@ import 'package:oprino_mobile/core/database/database.dart';
 import 'package:oprino_mobile/core/network/api_client_provider.dart';
 import 'package:oprino_mobile/core/sync/sync_service.dart';
 import 'package:oprino_mobile/features/auth/presentation/auth_state_notifier.dart';
+import 'package:oprino_mobile/core/network/media_upload_service.dart';
 import 'package:oprino_mobile/features/tasks/presentation/widgets/customer_signature_sheet.dart';
 import 'package:oprino_mobile/features/tasks/presentation/widgets/photo_proof_sheet.dart';
 import 'package:oprino_mobile/features/tasks/presentation/task_detail_screen.dart';
 import 'package:oprino_mobile/features/visits/presentation/visits_view.dart';
 import 'package:oprino_api/oprino_api.dart';
+
+class _TestMediaUploadService extends MediaUploadService {
+  _TestMediaUploadService({required super.client});
+
+  @override
+  Future<MediaUploadUrlResponse> requestTaskProofUploadUrl({
+    required String taskId,
+    String? visitId,
+    required String proofType,
+    required String fileName,
+    String mimeType = 'image/jpeg',
+    int? fileSizeBytes,
+  }) async {
+    return MediaUploadUrlResponse(
+      uploadUrl: 'http://127.0.0.1:3001/v1/media/storage/upload/test',
+      fileKey: 'ws-test/proofs/$taskId/proof.jpg',
+      expiresInSeconds: 600,
+    );
+  }
+
+  @override
+  Future<void> uploadBinaryBytes({
+    required String uploadUrl,
+    required List<int> bytes,
+    String contentType = 'image/jpeg',
+  }) async {}
+
+  @override
+  Future<String> savePendingImageFile({
+    required String prefix,
+    required List<int> bytes,
+  }) async {
+    return '/tmp/$prefix.jpg';
+  }
+}
 
 class _TestSyncService extends SyncService {
   List<CachedTask> testTasks = [];
@@ -190,24 +226,34 @@ void main() {
     String? confirmedNotes;
     double? confirmedLat;
 
+    final testMediaService = _TestMediaUploadService(client: testClient);
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: PhotoProofSheet(
-            taskId: 't-1',
-            currentLatitude: 37.77492,
-            currentLongitude: -122.41941,
-            accuracy: 3.5,
-            onConfirm: ({
-              required String notes,
-              required double latitude,
-              required double longitude,
-              required double accuracy,
-              required DateTime timestamp,
-            }) {
-              confirmedNotes = notes;
-              confirmedLat = latitude;
-            },
+      ProviderScope(
+        overrides: [
+          mediaUploadServiceProvider.overrideWithValue(testMediaService),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: PhotoProofSheet(
+              taskId: 't-1',
+              currentLatitude: 37.77492,
+              currentLongitude: -122.41941,
+              accuracy: 3.5,
+              onConfirm: ({
+                required String fileKey,
+                String? localFilePath,
+                required bool isBinaryUploaded,
+                required String notes,
+                required double latitude,
+                required double longitude,
+                required double accuracy,
+                required DateTime timestamp,
+              }) {
+                confirmedNotes = notes;
+                confirmedLat = latitude;
+              },
+            ),
           ),
         ),
       ),

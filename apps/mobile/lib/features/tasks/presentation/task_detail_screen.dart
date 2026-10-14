@@ -6,6 +6,7 @@ import '../../../../core/database/database.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
 import 'widgets/customer_signature_sheet.dart';
 import 'widgets/photo_proof_sheet.dart';
+import 'widgets/proof_viewer_sheet.dart';
 
 class TaskDetailScreen extends ConsumerStatefulWidget {
   final String taskId;
@@ -204,6 +205,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
       builder: (_) => PhotoProofSheet(
         taskId: widget.taskId,
         onConfirm: ({
+          required String fileKey,
+          String? localFilePath,
+          required bool isBinaryUploaded,
           required String notes,
           required double latitude,
           required double longitude,
@@ -211,8 +215,6 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           required DateTime timestamp,
         }) async {
           final sync = ref.read(syncServiceProvider);
-          final ts = timestamp.millisecondsSinceEpoch;
-          final fileKey = '$workspaceId/proofs/${widget.taskId}/photo_$ts.jpg';
 
           await sync.queueProofConfirmation(
             workspaceId: workspaceId,
@@ -220,6 +222,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             userId: userId,
             proofType: 'PHOTO',
             fileKey: fileKey,
+            localFilePath: localFilePath,
+            isBinaryUploaded: isBinaryUploaded,
             watermarkMetadata: {
               'latitude': latitude,
               'longitude': longitude,
@@ -238,6 +242,67 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             );
           }
         },
+      ),
+    );
+  }
+
+  void _openVerificationDialog(String workspaceId) {
+    final notesController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Verify Task Completion', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Confirm that the task deliverables, checklists, and photo proofs meet quality standards.',
+              style: TextStyle(fontSize: 13, color: OprinoColors.slate),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: notesController,
+              decoration: const InputDecoration(
+                labelText: 'Verification Notes (Optional)',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final sync = ref.read(syncServiceProvider);
+              await sync.queueTaskVerification(
+                workspaceId: workspaceId,
+                taskId: widget.taskId,
+                action: 'APPROVE',
+                notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Task verified and closed successfully!'),
+                    backgroundColor: Color(0xFF059669),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF059669),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Approve & Verify'),
+          ),
+        ],
       ),
     );
   }
@@ -546,18 +611,34 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: const Color(0xFFA7F3D0)),
                             ),
-                            child: const Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Icon(Icons.check_circle, color: Color(0xFF059669)),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Task is completed and awaiting manager verification review.',
-                                    style: TextStyle(
-                                      color: Color(0xFF065F46),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
+                                const Row(
+                                  children: [
+                                    Icon(Icons.check_circle, color: Color(0xFF059669)),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Task is completed and awaiting manager verification review.',
+                                        style: TextStyle(
+                                          color: Color(0xFF065F46),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
                                     ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: () => _openVerificationDialog(workspaceId),
+                                  icon: const Icon(Icons.verified, size: 18),
+                                  label: const Text('Verify Task Completion (Manager Action)', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF059669),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
                                   ),
                                 ),
                               ],
@@ -649,32 +730,48 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: OprinoColors.slate),
                                     ),
                                     const SizedBox(height: 6),
-                                    ...proofs.map((p) => Container(
-                                          margin: const EdgeInsets.only(bottom: 6),
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF8FAFC),
-                                            borderRadius: BorderRadius.circular(6),
-                                            border: Border.all(color: OprinoColors.border),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                p.proofType == 'SIGNATURE' ? Icons.draw : Icons.camera_alt,
-                                                size: 16,
-                                                color: p.proofType == 'SIGNATURE' ? OprinoColors.cobalt : const Color(0xFF059669),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  p.proofType == 'SIGNATURE'
-                                                      ? 'Signed by: ${p.signerName ?? "Customer"}'
-                                                      : 'Geotagged Photo Proof',
-                                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                    ...proofs.map((p) => InkWell(
+                                          onTap: () {
+                                            showModalBottomSheet(
+                                              context: context,
+                                              isScrollControlled: true,
+                                              backgroundColor: Colors.transparent,
+                                              builder: (_) => ProofViewerSheet(proof: p),
+                                            );
+                                          },
+                                          borderRadius: BorderRadius.circular(6),
+                                          child: Container(
+                                            margin: const EdgeInsets.only(bottom: 6),
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF8FAFC),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: OprinoColors.border),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  p.proofType == 'SIGNATURE' ? Icons.draw : Icons.camera_alt,
+                                                  size: 16,
+                                                  color: p.proofType == 'SIGNATURE' ? OprinoColors.cobalt : const Color(0xFF059669),
                                                 ),
-                                              ),
-                                              const Icon(Icons.check_circle, size: 14, color: Color(0xFF059669)),
-                                            ],
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    p.proofType == 'SIGNATURE'
+                                                        ? 'Signed by: ${p.signerName ?? "Customer"}'
+                                                        : 'Geotagged Photo Proof',
+                                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                                  ),
+                                                ),
+                                                const Text(
+                                                  'View',
+                                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: OprinoColors.cobalt),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                const Icon(Icons.chevron_right, size: 14, color: OprinoColors.cobalt),
+                                              ],
+                                            ),
                                           ),
                                         )),
                                   ],
