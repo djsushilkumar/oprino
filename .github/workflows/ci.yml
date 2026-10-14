@@ -2,9 +2,10 @@ name: Oprino Monorepo CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/**']
   pull_request:
-    branches: [main]
+    branches: [main, 'feat/**', 'docs/**']
+  workflow_dispatch:
 
 jobs:
   validate-web-and-services:
