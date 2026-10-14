@@ -163,6 +163,16 @@ export class MediaService {
   async confirmUpload(workspaceId: string, userId: string, input: ConfirmMediaUploadRequest) {
     this.validateFileKey(workspaceId, input.fileKey);
 
+    // Verify entity association: fileKey must strictly match target task proof prefix
+    const expectedTaskPrefix = `${workspaceId}/proofs/${input.taskId}/`;
+    if (!input.fileKey.startsWith(expectedTaskPrefix)) {
+      const error: any = new Error(
+        'Security barrier violation: fileKey does not match the target task proof entity',
+      );
+      error.statusCode = 403;
+      throw error;
+    }
+
     // Verify object existence in real storage
     const meta = await this.storageDriver.headObject(input.fileKey);
     if (!meta || !meta.exists) {
@@ -171,6 +181,23 @@ export class MediaService {
       );
       error.statusCode = 400;
       error.code = 'STORAGE_OBJECT_NOT_FOUND';
+      throw error;
+    }
+
+    // Verify real file size
+    if (meta.sizeBytes === 0) {
+      const error: any = new Error('Uploaded media file is empty (0 bytes).');
+      error.statusCode = 400;
+      error.code = 'EMPTY_MEDIA_FILE';
+      throw error;
+    }
+
+    if (meta.sizeBytes && meta.sizeBytes > MAX_UPLOAD_SIZE_BYTES) {
+      const error: any = new Error(
+        `Uploaded media file exceeds maximum allowed threshold of ${MAX_UPLOAD_SIZE_BYTES} bytes (10 MB).`,
+      );
+      error.statusCode = 400;
+      error.code = 'OVERSIZED_MEDIA_FILE';
       throw error;
     }
 
@@ -198,6 +225,22 @@ export class MediaService {
         throw error;
       }
 
+      // Replay prevention: verify this fileKey has not already been confirmed
+      const [existingProof] = await tx
+        .select({ id: taskProofs.id })
+        .from(taskProofs)
+        .where(and(eq(taskProofs.workspaceId, workspaceId), eq(taskProofs.fileKey, input.fileKey)))
+        .limit(1);
+
+      if (existingProof) {
+        const error: any = new Error(
+          'Replay detected: This media file has already been confirmed as proof.',
+        );
+        error.statusCode = 400;
+        error.code = 'PROOF_REPLAY_DETECTED';
+        throw error;
+      }
+
       // Generate a fresh 15-minute presigned GET URL for viewing
       const fileUrl = await this.storageDriver.getDownloadUrl(input.fileKey, {
         expiresInSeconds: 900,
@@ -215,7 +258,7 @@ export class MediaService {
           userId,
           proofType: input.proofType as any,
           fileKey: input.fileKey,
-          fileUrl,
+          fileUrl: null, // Durable storage: generate fresh presigned URLs on demand, never store stale URLs
           fileSizeBytes: actualSizeBytes,
           mimeType: actualMimeType,
           signerName: input.signerName ?? null,
@@ -264,10 +307,14 @@ export class MediaService {
   ): Promise<{ downloadUrl: string; fileKey: string; expiresInSeconds: number }> {
     this.validateFileKey(workspaceId, fileKey);
 
-    // Permission and ownership authorization
-    if (fileKey.includes('/attendance/')) {
-      const isOwner = fileKey.includes(`/attendance/${userId}/`);
-      const hasTeamRead = permissions.includes('attendance.team.read');
+    // Permission and ownership authorization with default-deny
+    if (fileKey.startsWith(`${workspaceId}/attendance/`)) {
+      const parts = fileKey.split('/');
+      // Expected key format: {workspaceId}/attendance/{userId}/{timestamp}-{uuid}-{filename}
+      const targetUserId = parts[2];
+      const isOwner = targetUserId === userId;
+      const hasTeamRead =
+        permissions.includes('attendance.team.read') || permissions.includes('admin');
       if (!isOwner && !hasTeamRead) {
         const error: any = new Error(
           'Security barrier violation: Insufficient permissions to view employee attendance selfie',
@@ -275,8 +322,11 @@ export class MediaService {
         error.statusCode = 403;
         throw error;
       }
-    } else if (fileKey.includes('/proofs/')) {
-      const hasTasksRead = permissions.includes('tasks.read');
+    } else if (fileKey.startsWith(`${workspaceId}/proofs/`)) {
+      const hasTasksRead =
+        permissions.includes('tasks.read') ||
+        permissions.includes('tasks.write') ||
+        permissions.includes('admin');
       if (!hasTasksRead) {
         const error: any = new Error(
           'Security barrier violation: Insufficient permissions to inspect task proof',
@@ -284,6 +334,13 @@ export class MediaService {
         error.statusCode = 403;
         throw error;
       }
+    } else {
+      // Default-Deny: Any unclassified media category is forbidden
+      const error: any = new Error(
+        'Security barrier violation: Access to unclassified media category is forbidden',
+      );
+      error.statusCode = 403;
+      throw error;
     }
 
     // Verify object exists

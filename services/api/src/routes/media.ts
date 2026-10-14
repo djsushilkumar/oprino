@@ -1,5 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { MediaService } from '../services/media.service.js';
+import {
+  type MediaService,
+  ALLOWED_MIME_TYPES,
+  MAX_UPLOAD_SIZE_BYTES,
+} from '../services/media.service.js';
 import type { createAuthMiddleware } from '../middleware/auth.js';
 import { LocalStorageDriver } from '../storage/local-driver.js';
 import { MediaUploadUrlRequestSchema, ConfirmMediaUploadRequestSchema } from '@oprino/contracts';
@@ -264,36 +268,95 @@ export const mediaRoutes: FastifyPluginAsync<MediaRoutesOptions> = async (app, o
   );
 
   // =========================================================================
-  // LOCAL / TEST DIRECT S3-COMPATIBLE STORAGE TARGETS
+  // LOCAL STORAGE DIRECT SIGNED TARGETS (DISABLED IN S3 MODE)
   // =========================================================================
 
-  // Handle direct PUT uploads for LocalStorageDriver and backward-compatible mock uploads
-  const handleDirectPutUpload = async (req: any, reply: any) => {
+  // Handle direct PUT uploads for LocalStorageDriver only with MANDATORY HMAC signature
+  app.put('/v1/media/storage/upload/*', async (req, reply) => {
+    // S3 Safety Guard: Direct API proxy uploads are strictly forbidden when S3 driver is active
+    if (!(storageDriver instanceof LocalStorageDriver)) {
+      return reply.status(403).send({
+        statusCode: 403,
+        error: 'Forbidden',
+        message:
+          'Direct API storage proxy upload is disabled. S3/R2 presigned URLs must be used directly.',
+      });
+    }
+
     const rawPath = (req.params as any)['*'] || '';
     const fileKey = decodeURIComponent(rawPath);
 
     if (!fileKey) {
-      return reply.status(400).send({ error: 'Missing file key in upload path' });
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Missing file key in upload path',
+      });
     }
 
-    const contentType = req.headers['content-type'] || 'image/jpeg';
+    // Path traversal guardrails
+    if (
+      fileKey.includes('..') ||
+      fileKey.includes('//') ||
+      fileKey.includes('\\') ||
+      fileKey.startsWith('/') ||
+      fileKey.includes('\0')
+    ) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message:
+          'Security barrier violation: Malicious path traversal pattern detected in file key',
+      });
+    }
+
     const query = req.query as Record<string, string>;
 
-    // If signed token is present and using LocalStorageDriver, verify token
-    if (storageDriver instanceof LocalStorageDriver && query?.signature && query?.expires) {
-      const isValid = storageDriver.verifyUploadToken(
-        fileKey,
-        query.expires,
-        query.signature,
-        query.contentType || contentType,
-      );
-      if (!isValid) {
-        return reply.status(403).send({
-          statusCode: 403,
-          error: 'Forbidden',
-          message: 'Invalid or expired upload signature token',
-        });
-      }
+    // MANDATORY SIGNED TOKEN VALIDATION: Missing signature or expiry is immediately rejected
+    if (!query?.signature || !query?.expires) {
+      return reply.status(403).send({
+        statusCode: 403,
+        error: 'Forbidden',
+        message:
+          'Forbidden: Missing mandatory upload signature or expiration token. Direct uploads require a valid signed token.',
+      });
+    }
+
+    const headerContentType = ((req.headers['content-type'] as string) || 'image/jpeg')
+      .split(';')[0]
+      .trim();
+
+    // Validate MIME type against allowed list
+    if (!ALLOWED_MIME_TYPES.includes(headerContentType as any)) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Unsupported media Content-Type: ${headerContentType}. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}`,
+      });
+    }
+
+    // If query specified contentType, enforce exact match with header Content-Type
+    if (query.contentType && query.contentType !== headerContentType) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Content-Type mismatch: upload requested with ${query.contentType} but received ${headerContentType}`,
+      });
+    }
+
+    const isValid = storageDriver.verifyUploadToken(
+      fileKey,
+      query.expires,
+      query.signature,
+      query.contentType || headerContentType,
+    );
+
+    if (!isValid) {
+      return reply.status(403).send({
+        statusCode: 403,
+        error: 'Forbidden',
+        message: 'Invalid or expired upload signature token',
+      });
     }
 
     // Persist real bytes to storage
@@ -303,7 +366,24 @@ export const mediaRoutes: FastifyPluginAsync<MediaRoutesOptions> = async (app, o
         ? Buffer.from(req.body)
         : Buffer.from([]);
 
-    await storageDriver.putObject(fileKey, dataBuffer, contentType);
+    // Validate actual file size constraints
+    if (dataBuffer.length === 0) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Empty file upload (0 bytes) is not allowed',
+      });
+    }
+
+    if (dataBuffer.length > MAX_UPLOAD_SIZE_BYTES) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Uploaded file exceeds maximum allowed threshold of ${MAX_UPLOAD_SIZE_BYTES} bytes (10 MB).`,
+      });
+    }
+
+    await storageDriver.putObject(fileKey, dataBuffer, headerContentType);
 
     return reply.status(200).send({
       success: true,
@@ -311,26 +391,66 @@ export const mediaRoutes: FastifyPluginAsync<MediaRoutesOptions> = async (app, o
       sizeBytes: dataBuffer.length,
       message: 'Direct storage upload successful',
     });
-  };
+  });
 
-  app.put('/v1/media/storage/upload/*', handleDirectPutUpload);
-  app.put('/v1/media/mock-upload/*', handleDirectPutUpload);
-
-  // Handle direct GET downloads for LocalStorageDriver
+  // Handle direct GET downloads for LocalStorageDriver only with MANDATORY HMAC signature
   app.get('/v1/media/storage/download/*', async (req, reply) => {
+    // S3 Safety Guard: Direct API proxy downloads are strictly forbidden when S3 driver is active
+    if (!(storageDriver instanceof LocalStorageDriver)) {
+      return reply.status(403).send({
+        statusCode: 403,
+        error: 'Forbidden',
+        message:
+          'Direct API storage proxy download is disabled. S3/R2 presigned URLs must be used directly.',
+      });
+    }
+
     const rawPath = (req.params as any)['*'] || '';
     const fileKey = decodeURIComponent(rawPath);
+
+    if (!fileKey) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Missing file key in download path',
+      });
+    }
+
+    // Path traversal guardrails
+    if (
+      fileKey.includes('..') ||
+      fileKey.includes('//') ||
+      fileKey.includes('\\') ||
+      fileKey.startsWith('/') ||
+      fileKey.includes('\0')
+    ) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message:
+          'Security barrier violation: Malicious path traversal pattern detected in file key',
+      });
+    }
+
     const query = req.query as Record<string, string>;
 
-    if (storageDriver instanceof LocalStorageDriver && query?.signature && query?.expires) {
-      const isValid = storageDriver.verifyDownloadToken(fileKey, query.expires, query.signature);
-      if (!isValid) {
-        return reply.status(403).send({
-          statusCode: 403,
-          error: 'Forbidden',
-          message: 'Invalid or expired download signature token',
-        });
-      }
+    // MANDATORY SIGNED TOKEN VALIDATION: Missing signature or expiry is immediately rejected
+    if (!query?.signature || !query?.expires) {
+      return reply.status(403).send({
+        statusCode: 403,
+        error: 'Forbidden',
+        message:
+          'Forbidden: Missing mandatory download signature or expiration token. Direct downloads require a valid signed token.',
+      });
+    }
+
+    const isValid = storageDriver.verifyDownloadToken(fileKey, query.expires, query.signature);
+    if (!isValid) {
+      return reply.status(403).send({
+        statusCode: 403,
+        error: 'Forbidden',
+        message: 'Invalid or expired download signature token',
+      });
     }
 
     const obj = await storageDriver.getObject(fileKey);

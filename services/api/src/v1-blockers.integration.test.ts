@@ -467,12 +467,13 @@ describe('V1 Release Blockers Remediation Integration Tests (BLK-002 through BLK
       const { uploadUrl, fileKey } = uploadUrlRes.json();
       assert.ok(fileKey.startsWith(`${workspaceAId}/attendance/`));
 
-      // Step B: Mock upload to storage target
+      // Step B: Direct upload using presigned uploadUrl
+      const uploadUri = new URL(uploadUrl);
       const mockUploadRes = await app.inject({
         method: 'PUT',
-        url: new URL(uploadUrl).pathname,
-        headers: { 'content-type': 'application/octet-stream' },
-        payload: 'fake-image-bytes-mock',
+        url: `${uploadUri.pathname}${uploadUri.search}`,
+        headers: { 'content-type': 'image/jpeg' },
+        payload: Buffer.from('fake-image-bytes-mock'),
       });
       assert.strictEqual(mockUploadRes.statusCode, 200);
 
@@ -523,12 +524,13 @@ describe('V1 Release Blockers Remediation Integration Tests (BLK-002 through BLK
           'x-workspace-id': workspaceAId,
         },
       });
-      const { fileKey } = uploadUrlRes.json();
+      const { fileKey, uploadUrl } = uploadUrlRes.json();
+      const uploadUri = new URL(uploadUrl);
 
       // Upload selfie binary to storage
       await app.inject({
         method: 'PUT',
-        url: `/v1/media/storage/upload/${encodeURIComponent(fileKey)}`,
+        url: `${uploadUri.pathname}${uploadUri.search}`,
         headers: { 'content-type': 'image/jpeg' },
         payload: Buffer.from('fake-selfie-bytes-replay-test'),
       });

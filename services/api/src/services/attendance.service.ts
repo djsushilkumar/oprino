@@ -290,18 +290,41 @@ export class AttendanceService {
           throw error;
         }
 
+        // Ownership invariant: Employee cannot use another employee's selfie key
+        const expectedSelfiePrefix = `${workspaceId}/attendance/${userId}/`;
+        if (!input.selfieMediaKey.startsWith(expectedSelfiePrefix)) {
+          const error: any = new Error(
+            "Security barrier violation: cannot use another employee's attendance selfie",
+          );
+          error.statusCode = 403;
+          error.code = 'FORBIDDEN_SELFIE_OWNERSHIP';
+          throw error;
+        }
+
         // Validate storage existence: ensure image binary was actually uploaded to storage
         if (this.mediaService) {
-          const exists = await this.mediaService.verifyMediaExists(
-            workspaceId,
-            input.selfieMediaKey,
-          );
-          if (!exists) {
+          this.mediaService.validateFileKey(workspaceId, input.selfieMediaKey);
+          const meta = await this.mediaService.getStorageDriver().headObject(input.selfieMediaKey);
+          if (!meta || !meta.exists) {
             const error: any = new Error(
               'Selfie photo binary does not exist in storage. The direct binary upload must complete before punching in.',
             );
             error.statusCode = 400;
             error.code = 'MISSING_SELFIE_BINARY';
+            throw error;
+          }
+
+          if (meta.sizeBytes === 0) {
+            const error: any = new Error('Selfie photo file in storage is empty (0 bytes).');
+            error.statusCode = 400;
+            error.code = 'EMPTY_SELFIE_BINARY';
+            throw error;
+          }
+
+          if (meta.sizeBytes && meta.sizeBytes > 10 * 1024 * 1024) {
+            const error: any = new Error('Selfie photo file exceeds 10MB limit.');
+            error.statusCode = 400;
+            error.code = 'OVERSIZED_SELFIE_BINARY';
             throw error;
           }
         }
