@@ -10,6 +10,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: APP_ENV
+        value: production
       - key: PORT
         value: 3001
       - key: API_PUBLIC_URL
@@ -32,9 +34,12 @@ services:
     dockerfilePath: ./Dockerfile.api
     plan: free
     region: oregon
+    autoDeploy: false
     healthCheckPath: /health/live
     envVars:
       - key: NODE_ENV
+        value: production
+      - key: APP_ENV
         value: staging
       - key: PORT
         value: 3001
@@ -49,7 +54,7 @@ services:
       - key: BETTER_AUTH_URL
         sync: false
       - key: CORS_ORIGINS
-        value: '*'
+        value: 'https://app.staging.oprino.com,https://oprino-staging.vercel.app,http://localhost:3000'
       - key: STORAGE_DRIVER
         value: s3
       - key: S3_ENDPOINT

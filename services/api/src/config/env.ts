@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 export const EnvSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'staging', 'production']).default('development'),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  APP_ENV: z.enum(['development', 'test', 'staging', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
   HOST: z.string().default('0.0.0.0'),
   API_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
@@ -40,20 +41,33 @@ export function validateEnv(customEnv?: Record<string, unknown>): Env {
     throw new Error('Invalid API environment configuration');
   }
 
+  const isProductionLike =
+    result.data.NODE_ENV === 'production' ||
+    result.data.APP_ENV === 'production' ||
+    result.data.APP_ENV === 'staging';
+
   // Security Invariant: Never allow fake or unconfigured storage in production or staging
-  if (result.data.NODE_ENV === 'production' || result.data.NODE_ENV === 'staging') {
+  if (isProductionLike) {
     const isMissingS3 =
       !result.data.S3_BUCKET_NAME ||
       !result.data.S3_ACCESS_KEY_ID ||
       !result.data.S3_SECRET_ACCESS_KEY;
 
     if (result.data.STORAGE_DRIVER !== 's3' || isMissingS3) {
-      const envName = result.data.NODE_ENV === 'production' ? 'Production' : 'Staging';
+      const envName = result.data.APP_ENV === 'staging' ? 'Staging' : 'Production';
       console.error(
-        `❌ ${envName} Storage Misconfiguration: Real S3/R2 object storage credentials (S3_BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY) are strictly mandatory in ${result.data.NODE_ENV}.`,
+        `❌ ${envName} Storage Misconfiguration: Real S3/R2 object storage credentials (S3_BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY) are strictly mandatory in ${envName.toLowerCase()}.`,
       );
       throw new Error(
         `${envName} environment requires valid S3/R2 storage configuration. Silent fallback to mock storage is strictly forbidden.`,
+      );
+    }
+
+    // Security Invariant: Reject default development auth secrets in production-like environments
+    if (result.data.BETTER_AUTH_SECRET === 'oprino_dev_secret_must_be_long_and_secure_for_auth') {
+      const envName = result.data.APP_ENV === 'staging' ? 'Staging' : 'Production';
+      throw new Error(
+        `Insecure ${envName} Authentication Secret: Default development BETTER_AUTH_SECRET is strictly forbidden in ${envName.toLowerCase()}.`,
       );
     }
   }

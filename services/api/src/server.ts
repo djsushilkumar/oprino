@@ -211,7 +211,10 @@ export function buildServer(options?: {
       error.statusCode && error.statusCode >= 400 && error.statusCode < 600
         ? error.statusCode
         : 500;
-    const isProduction = env.NODE_ENV === 'production';
+    const isProduction =
+      env.NODE_ENV === 'production' ||
+      env.APP_ENV === 'production' ||
+      env.APP_ENV === 'staging';
 
     request.log.error(error);
 

@@ -533,11 +533,12 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
       assert.strictEqual(env.S3_BUCKET_NAME, 'oprino-prod-media');
     });
 
-    test('validateEnv throws fatal error in NODE_ENV=staging if S3 credentials are missing', () => {
+    test('validateEnv throws fatal error in APP_ENV=staging if S3 credentials are missing', () => {
       assert.throws(
         () =>
           validateEnv({
-            NODE_ENV: 'staging',
+            NODE_ENV: 'production',
+            APP_ENV: 'staging',
             PORT: 3001,
             HOST: '0.0.0.0',
             API_PUBLIC_URL: 'https://api.staging.oprino.com',
@@ -551,9 +552,10 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
       );
     });
 
-    test('validateEnv succeeds in NODE_ENV=staging when complete S3 credentials are provided', () => {
+    test('validateEnv succeeds in APP_ENV=staging when complete S3 credentials are provided', () => {
       const env = validateEnv({
-        NODE_ENV: 'staging',
+        NODE_ENV: 'production',
+        APP_ENV: 'staging',
         PORT: 3001,
         HOST: '0.0.0.0',
         API_PUBLIC_URL: 'https://api.staging.oprino.com',
@@ -569,9 +571,32 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
         S3_SECRET_ACCESS_KEY: 'staging-secret-access-key',
       });
 
-      assert.strictEqual(env.NODE_ENV, 'staging');
+      assert.strictEqual(env.NODE_ENV, 'production');
+      assert.strictEqual(env.APP_ENV, 'staging');
       assert.strictEqual(env.STORAGE_DRIVER, 's3');
       assert.strictEqual(env.S3_BUCKET_NAME, 'oprino-staging-media');
+    });
+
+    test('validateEnv throws fatal error if default dev BETTER_AUTH_SECRET is used in staging or production', () => {
+      assert.throws(
+        () =>
+          validateEnv({
+            NODE_ENV: 'production',
+            APP_ENV: 'staging',
+            PORT: 3001,
+            HOST: '0.0.0.0',
+            API_PUBLIC_URL: 'https://api.staging.oprino.com',
+            BETTER_AUTH_SECRET: 'oprino_dev_secret_must_be_long_and_secure_for_auth',
+            BETTER_AUTH_URL: 'https://api.staging.oprino.com',
+            DATABASE_URL: 'postgresql://oprino_admin:password@localhost:5432/oprino_staging_db',
+            REDIS_URL: 'redis://localhost:6379',
+            STORAGE_DRIVER: 's3',
+            S3_BUCKET_NAME: 'oprino-staging-media',
+            S3_ACCESS_KEY_ID: 'valid-key',
+            S3_SECRET_ACCESS_KEY: 'valid-secret',
+          }),
+        /Insecure Staging Authentication Secret: Default development BETTER_AUTH_SECRET is strictly forbidden in staging/,
+      );
     });
   });
 
