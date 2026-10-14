@@ -321,6 +321,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
 
   describe('3. Proof of Work & ADR-012 Pre-Signed Direct Upload', () => {
     let photoKey: string;
+    let photoUploadUrl: string;
     let signatureKey: string;
 
     test('Request pre-signed upload URL enforces workspace prefix partitioning', async () => {
@@ -346,6 +347,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
       assert.ok(body.uploadUrl);
       assert.ok(body.fileKey.startsWith(`${workspaceAId}/proofs/${task1Id}/`));
       photoKey = body.fileKey;
+      photoUploadUrl = body.uploadUrl;
     });
 
     test('Security barrier: cross-tenant fileKey confirmation rejected with 403', async () => {
@@ -367,13 +369,15 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
     });
 
     test('Confirm photo proof and signature proof successfully recorded', async () => {
-      // Upload photo binary to storage
-      await app.inject({
+      // Upload photo binary using signed upload URL
+      const photoUri = new URL(photoUploadUrl);
+      const putPhotoRes = await app.inject({
         method: 'PUT',
-        url: `/v1/media/storage/upload/${encodeURIComponent(photoKey)}`,
+        url: `${photoUri.pathname}${photoUri.search}`,
         headers: { 'content-type': 'image/jpeg' },
         payload: Buffer.from('fake-jpeg-photo-bytes-for-test'),
       });
+      assert.equal(putPhotoRes.statusCode, 200);
 
       // 1. Confirm Photo Proof
       const resPhoto = await app.inject({
@@ -422,15 +426,18 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
           mimeType: 'image/png',
         },
       });
-      signatureKey = resSigUrl.json().fileKey;
+      const sigBody = resSigUrl.json();
+      signatureKey = sigBody.fileKey;
+      const sigUri = new URL(sigBody.uploadUrl);
 
-      // Upload signature binary to storage
-      await app.inject({
+      // Upload signature binary using signed upload URL
+      const putSigRes = await app.inject({
         method: 'PUT',
-        url: `/v1/media/storage/upload/${encodeURIComponent(signatureKey)}`,
+        url: `${sigUri.pathname}${sigUri.search}`,
         headers: { 'content-type': 'image/png' },
         payload: Buffer.from('fake-png-signature-bytes-for-test'),
       });
+      assert.equal(putSigRes.statusCode, 200);
 
       const resSig = await app.inject({
         method: 'POST',
