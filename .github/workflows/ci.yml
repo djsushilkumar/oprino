@@ -127,17 +127,17 @@ jobs:
           cd apps/mobile
           flutter test
 
-      - name: Build Android Pilot Debug APK
+      - name: Build LOCAL_PILOT_DEBUG Android APK
         run: |
           cd apps/mobile
           flutter build apk --debug \
-            --dart-define=API_BASE_URL=https://staging-api.oprino.com \
-            --dart-define=ENVIRONMENT=pilot
+            --dart-define=ENVIRONMENT=LOCAL_PILOT_DEBUG \
+            --dart-define=API_BASE_URL=http://localhost:3001
 
-      - name: Upload Pilot Debug APK Artifact
+      - name: Upload LOCAL_PILOT_DEBUG APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: oprino-pilot-debug-apk
+          name: oprino-local-pilot-debug-apk
           path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 7

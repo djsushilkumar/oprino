@@ -97,7 +97,8 @@ async function runPilotVerification() {
   const healthRes = await request('/health/ready');
   assert(healthRes.status === 200, 'Isolated pilot server responds 200 OK');
   assert(healthRes.body.status === 'ok', 'Pilot server status is ok');
-  assert(healthRes.body.version === '1.0.0-pilot', 'Version confirmed as 1.0.0-pilot');
+  assert(healthRes.body.mock === true, 'Server unmistakably identifies as synthetic in-memory mock');
+  assert(healthRes.headers['x-oprino-mock-server'] === 'true', 'X-Oprino-Mock-Server header confirms test-double status');
   assert(healthRes.body.services.storage === 'local-isolated', 'Storage strictly local-isolated (Zero Neon/R2)');
 
   // SCENARIO 2: Employee Authentication & Tenant Isolation

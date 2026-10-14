@@ -1,19 +1,24 @@
 // Oprino Isolated Pilot Test Server (Phase 4C)
 // Provides a complete, zero-dependency, reproducible backend for Android pilot testing:
-// - Fastify/HTTP API compatible contract
+// - Mock Fastify/HTTP API compatible contract
 // - Synthetic Tenant: "Apex Field Services" (ws-pilot-1)
-// - Synthetic Employee: field.lead@acme.com / PilotPassword123!
-// - Synthetic Manager: manager@acme.com / PilotPassword123!
+// - Synthetic Employee & Manager accounts (in-memory test-double only)
 // - Local HMAC-secured media storage with file persistence
 // - Attendance punch-in/out, GPS duty tracking, tasks, checklists, and proof verification
 // - Device governance & revocation simulation
 // - Zero connection to production database
+
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+  console.error('FATAL SECURITY VIOLATION: scripts/isolated_pilot_server.mjs is an in-memory test double and must NEVER be run in production or staging environments!');
+  process.exit(1);
+}
 
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const PORT = parseInt(process.env.PILOT_PORT || '3001', 10);
+const HOST = process.env.PILOT_HOST || '127.0.0.1';
 const STORAGE_DIR = path.resolve(process.cwd(), '.storage', 'pilot_media');
 
 if (!fs.existsSync(STORAGE_DIR)) {
@@ -76,6 +81,10 @@ function sendJson(res, statusCode, data) {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-workspace-id, x-installation-id, x-app-version, x-platform',
+    'X-Oprino-Environment': 'isolated-mock-pilot',
+    'X-Oprino-Mock-Server': 'true',
+    'X-Oprino-Backend-Type': 'in-memory-test-double',
+    'X-Oprino-Warning': 'SYNTHETIC TEST DATA ONLY - NOT REAL FASTIFY POSTGRESQL API',
   });
   res.end(body);
 }
@@ -87,11 +96,13 @@ const server = http.createServer((req, res) => {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-workspace-id, x-installation-id, x-app-version, x-platform',
+      'X-Oprino-Environment': 'isolated-mock-pilot',
+      'X-Oprino-Mock-Server': 'true',
     });
     return res.end();
   }
 
-  const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
   const pathname = parsedUrl.pathname;
   const authHeader = req.headers.authorization || '';
   const isManager = authHeader.includes('manager');
@@ -105,13 +116,16 @@ const server = http.createServer((req, res) => {
     });
   }
 
-  // 1. Health Endpoint
+  // 1. Health Endpoint (Clearly labeled test-double)
   if (pathname === '/health/ready' || pathname === '/health') {
     return sendJson(res, 200, {
       status: 'ok',
-      version: '1.0.0-pilot',
+      mock: true,
+      engine: 'synthetic-in-memory-mock',
+      warning: 'TEST DOUBLE ONLY - NOT REAL FASTIFY POSTGRESQL API',
+      version: '1.0.0-pilot-mock',
       timestamp: new Date().toISOString(),
-      services: { database: 'up', redis: 'up', storage: 'local-isolated' },
+      services: { database: 'mock-in-memory', redis: 'mock-in-memory', storage: 'local-isolated' },
     });
   }
 
@@ -522,12 +536,11 @@ const server = http.createServer((req, res) => {
   sendJson(res, 404, { error: `Route ${req.method} ${pathname} not found in pilot mock server` });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Oprino Isolated Pilot Test Server running at http://0.0.0.0:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`⚠️  OPRINO SYNTHETIC MOCK PILOT SERVER (TEST-DOUBLE ONLY)`);
+  console.log(`🔒 Bound strictly to http://${HOST}:${PORT} (Local-only, NOT a production or real Fastify API)`);
   console.log(`📁 Local Isolated Media Storage: ${STORAGE_DIR}`);
   console.log(`🏢 Synthetic Workspace: Apex Field Services (ws-pilot-1)`);
-  console.log(`👷 Synthetic Employee: field.lead@acme.com / PilotPassword123!`);
-  console.log(`👩‍💼 Synthetic Manager: manager@acme.com / PilotPassword123!`);
 });
 
 // Process signal handling

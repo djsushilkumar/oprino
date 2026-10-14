@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "pilot:server": "node scripts/isolated_pilot_server.mjs",
-    "pilot:test": "node scripts/test_pilot_scenarios.mjs"
+    "pilot:test": "node scripts/test_pilot_scenarios.mjs",
+    "pilot:gates": "node scripts/verify_pilot_hardening_gates.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
