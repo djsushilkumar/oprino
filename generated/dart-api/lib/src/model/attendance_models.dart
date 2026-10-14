@@ -81,6 +81,10 @@ class AttendanceSessionResponse {
   final DateTime punchInTime;
   final DateTime? punchOutTime;
   final int? durationMinutes;
+  final String? selfieMediaKey;
+  final double? punchInLatitude;
+  final double? punchInLongitude;
+  final double? punchInAccuracy;
   final bool isLate;
   final int lateMinutes;
   final bool isManualAdjustment;
@@ -100,6 +104,10 @@ class AttendanceSessionResponse {
     required this.punchInTime,
     this.punchOutTime,
     this.durationMinutes,
+    this.selfieMediaKey,
+    this.punchInLatitude,
+    this.punchInLongitude,
+    this.punchInAccuracy,
     this.isLate = false,
     this.lateMinutes = 0,
     this.isManualAdjustment = false,
@@ -123,6 +131,10 @@ class AttendanceSessionResponse {
           ? DateTime.parse(json['punchOutTime'] as String)
           : null,
       durationMinutes: json['durationMinutes'] as int?,
+      selfieMediaKey: json['selfieMediaKey'] as String?,
+      punchInLatitude: (json['punchInLatitude'] as num?)?.toDouble(),
+      punchInLongitude: (json['punchInLongitude'] as num?)?.toDouble(),
+      punchInAccuracy: (json['punchInAccuracy'] as num?)?.toDouble(),
       isLate: json['isLate'] as bool? ?? false,
       lateMinutes: json['lateMinutes'] as int? ?? 0,
       isManualAdjustment: json['isManualAdjustment'] as bool? ?? false,
@@ -144,6 +156,10 @@ class AttendanceSessionResponse {
         'punchInTime': punchInTime.toIso8601String(),
         if (punchOutTime != null) 'punchOutTime': punchOutTime!.toIso8601String(),
         if (durationMinutes != null) 'durationMinutes': durationMinutes,
+        if (selfieMediaKey != null) 'selfieMediaKey': selfieMediaKey,
+        if (punchInLatitude != null) 'punchInLatitude': punchInLatitude,
+        if (punchInLongitude != null) 'punchInLongitude': punchInLongitude,
+        if (punchInAccuracy != null) 'punchInAccuracy': punchInAccuracy,
         'isLate': isLate,
         'lateMinutes': lateMinutes,
         'isManualAdjustment': isManualAdjustment,
