@@ -67,7 +67,9 @@ async function runSmokeTest() {
     if (attempt < 3) await new Promise((r) => setTimeout(r, 2000));
   }
   if (healthRes && healthRes.status === 200 && healthRes.body?.status === 'ok') {
-    pass(`API is healthy: db=${healthRes.body.services.database}, redis=${healthRes.body.services.redis}`);
+    pass(
+      `API is healthy: db=${healthRes.body.services.database}, redis=${healthRes.body.services.redis}`,
+    );
   } else {
     fail('Health check failed', healthRes?.body);
   }
@@ -117,7 +119,7 @@ async function runSmokeTest() {
               name: 'North Logistics Solar Farm',
               address: '742 Evergreen Terrace',
               latitude: 28.6139,
-              longitude: 77.2090,
+              longitude: 77.209,
               geofenceRadiusMeters: 150.0,
             }),
           });
@@ -190,12 +192,37 @@ async function runSmokeTest() {
     });
   }
 
+  // BLK-004: Upload attendance selfie photo directly to private storage
+  const selfieUploadRes = await api('/v1/media/attendance-selfie-url', {
+    method: 'POST',
+    body: JSON.stringify({
+      fileName: 'worker_attendance_selfie.jpg',
+    }),
+  });
+  let selfieMediaKey = undefined;
+  if (selfieUploadRes.ok && selfieUploadRes.body.uploadUrl) {
+    const selfiePutRes = await fetch(selfieUploadRes.body.uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'image/jpeg',
+      },
+      body: Buffer.from('ATTENDANCE-SELFIE-IMAGE-STREAM-BINARY'),
+    });
+    if (selfiePutRes.ok) {
+      selfieMediaKey = selfieUploadRes.body.fileKey;
+      pass(`Attendance selfie uploaded to private storage: ${selfieMediaKey}`);
+    } else {
+      fail('Failed to upload attendance selfie bytes to storage URL', await selfiePutRes.text());
+    }
+  }
+
   const punchInIdemp = `punch-in-${Date.now()}`;
   const punchInRes = await api('/v1/attendance/punch-in', {
     method: 'POST',
     body: JSON.stringify({
       idempotencyKey: punchInIdemp,
       shiftId: SHIFT_ID,
+      selfieMediaKey,
       note: 'Smoke test duty start at solar site',
     }),
   });
@@ -203,6 +230,21 @@ async function runSmokeTest() {
     pass(`Punch-in successful: session ${punchInRes.body.id}, duty state ON_DUTY`);
   } else {
     fail('Punch-in failed', punchInRes.body);
+  }
+
+  // Verify selfie download URL generation
+  if (selfieMediaKey) {
+    const selfieDlRes = await api('/v1/media/download-url', {
+      method: 'POST',
+      body: JSON.stringify({ fileKey: selfieMediaKey }),
+    });
+    if (selfieDlRes.ok && selfieDlRes.body.downloadUrl) {
+      pass(
+        `Selfie presigned download URL verified (expires in ${selfieDlRes.body.expiresInSeconds}s)`,
+      );
+    } else {
+      fail('Failed to generate selfie presigned download URL', selfieDlRes.body);
+    }
   }
 
   // Verify current duty state
@@ -246,7 +288,8 @@ async function runSmokeTest() {
   // Test Route Sequencing (Phase 04)
   const todayDate = new Date().toISOString().slice(0, 10);
   const userMeRes = await api('/v1/me');
-  const currentUserId = userMeRes.body?.user?.id || userMeRes.body?.id || 'c273de53-f1dc-423c-a5fa-92fef4862587';
+  const currentUserId =
+    userMeRes.body?.user?.id || userMeRes.body?.id || 'c273de53-f1dc-423c-a5fa-92fef4862587';
 
   const seqRes = await api('/v1/visits/sequence', {
     method: 'PUT',
@@ -268,13 +311,15 @@ async function runSmokeTest() {
     method: 'POST',
     body: JSON.stringify({
       latitude: 28.6139,
-      longitude: 77.2090,
+      longitude: 77.209,
       accuracy: 4.5,
       notes: 'Arrived at Acme Solar HQ Warehouse main gate',
     }),
   });
   if (checkInRes.ok && checkInRes.body.status === 'CHECKED_IN') {
-    pass(`Visit checked in: status=${checkInRes.body.status}, checkInTime=${checkInRes.body.checkInTime}`);
+    pass(
+      `Visit checked in: status=${checkInRes.body.status}, checkInTime=${checkInRes.body.checkInTime}`,
+    );
   } else {
     fail('Visit check-in failed', checkInRes.body);
   }
@@ -283,13 +328,15 @@ async function runSmokeTest() {
     method: 'POST',
     body: JSON.stringify({
       latitude: 28.6139,
-      longitude: 77.2090,
+      longitude: 77.209,
       accuracy: 3.8,
       notes: 'Maintenance completed, customer signed off on site',
     }),
   });
   if (checkOutRes.ok && checkOutRes.body.status === 'CHECKED_OUT') {
-    pass(`Visit checked out: status=${checkOutRes.body.status}, duration=${checkOutRes.body.durationMinutes}m`);
+    pass(
+      `Visit checked out: status=${checkOutRes.body.status}, duration=${checkOutRes.body.durationMinutes}m`,
+    );
   } else {
     fail('Visit check-out failed', checkOutRes.body);
   }
@@ -300,7 +347,12 @@ async function runSmokeTest() {
   let taskDetailRes = await api(`/v1/tasks/${currentTaskId}`);
   let task = taskDetailRes.ok ? taskDetailRes.body : null;
 
-  if (!task || task.status === 'COMPLETED' || task.status === 'VERIFIED' || task.status === 'CANCELLED') {
+  if (
+    !task ||
+    task.status === 'COMPLETED' ||
+    task.status === 'VERIFIED' ||
+    task.status === 'CANCELLED'
+  ) {
     const createRes = await api('/v1/tasks', {
       method: 'POST',
       body: JSON.stringify({
@@ -384,6 +436,19 @@ async function runSmokeTest() {
   });
   if (!photoUploadRes.ok) fail('Photo upload URL failed', photoUploadRes.body);
   const photoKey = photoUploadRes.body.fileKey;
+  const photoUploadUrl = photoUploadRes.body.uploadUrl;
+
+  // Real private storage: upload binary bytes to storage URL before confirming
+  const photoPutRes = await fetch(photoUploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'image/jpeg',
+    },
+    body: Buffer.from('FAKE-JPEG-DATA-BINARY-FOR-SMOKE-TEST'),
+  });
+  if (!photoPutRes.ok)
+    fail('Direct binary photo upload to storage failed', await photoPutRes.text());
+  pass('Direct binary photo uploaded to storage URL');
 
   const photoConfirmRes = await api('/v1/media/confirm', {
     method: 'POST',
@@ -396,7 +461,7 @@ async function runSmokeTest() {
       mimeType: 'image/jpeg',
       watermarkMetadata: {
         latitude: 28.6139,
-        longitude: 77.2090,
+        longitude: 77.209,
         timestamp: new Date().toISOString(),
         accuracyMeters: 4.2,
       },
@@ -423,6 +488,19 @@ async function runSmokeTest() {
   });
   if (!sigUploadRes.ok) fail('Signature upload URL failed', sigUploadRes.body);
   const sigKey = sigUploadRes.body.fileKey;
+  const sigUploadUrl = sigUploadRes.body.uploadUrl;
+
+  // Real private storage: upload binary bytes to storage URL before confirming
+  const sigPutRes = await fetch(sigUploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'image/png',
+    },
+    body: Buffer.from('FAKE-PNG-SIGNATURE-BINARY-FOR-SMOKE-TEST'),
+  });
+  if (!sigPutRes.ok)
+    fail('Direct binary signature upload to storage failed', await sigPutRes.text());
+  pass('Direct binary signature uploaded to storage URL');
 
   const sigConfirmRes = await api('/v1/media/confirm', {
     method: 'POST',
@@ -443,6 +521,47 @@ async function runSmokeTest() {
     pass(`Signature proof confirmed: ID=${sigConfirmRes.body.id}`);
   } else {
     fail('Signature proof confirmation failed', sigConfirmRes.body);
+  }
+
+  // Security test: Request presigned download URL for photo and verify short-lived access
+  const photoDlRes = await api('/v1/media/download-url', {
+    method: 'POST',
+    body: JSON.stringify({ fileKey: photoKey }),
+  });
+  if (photoDlRes.ok && photoDlRes.body.downloadUrl) {
+    pass(
+      `Manager presigned photo download URL verified: expires in ${photoDlRes.body.expiresInSeconds}s`,
+    );
+    const binaryRes = await fetch(photoDlRes.body.downloadUrl);
+    if (binaryRes.ok) {
+      pass(`Photo binary successfully retrieved via presigned URL (${binaryRes.status})`);
+    } else {
+      fail(`Failed to fetch photo binary via presigned URL: ${binaryRes.status}`);
+    }
+  } else {
+    fail('Failed to request presigned download URL for photo proof', photoDlRes.body);
+  }
+
+  // Security test: Path traversal rejection (must return 400)
+  const traversalRes = await api('/v1/media/download-url', {
+    method: 'POST',
+    body: JSON.stringify({ fileKey: `${WORKSPACE_ID}/../../../etc/passwd` }),
+  });
+  if (traversalRes.status === 400) {
+    pass('Security barrier confirmed: Path traversal attempt rejected with HTTP 400');
+  } else {
+    fail('Expected HTTP 400 for path traversal attempt', traversalRes.body);
+  }
+
+  // Security test: Cross-company file access rejection (must return 403)
+  const crossTenantRes = await api('/v1/media/download-url', {
+    method: 'POST',
+    body: JSON.stringify({ fileKey: 'other-company-id/proofs/secret.jpg' }),
+  });
+  if (crossTenantRes.status === 403) {
+    pass('Security barrier confirmed: Cross-company file access rejected with HTTP 403');
+  } else {
+    fail('Expected HTTP 403 for cross-company access attempt', crossTenantRes.body);
   }
 
   // Re-fetch fresh task version before completing
