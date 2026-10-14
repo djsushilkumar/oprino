@@ -3,7 +3,7 @@
 **Milestone:** Phase 05 — Production Hardening, Monitoring & Launch Readiness  
 **Date:** October 2026  
 **Status:** Complete & Formally Verified  
-**Controlling Architecture:** [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md), [`docs/architecture/SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md), [`docs/handoff/CODEX-CLOUD-HANDOFF.md`](file:///workspace/oprino/docs/handoff/CODEX-CLOUD-HANDOFF.md)
+**Controlling Architecture:** [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](../architecture/OPRINO-TECHNICAL-ARCHITECTURE.md), [`docs/architecture/SECURITY-ARCHITECTURE.md`](../architecture/SECURITY-ARCHITECTURE.md), [`docs/handoff/CODEX-CLOUD-HANDOFF.md`](../handoff/CODEX-CLOUD-HANDOFF.md)
 
 ---
 

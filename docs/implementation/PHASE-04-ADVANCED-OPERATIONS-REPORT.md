@@ -12,7 +12,7 @@
 Phase 04 delivers the complete **Advanced Scheduling, Dispatch Routing, Offline Conflict Resilience, and Operational Analytics Suite** for Oprino, spanning all tiers of the polyglot monorepo: PostgreSQL database with PostGIS, `@oprino/contracts`, Fastify backend API, `@oprino/worker`, Next.js 15 web operations console, and Flutter 3.47 mobile field application.
 
 All core architectural invariants and product PRD mandates have been strictly implemented and verified:
-- **Offline Conflict Matrix Rules ([`SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md)):** The batch sync engine (`POST /v1/sync/mutations`) executes authoritative resolution rules:
+- **Offline Conflict Matrix Rules ([`SYNC-CONFLICT-MATRIX.md`](../architecture/SYNC-CONFLICT-MATRIX.md)):** The batch sync engine (`POST /v1/sync/mutations`) executes authoritative resolution rules:
   1. *Punch-Out Hardware Override:* A punch-out always terminates duty state regardless of competing queued punches.
   2. *Managerial Cancellation Precedence:* A task canceled or reassigned on the web dashboard immediately takes precedence over offline technician in-progress transitions (`REJECTED_STALE`).
   3. *Checklist Union Merging:* Checklist item completions are merged as a union set, preserving completed checks from both mobile and web.

@@ -3,7 +3,7 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Deciders:** Lead Systems Architect, Backend Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
 
 ---
 
@@ -80,12 +80,12 @@ The team must evaluate whether a managed Backend-as-a-Service (BaaS) such as Sup
    - Enforces the 7-stage task lifecycle state machine and verification workflows.
    - Houses the **Offline Delta Sync Engine**, processing batched client mutations idempotently.
    - Enforces the **Duty-Hours Privacy Cutoff**: verifies employee duty status before ingesting or persisting any location telemetry.
-   - Authentication powered by an application-owned, audited authentication framework ([`ADR-006`](file:///workspace/oprino/docs/architecture/ADR-006-authentication.md)).
+   - Authentication powered by an application-owned, audited authentication framework ([`ADR-006`](./ADR-006-authentication.md)).
 2. **Database Layer:**
-   - Mature supported PostgreSQL with stable **PostGIS** extension for spatial geometries, distance calculations, and geofencing ([`ADR-004`](file:///workspace/oprino/docs/architecture/ADR-004-database-geospatial.md)).
+   - Mature supported PostgreSQL with stable **PostGIS** extension for spatial geometries, distance calculations, and geofencing ([`ADR-004`](./ADR-004-database-geospatial.md)).
    - Uses Drizzle ORM or Kysely for type-safe, performant SQL queries compiled directly to native SQL without heavyweight ORM runtime overhead.
 3. **Queue & Background Worker (`BullMQ`):**
-   - Redis-backed queue handling asynchronous workloads: photo metadata watermarking, daily location retention partition pruning, notification fan-out, and report generation ([`ADR-014`](file:///workspace/oprino/docs/architecture/ADR-014-background-jobs.md)).
+   - Redis-backed queue handling asynchronous workloads: photo metadata watermarking, daily location retention partition pruning, notification fan-out, and report generation ([`ADR-014`](./ADR-014-background-jobs.md)).
 
 ---
 
@@ -94,5 +94,5 @@ The team must evaluate whether a managed Backend-as-a-Service (BaaS) such as Sup
 - **Consequence:** Requires maintaining a dedicated Node.js service container rather than serverless functions.  
   *Mitigation:* Fastify has an exceptionally tiny memory footprint (~60–80 MB idle), allowing cheap hosting on standard container platforms (AWS ECS Fargate, Railway, or Google Cloud Run) with predictable pricing.
 - **Consequence:** Authentication must be handled by the application server.  
-  *Mitigation:* Utilize an established, audited open-source framework (Better Auth / audited engine) with PostgreSQL storage and Redis cache, providing full authority over multi-company switching and device revocation without custom crypto implementation ([`ADR-006`](file:///workspace/oprino/docs/architecture/ADR-006-authentication.md)).
+  *Mitigation:* Utilize an established, audited open-source framework (Better Auth / audited engine) with PostgreSQL storage and Redis cache, providing full authority over multi-company switching and device revocation without custom crypto implementation ([`ADR-006`](./ADR-006-authentication.md)).
 - **Reversal Cost:** Low to Medium. Because the database is standard PostgreSQL and the API is standard REST, migrating infrastructure providers requires zero code rewriting.

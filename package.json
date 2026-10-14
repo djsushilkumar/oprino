@@ -12,7 +12,8 @@
     "test": "turbo test",
     "generate": "turbo generate",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "docs:check-links": "node scripts/validate-doc-links.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

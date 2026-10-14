@@ -3,8 +3,8 @@
 **Status:** APPROVED (Updated for Flutter Baseline)  
 **Date:** October 2026 (Revised & Re-Architected)  
 **Deciders:** Lead Systems Architect, Mobile Engineering, Product  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/APP-SURFACES.md`](file:///workspace/oprino/docs/product/APP-SURFACES.md))  
-**Underlying Framework:** Flutter Stable (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) ([`ADR-001`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/APP-SURFACES.md`](../product/APP-SURFACES.md))  
+**Underlying Framework:** Flutter Stable (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) ([`ADR-001`](./ADR-001-mobile-framework.md))
 
 ---
 

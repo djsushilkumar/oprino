@@ -1,10 +1,19 @@
 # ADR-008: Mobile Background Location & Duty-Hours Tracking Architecture (Flutter Baseline)
 
-**Status:** APPROVED (Updated for Final Flutter Baseline & Empirical Spike Scope)  
-**Date:** October 2026 (Revised & Re-Architected)  
+> [!IMPORTANT]
+> **SUPERSEDED IN PART BY ADR-021 (OCTOBER 2026):**  
+> While this document records the Phase 01A architectural evaluation selecting Transistor Software `flutter_background_geolocation`, **ADR-021** ([`ADR-021-zero-cost-gps-pipeline.md`](ADR-021-zero-cost-gps-pipeline.md)) formally supersedes the commercial Transistorsoft dependency.
+> 
+> To eliminate commercial licensing friction while strictly upholding the Duty-Hours Invariant, the production codebase implements:
+> 1. Open-source **`geolocator`** with Android foreground service notification.
+> 2. Unified **Drift + SQLite** durable local outbox queuing (eliminating dual native SQLite SDK storage).
+> 3. Zero off-duty tracking enforced at mobile service unhook and API ingestion boundary.
+
+**Status:** APPROVED (SUPERSEDED by ADR-021 for Geolocation SDK)  
+**Date:** October 2026 (Historical Record)  
 **Deciders:** Lead Systems Architect, Mobile Engineering, Privacy Officer  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))  
-**Underlying Framework:** Flutter Stable (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) ([`ADR-001`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))  
+**Underlying Framework:** Flutter Stable ([`ADR-001`](ADR-001-mobile-framework.md))
 
 ---
 

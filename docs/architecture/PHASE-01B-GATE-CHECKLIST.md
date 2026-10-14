@@ -5,7 +5,7 @@
 **Status:** CONDITIONALLY CLOSED (Physical OEM validation deferred to mobile release gate)  
 **Gate Decision:** **PHASE 01B CONDITIONALLY CLOSED — PHASE 01C PRODUCTION SCAFFOLDING AUTHORIZED**  
 **Date:** October 2026  
-**Controlling Validation Report:** [`docs/architecture/PHASE-01B-VALIDATION-REPORT.md`](file:///workspace/oprino/docs/architecture/PHASE-01B-VALIDATION-REPORT.md)  
+**Controlling Validation Report:** [`docs/architecture/PHASE-01B-VALIDATION-REPORT.md`](./PHASE-01B-VALIDATION-REPORT.md)  
 **Governance Record:**
 
 - Phase 00: APPROVED & FROZEN
@@ -19,7 +19,7 @@
 
 ## 1. Absolute Constraints Verification
 
-- [x] **Zero Production Scaffolding:** No production application UI or scaffolding written; all spike code isolated in [`research/spikes/`](file:///workspace/oprino/research/spikes/).
+- [x] **Zero Production Scaffolding:** No production application UI or scaffolding written; all spike code isolated in [`research/spikes/`](../../research/archived-spikes).
 - [x] **Zero Scope Drift:** Phase 00 product requirements strictly preserved; no new product features introduced.
 - [x] **Disposable Test Artifacts:** All spike code clearly isolated and marked as disposable research harnesses.
 - [x] **Honest Categorization:** Software dispatch latency (16ms) clearly separated from physical GPS hardware spin-down latency; simulated and host unit test results strictly distinguished from physical silicon execution.
@@ -30,7 +30,7 @@
 
 ### Gate A: Background Location & Duty Privacy (Spike A)
 
-- [x] Software test harness created under [`research/spikes/spike_a_location/`](file:///workspace/oprino/research/spikes/spike_a_location/).
+- [x] Software test harness created under [`research/spikes/spike_a_location/`](../../research/archived-spikes/spike_a_location).
 - [x] Software punch-out stop dispatch latency measured (**16ms**).
 - [x] Post-duty breadcrumb purge algorithm verified (**100%** purged before transmission).
 - [x] Automatic duty deadline safety watchdog validated (local timer triggers native stop on boundary expiration).
@@ -41,7 +41,7 @@
 
 ### Gate B: Drift Offline Persistence & Outbox (Spike B)
 
-- [x] Test project created under [`research/spikes/spike_b_drift/`](file:///workspace/oprino/research/spikes/spike_b_drift/).
+- [x] Test project created under [`research/spikes/spike_b_drift/`](../../research/archived-spikes/spike_b_drift).
 - [x] Native SQLite with WAL mode (`PRAGMA journal_mode = wal`) verified.
 - [x] Foreign keys enabled and verified (`PRAGMA foreign_keys = 1`).
 - [x] Atomic transactions (optimistic task update + outbox mutation) tested and verified.
@@ -55,7 +55,7 @@
 
 ### Gate C: Flutter + Better Auth Integration (Spike C)
 
-- [x] Test service created under [`research/spikes/spike_c_auth/`](file:///workspace/oprino/research/spikes/spike_c_auth/).
+- [x] Test service created under [`research/spikes/spike_c_auth/`](../../research/archived-spikes/spike_c_auth).
 - [x] Better Auth Bearer plugin verified; opaque session token issued over TLS.
 - [x] Global `disableCSRFCheck: true` eliminated; native scheme validation (`Origin: oprino://app` in `trustedOrigins`) verified.
 - [x] Dart Dio client with interceptor verified: email auth, token capture, namespaced storage, device registration, workspace switch, revocation rejection, and replay protection.
@@ -64,7 +64,7 @@
 
 ### Gate D: OpenAPI 3.1 → Dart Code Generation (Spike D)
 
-- [x] Fastify Zod contract API created under [`research/spikes/spike_d_openapi/`](file:///workspace/oprino/research/spikes/spike_d_openapi/).
+- [x] Fastify Zod contract API created under [`research/spikes/spike_d_openapi/`](../../research/archived-spikes/spike_d_openapi).
 - [x] Complete schema coverage tested: UUID, enums, nullable fields, arrays, pagination, nested objects, dates/timestamps, validation error schema, multipart upload, binary PDF streaming.
 - [x] OpenAPI spec exported and compiled to `dart-dio` client (`oprino_api`) using `openapi-generator-cli 7.9.0`.
 - [x] Dart client compiled cleanly with `build_runner` (72 outputs generated in 19.8s).
@@ -74,7 +74,7 @@
 
 ### Gate E: Secure Storage & Installation Identity (Spike E)
 
-- [x] Test project created under [`research/spikes/spike_e_security/`](file:///workspace/oprino/research/spikes/spike_e_security/).
+- [x] Test project created under [`research/spikes/spike_e_security/`](../../research/archived-spikes/spike_e_security).
 - [x] Cryptographically random Installation ID (`inst_` + UUIDv4) generated and verified.
 - [x] Namespace separation between `oprino_installation` and `oprino_auth_session` verified.
 - [x] Cold app restart and update survival verified.

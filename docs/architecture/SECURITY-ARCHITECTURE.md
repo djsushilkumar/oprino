@@ -3,11 +3,11 @@
 **Status:** Updated & Recommended for Phase 01A  
 **Date:** October 2026 (Reconciled)  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`ADR-005: Multi-Tenancy Architecture`](file:///workspace/oprino/docs/architecture/ADR-005-multitenancy.md)
-- [`ADR-006: Authentication Architecture`](file:///workspace/oprino/docs/architecture/ADR-006-authentication.md)
-- [`ADR-007: Authorization Model`](file:///workspace/oprino/docs/architecture/ADR-007-authorization.md)
-- [`ADR-012: File Storage Architecture`](file:///workspace/oprino/docs/architecture/ADR-012-file-storage.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`ADR-005: Multi-Tenancy Architecture`](./ADR-005-multitenancy.md)
+- [`ADR-006: Authentication Architecture`](./ADR-006-authentication.md)
+- [`ADR-007: Authorization Model`](./ADR-007-authorization.md)
+- [`ADR-012: File Storage Architecture`](./ADR-012-file-storage.md)
 
 ---
 
@@ -81,7 +81,7 @@ flowchart TD
 - **CORS & Headers:** Explicitly restricted to authorized dashboard domains (`app.oprino.com`). Employs strict CSP, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: strict-origin-when-cross-origin`.
 
 ### 3.2 Layer 2: Identity & Session Security (Audited Framework)
-Per [`ADR-006`](file:///workspace/oprino/docs/architecture/ADR-006-authentication.md), authentication is handled via an established, audited framework (Better Auth / audited engine) with PostgreSQL storage:
+Per [`ADR-006`](./ADR-006-authentication.md), authentication is handled via an established, audited framework (Better Auth / audited engine) with PostgreSQL storage:
 - **Credential Storage:** User passwords hashed using **Argon2id** (memory cost: 64MB, iterations: 3, parallelism: 4). Plaintext passwords are never logged, cached, or transmitted after hashing.
 - **Dual Surface Session Handling:**
   - **Web Dashboard:** Secure, HttpOnly, SameSite=Lax, encrypted session cookies protecting against JavaScript XSS token theft.
@@ -89,7 +89,7 @@ Per [`ADR-006`](file:///workspace/oprino/docs/architecture/ADR-006-authenticatio
 - **Installation Registration & Revocation:** Sessions are bound to Oprino-generated Installation IDs (`installation_id`). Deactivating an employee or revoking an installation flushes session records immediately from Redis and PostgreSQL.
 
 ### 3.3 Layer 3 & 4: Zero-Trust 5-Stage Multi-Tenancy & Pooled RLS Safety
-Per [`ADR-005`](file:///workspace/oprino/docs/architecture/ADR-005-multitenancy.md):
+Per [`ADR-005`](./ADR-005-multitenancy.md):
 1. **Authenticated Identity:** User identity verified via signed token or session cookie.
 2. **Workspace Membership Verification:** Backend queries `workspace_memberships` to verify user holds an active membership in the requested workspace.
 3. **Authorized Active Context:** Binds validated `workspace_id` to request scope.

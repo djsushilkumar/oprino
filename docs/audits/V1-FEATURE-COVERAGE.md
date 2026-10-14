@@ -3,7 +3,7 @@
 **Document:** V1 Feature Coverage Matrix & Requirements Inventory  
 **Version:** 2.0 (Post-Remediation Hardened)  
 **Date:** October 12, 2026  
-**Controlling Authority:** [`docs/product/V1-SCOPE.md`](file:///workspace/oprino/docs/product/V1-SCOPE.md) & [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)  
+**Controlling Authority:** [`docs/product/V1-SCOPE.md`](../product/V1-SCOPE.md) & [`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md)  
 **Status Rule:** Statuses strictly follow approved schema: `VERIFIED`, `IMPLEMENTED / NOT VERIFIED`, `PARTIAL`, `MISSING`, `BROKEN`, `OUT OF SCOPE`. Incomplete or unverified features are NEVER marked `VERIFIED`.
 
 ---

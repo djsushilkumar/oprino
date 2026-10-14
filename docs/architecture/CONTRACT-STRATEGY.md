@@ -3,10 +3,10 @@
 **Status:** APPROVED (Updated for Polyglot Flutter + TypeScript Monorepo)  
 **Date:** October 2026 (Revised & Re-Architected)  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`ADR-001: Mobile Application Framework Selection (Flutter)`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md)
-- [`ADR-017: Monorepo Architecture & Workspace Layout`](file:///workspace/oprino/docs/architecture/ADR-017-monorepo.md)
-- [`ADR-018: API Architecture & Contracts`](file:///workspace/oprino/docs/architecture/ADR-018-api-style.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`ADR-001: Mobile Application Framework Selection (Flutter)`](./ADR-001-mobile-framework.md)
+- [`ADR-017: Monorepo Architecture & Workspace Layout`](./ADR-017-monorepo.md)
+- [`ADR-018: API Architecture & Contracts`](./ADR-018-api-style.md)
 
 ---
 

@@ -3,8 +3,8 @@
 **Status:** APPROVED (Updated for Final Flutter Baseline & Installation Identity)  
 **Date:** October 2026 (Revised & Re-Architected)  
 **Deciders:** Lead Systems Architect, Security Officer, Mobile Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))  
-**Underlying Framework:** Flutter Stable (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) ([`ADR-001`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md))  
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))  
+**Underlying Framework:** Flutter Stable (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) ([`ADR-001`](./ADR-001-mobile-framework.md))  
 **Backend Auth Engine:** **Better Auth** (Fastify Plugin with Bearer Support, PostgreSQL Storage & Redis Session Cache)
 
 ---

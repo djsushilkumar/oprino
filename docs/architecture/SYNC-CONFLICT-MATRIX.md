@@ -3,8 +3,8 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`ADR-009: Offline-First Architecture & Sync Protocol`](file:///workspace/oprino/docs/architecture/ADR-009-offline-sync.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`ADR-009: Offline-First Architecture & Sync Protocol`](./ADR-009-offline-sync.md)
 
 ---
 

@@ -14,13 +14,13 @@
 - **Phase 01A (Technical Architecture Research & ADR Freeze):** **APPROVED & FROZEN**.
 - **Phase 01B (Technical Validation Spikes):** **CONDITIONALLY CLOSED** (Physical OEM mobile validation formally deferred to mobile release gate).
 - **Pre-Phase-01C Repository Cleanup:** **COMPLETED**.
-- **Phase 01C (Production Monorepo Scaffolding):** **COMPLETED & VERIFIED** ([`docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md`](file:///workspace/oprino/docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md)).
-- **Phase 02A (Identity, Workspace & Multi-Tenant Foundation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md)).
-- **Phase 02B (Task & Attendance Domain Implementation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md)).
-- **Phase 02C (GPS Location Pipeline, Geofencing & Tracking Engine):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md)).
-- **Phase 03 (Field Operations, Customer Sites, Visits & Proof of Work):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md)).
-- **Phase 04 (Advanced Scheduling, Dispatch Routing & Analytics):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-04-ADVANCED-OPERATIONS-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-04-ADVANCED-OPERATIONS-REPORT.md)).
-- **Phase 05 (Production Hardening, Monitoring & Launch Readiness):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-05-PRODUCTION-HARDENING-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-05-PRODUCTION-HARDENING-REPORT.md)).
+- **Phase 01C (Production Monorepo Scaffolding):** **COMPLETED & VERIFIED** ([`docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md`](../architecture/PHASE-01C-SCAFFOLDING-REPORT.md)).
+- **Phase 02A (Identity, Workspace & Multi-Tenant Foundation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md`](../implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md)).
+- **Phase 02B (Task & Attendance Domain Implementation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md`](../implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md)).
+- **Phase 02C (GPS Location Pipeline, Geofencing & Tracking Engine):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md`](../implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md)).
+- **Phase 03 (Field Operations, Customer Sites, Visits & Proof of Work):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md`](../implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md)).
+- **Phase 04 (Advanced Scheduling, Dispatch Routing & Analytics):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-04-ADVANCED-OPERATIONS-REPORT.md`](../implementation/PHASE-04-ADVANCED-OPERATIONS-REPORT.md)).
+- **Phase 05 (Production Hardening, Monitoring & Launch Readiness):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-05-PRODUCTION-HARDENING-REPORT.md`](../implementation/PHASE-05-PRODUCTION-HARDENING-REPORT.md)).
 - **Current Milestone State:** **ALL CORE PRODUCTION PHASES (00 THROUGH 05) VERIFIED & PRODUCTION READY**.
 
 ---
@@ -31,15 +31,15 @@
 
 The single, authoritative source of truth for all product requirements, feature classifications, business rules, and non-goals is:
 
-- [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)
+- [`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md)
 
 ### Primary Technical Architecture Authority:
 
 The system architecture, component topologies, and physical designs are governed by:
 
-- [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md)
-- [`docs/architecture/ADR/README.md`](file:///workspace/oprino/docs/architecture/ADR/README.md) (Register of ADR-001 through ADR-020)
-- [`docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md`](file:///workspace/oprino/docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md)
+- [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](../architecture/OPRINO-TECHNICAL-ARCHITECTURE.md)
+- [`docs/architecture/ADR/README.md`](../architecture/ADR/README.md) (Register of ADR-001 through ADR-020)
+- [`docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md`](../architecture/PHASE-01A-FREEZE-CHECKLIST.md)
 
 ---
 
@@ -49,24 +49,24 @@ Before modifying code or configuration, Codex and all coding agents **MUST** rea
 
 ### A. Product Baseline & Boundaries
 
-1. [`docs/product/V1-SCOPE.md`](file:///workspace/oprino/docs/product/V1-SCOPE.md) — Strict classification of MUST, SHOULD, LATER, and OUT-OF-SCOPE features for V1.
-2. [`docs/product/PRODUCT-DEFINITION.md`](file:///workspace/oprino/docs/product/PRODUCT-DEFINITION.md) — Core principles, target multi-industry SMB market, and explicit non-goals.
-3. [`docs/product/APP-SURFACES.md`](file:///workspace/oprino/docs/product/APP-SURFACES.md) — Surfaces: Unified Mobile App (Field & Manager modes) and Web Dashboard.
-4. [`docs/product/ROLES-AND-PERMISSIONS-PLAN.md`](file:///workspace/oprino/docs/product/ROLES-AND-PERMISSIONS-PLAN.md) — Default and custom RBAC permissions model.
+1. [`docs/product/V1-SCOPE.md`](../product/V1-SCOPE.md) — Strict classification of MUST, SHOULD, LATER, and OUT-OF-SCOPE features for V1.
+2. [`docs/product/PRODUCT-DEFINITION.md`](../product/PRODUCT-DEFINITION.md) — Core principles, target multi-industry SMB market, and explicit non-goals.
+3. [`docs/product/APP-SURFACES.md`](../product/APP-SURFACES.md) — Surfaces: Unified Mobile App (Field & Manager modes) and Web Dashboard.
+4. [`docs/product/ROLES-AND-PERMISSIONS-PLAN.md`](../product/ROLES-AND-PERMISSIONS-PLAN.md) — Default and custom RBAC permissions model.
 
 ### B. Core Architecture & Invariant Specifications
 
-5. [`docs/architecture/PRIVACY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/PRIVACY-ARCHITECTURE.md) — 3-boundary duty-hours controls, safe local deadline strategy, and off-duty privacy enforcement.
-6. [`docs/architecture/RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md) — 30-day default location retention, multi-tier deletion lifecycle, and least-privileged maintenance procedure.
-7. [`docs/architecture/LOCATION-PIPELINE.md`](file:///workspace/oprino/docs/architecture/LOCATION-PIPELINE.md) — Separation of domain SQLite vs. Transistor SDK native persistence; measurable SLO targets; device validation matrix.
-8. [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md) — Offline-first conflict resolution rules for all entities.
-9. [`docs/architecture/SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md) — 5-tier defense-in-depth model, 5-stage tenant verification, and transaction-scoped `SET LOCAL` RLS.
-10. [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md) — Single source of truth `@oprino/contracts` schema strategy.
-11. [`docs/architecture/INFRA-COST-MODEL.md`](file:///workspace/oprino/docs/architecture/INFRA-COST-MODEL.md) — Parameterized SMB infrastructure economics and margin targets.
+5. [`docs/architecture/PRIVACY-ARCHITECTURE.md`](../architecture/PRIVACY-ARCHITECTURE.md) — 3-boundary duty-hours controls, safe local deadline strategy, and off-duty privacy enforcement.
+6. [`docs/architecture/RETENTION-ARCHITECTURE.md`](../architecture/RETENTION-ARCHITECTURE.md) — 30-day default location retention, multi-tier deletion lifecycle, and least-privileged maintenance procedure.
+7. [`docs/architecture/LOCATION-PIPELINE.md`](../architecture/LOCATION-PIPELINE.md) — Separation of domain SQLite vs. Transistor SDK native persistence; measurable SLO targets; device validation matrix.
+8. [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](../architecture/SYNC-CONFLICT-MATRIX.md) — Offline-first conflict resolution rules for all entities.
+9. [`docs/architecture/SECURITY-ARCHITECTURE.md`](../architecture/SECURITY-ARCHITECTURE.md) — 5-tier defense-in-depth model, 5-stage tenant verification, and transaction-scoped `SET LOCAL` RLS.
+10. [`docs/architecture/CONTRACT-STRATEGY.md`](../architecture/CONTRACT-STRATEGY.md) — Single source of truth `@oprino/contracts` schema strategy.
+11. [`docs/architecture/INFRA-COST-MODEL.md`](../architecture/INFRA-COST-MODEL.md) — Parameterized SMB infrastructure economics and margin targets.
 
 ### C. Authoritative Brand System
 
-12. [`docs/brand/OPRINO-BRAND-SYSTEM.md`](file:///workspace/oprino/docs/brand/OPRINO-BRAND-SYSTEM.md) — Canonical logo variations, color tokens, typography scales, and spacing units derived from `Oprino-Brand-Kit/`.
+12. [`docs/brand/OPRINO-BRAND-SYSTEM.md`](../brand/OPRINO-BRAND-SYSTEM.md) — Canonical logo variations, color tokens, typography scales, and spacing units derived from `Oprino-Brand-Kit/`.
 
 ---
 
@@ -140,7 +140,7 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
    - Full quality gates passed: TypeScript, ESLint, API integration tests (69/69), Flutter analyze (0 err), Flutter tests (22/22), Dart API tests (11/11), and Next.js production build.
 9. **Phase 04 (Advanced Scheduling, Dispatch Routing, Conflict Resilience & Analytics):** **COMPLETED & VERIFIED**.
    - PostgreSQL RLS tenant isolation across `recurring_task_templates`, `shift_rosters`, `sync_mutation_records`, `notifications`, and route sequencing on `visits`.
-   - Comprehensive Offline-First Sync Engine executing [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md) with idempotency deduplication, punch-out hardware override, managerial cancellation precedence, and checklist union merging.
+   - Comprehensive Offline-First Sync Engine executing [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](../architecture/SYNC-CONFLICT-MATRIX.md) with idempotency deduplication, punch-out hardware override, managerial cancellation precedence, and checklist union merging.
    - Dispatch Stop Sequencing with `PUT /v1/visits/sequence` and interactive web/mobile route reordering controls.
    - Recurring Task Templates with cron evaluation and BullMQ worker job `tasks.recurring.generate`.
    - Shift Roster Assignment with roster calendar view and BullMQ worker job `tasks.sla.check_overdue`.
@@ -173,7 +173,7 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
       - `Lint, Typecheck, Test & Build (TypeScript)`: PASSED (Turbo build + all 88 integration tests against live PostGIS 17 & Redis 7 service containers).
       - `Full End-to-End Smoke Test`: PASSED (self-bootstrapping tenant creation, attendance punch lifecycle, visit routing, checklists, proof upload, and Next.js routes).
     - Production multi-stage Docker containerization (`Dockerfile.api`, `Dockerfile.worker`, `Dockerfile.web`).
-    - 100% Free Cloud Deployment specifications (`render.yaml`, `apps/web/vercel.json`, and [`docs/deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md`](file:///workspace/oprino/docs/deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md)) across Supabase (PostgreSQL 17 + PostGIS), Upstash (Redis), Render (Fastify API & Worker), and Vercel (Next.js 15 Web Dashboard).
+    - 100% Free Cloud Deployment specifications (`render.yaml`, `apps/web/vercel.json`, and [`docs/deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md`](../deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md)) across Supabase (PostgreSQL 17 + PostGIS), Upstash (Redis), Render (Fastify API & Worker), and Vercel (Next.js 15 Web Dashboard).
 14. **Cloud Deployment Execution & Free-Tier Optimization:** **COMPLETED & VERIFIED (OCTOBER 11, 2026)**.
     - **Vercel Web Dashboard:** Deployed live to Vercel CDN from `apps/web` with automatic Git push CI/CD.
     - **Render Free-Tier Re-architecture:**
