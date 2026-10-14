@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 import 'package:oprino_api/oprino_api.dart';
@@ -553,19 +554,48 @@ class SyncService {
               }
             }
 
-            await client.punchIn(
-              idempotencyKey: mutation.idempotencyKey,
-              shiftId: data['shiftId'] as String?,
-              note: data['note'] as String?,
-              selfieMediaKey: selfieKey,
-              latitude: (data['latitude'] as num?)?.toDouble(),
-              longitude: (data['longitude'] as num?)?.toDouble(),
-              accuracy: (data['accuracy'] as num?)?.toDouble(),
-            );
+            try {
+              final punchRes = await client.punchIn(
+                idempotencyKey: mutation.idempotencyKey,
+                shiftId: data['shiftId'] as String?,
+                note: data['note'] as String?,
+                selfieMediaKey: selfieKey,
+                latitude: (data['latitude'] as num?)?.toDouble(),
+                longitude: (data['longitude'] as num?)?.toDouble(),
+                accuracy: (data['accuracy'] as num?)?.toDouble(),
+              );
 
-            // Cleanup local temporary selfie file after confirmed delivery
-            if (localSelfiePath != null && mediaService != null) {
-              await mediaService!.deleteLocalMediaFile(localSelfiePath);
+              // Server confirmed! Update cached attendance with server canonical session ID and punch time
+              await db.into(db.cachedAttendance).insertOnConflictUpdate(
+                    CachedAttendanceCompanion.insert(
+                      id: 'active_state_${mutation.workspaceId}',
+                      workspaceId: mutation.workspaceId,
+                      dutyState: punchRes.status == 'ON_DUTY' ? 'ON_DUTY' : 'NOT_STARTED',
+                      activeSessionId: Value(punchRes.id),
+                      punchInTime: Value(punchRes.punchInTime),
+                      lastUpdated: Value(DateTime.now()),
+                    ),
+                  );
+
+              // Cleanup local temporary selfie file after confirmed delivery
+              if (localSelfiePath != null && mediaService != null) {
+                await mediaService!.deleteLocalMediaFile(localSelfiePath);
+              }
+            } on DioException catch (dioErr) {
+              final statusCode = dioErr.response?.statusCode;
+              // If client error (4xx: rejection by business rules, invalid shift, geofence mismatch, etc.)
+              if (statusCode != null && statusCode >= 400 && statusCode < 500 && statusCode != 408 && statusCode != 429) {
+                // Roll back optimistic ON_DUTY state to prevent masquerading unverified punch as duty
+                await db.into(db.cachedAttendance).insertOnConflictUpdate(
+                      CachedAttendanceCompanion.insert(
+                        id: 'active_state_${mutation.workspaceId}',
+                        workspaceId: mutation.workspaceId,
+                        dutyState: 'NOT_STARTED',
+                        lastUpdated: Value(DateTime.now()),
+                      ),
+                    );
+              }
+              rethrow;
             }
             break;
 
@@ -574,6 +604,14 @@ class SyncService {
               idempotencyKey: mutation.idempotencyKey,
               note: data['note'] as String?,
             );
+            await db.into(db.cachedAttendance).insertOnConflictUpdate(
+                  CachedAttendanceCompanion.insert(
+                    id: 'active_state_${mutation.workspaceId}',
+                    workspaceId: mutation.workspaceId,
+                    dutyState: 'OFF_DUTY',
+                    lastUpdated: Value(DateTime.now()),
+                  ),
+                );
             break;
 
           case 'TRANSITION':
@@ -686,11 +724,20 @@ class SyncService {
         // Successfully acknowledged: remove from outbox
         await (db.delete(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).go();
       } catch (err) {
+        String errMsg = err.toString();
+        if (err is DioException) {
+          final resData = err.response?.data;
+          if (resData is Map && resData['message'] != null) {
+            errMsg = resData['message'].toString();
+          } else if (err.message != null && err.message!.isNotEmpty) {
+            errMsg = err.message!;
+          }
+        }
         // Record failure and retry count
         await (db.update(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).write(
           OutboxMutationsCompanion(
             status: const Value('FAILED'),
-            lastError: Value(err.toString()),
+            lastError: Value(errMsg),
             updatedAt: Value(DateTime.now()),
           ),
         );
@@ -858,6 +905,14 @@ class SyncService {
   Stream<CachedAttendanceData?> watchAttendance(String workspaceId) {
     return (db.select(db.cachedAttendance)
           ..where((a) => a.id.equals('active_state_$workspaceId')))
+        .watchSingleOrNull();
+  }
+
+  Stream<OutboxMutation?> watchPendingAttendanceMutation(String workspaceId) {
+    return (db.select(db.outboxMutations)
+          ..where((m) => m.workspaceId.equals(workspaceId) & m.entityType.equals('ATTENDANCE'))
+          ..orderBy([(m) => OrderingTerm.desc(m.createdAt)])
+          ..limit(1))
         .watchSingleOrNull();
   }
 

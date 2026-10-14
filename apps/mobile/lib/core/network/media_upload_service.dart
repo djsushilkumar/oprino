@@ -95,7 +95,11 @@ class MediaUploadService {
       try {
         dir = await getApplicationDocumentsDirectory();
       } catch (_) {
-        dir = Directory.systemTemp;
+        try {
+          dir = await getApplicationSupportDirectory();
+        } catch (_) {
+          dir = Directory.systemTemp;
+        }
       }
     }
     final mediaDir = Directory('${dir.path}/pending_media');

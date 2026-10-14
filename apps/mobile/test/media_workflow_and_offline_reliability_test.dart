@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:dio/dio.dart';
 import 'package:oprino_mobile/core/database/database.dart';
 import 'package:oprino_mobile/core/network/media_upload_service.dart';
@@ -86,6 +87,26 @@ class _MockApiClient extends OprinoApiClient {
     );
   }
 
+  bool punchOutCalled = false;
+
+  @override
+  Future<AttendanceSessionResponse> punchOut({
+    required String idempotencyKey,
+    String? note,
+  }) async {
+    punchOutCalled = true;
+    return AttendanceSessionResponse(
+      id: 'session-1',
+      workspaceId: 'ws-1',
+      userId: 'user-1',
+      status: 'OFF_DUTY',
+      punchInTime: DateTime.now().subtract(const Duration(hours: 8)),
+      punchOutTime: DateTime.now(),
+      createdAt: DateTime.now().subtract(const Duration(hours: 8)),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   @override
   Future<TaskProof> confirmMediaUpload({
     required String taskId,
@@ -160,6 +181,29 @@ class _MockFailingApiClient extends _MockApiClient {
     throw DioException(
       requestOptions: RequestOptions(path: '/v1/media/upload-url'),
       error: 'Network connection failed (offline)',
+    );
+  }
+}
+
+class _MockRejectionApiClient extends _MockApiClient {
+  @override
+  Future<AttendanceSessionResponse> punchIn({
+    required String idempotencyKey,
+    String? shiftId,
+    String? note,
+    String? selfieMediaKey,
+    double? latitude,
+    double? longitude,
+    double? accuracy,
+  }) async {
+    throw DioException(
+      requestOptions: RequestOptions(path: '/v1/attendance/punch-in'),
+      message: 'Outside assigned work perimeter',
+      response: Response(
+        statusCode: 422,
+        requestOptions: RequestOptions(path: '/v1/attendance/punch-in'),
+        data: {'error': 'GEOFENCE_REJECTED', 'message': 'Outside assigned work perimeter'},
+      ),
     );
   }
 }
@@ -497,6 +541,195 @@ void main() {
       expect(find.textContaining('77.209'), findsOneWidget);
       expect(find.text('Work Notes: Compressor check passed'), findsOneWidget);
       expect(find.text('Storage Key: ws-1/proofs/task-100/photo.jpg'), findsOneWidget);
+    });
+
+    test('10. App restart & process termination: Offline selfie & mutation survive restart and sync with fresh presigned URL', () async {
+      // Step 1: Save local selfie file in private durable storage
+      final fakeSelfieBytes = MediaUploadService.createSyntheticJpeg();
+      final localPath = await mediaService.savePendingImageFile(
+        prefix: 'restart_test_selfie',
+        bytes: fakeSelfieBytes,
+      );
+      expect(await File(localPath).exists(), isTrue, reason: 'Durable file must exist before app termination');
+
+      // Step 2: Queue offline punch-in mutation
+      final idempKey = await syncService.queuePunchIn(
+        workspaceId: 'ws-1',
+        shiftId: 'shift-100',
+        note: 'Starting shift before app crash',
+        localFilePath: localPath,
+        latitude: 28.6139,
+        longitude: 77.2090,
+      );
+
+      // Verify mutation is queued and local cached state is optimistic
+      final initialMutation = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).getSingle();
+      expect(initialMutation.status, equals('PENDING'));
+      final preCrashAttendance = await (testDb.select(testDb.cachedAttendance)..where((a) => a.workspaceId.equals('ws-1'))).getSingleOrNull();
+      expect(preCrashAttendance?.dutyState, equals('ON_DUTY'));
+
+      // Step 3: Simulate App Crash / Force-Close & Process Restart
+      // Re-instantiate SyncService from the same persistent database and storage
+      final restartedClient = _MockApiClient();
+      final restartedSyncService = SyncService(
+        db: testDb,
+        client: restartedClient,
+        mediaService: mediaService,
+        autoProcessOutbox: false,
+      );
+
+      // Verify after restart: pending mutation & local file still exist intact!
+      final postRestartMutations = await (testDb.select(testDb.outboxMutations)..where((m) => m.status.equals('PENDING'))).get();
+      expect(postRestartMutations.length, equals(1));
+      expect(postRestartMutations.first.idempotencyKey, equals(idempKey));
+      expect(await File(localPath).exists(), isTrue, reason: 'Pending media must not be purged on restart');
+
+      // Step 4: Restore Connectivity & Process Outbox
+      await restartedSyncService.processOutbox();
+
+      // Verify remote upload and punch-in execution
+      expect(restartedClient.punchInCalled, isTrue);
+      expect(restartedClient.lastPunchInSelfieKey, equals('ws-1/attendance/user-1/selfie_123.jpg'));
+
+      // Verify canonical server confirmed attendance
+      final postSyncAttendance = await (testDb.select(testDb.cachedAttendance)..where((a) => a.workspaceId.equals('ws-1'))).getSingle();
+      expect(postSyncAttendance.dutyState, equals('ON_DUTY'));
+      expect(postSyncAttendance.activeSessionId, equals('session-1'));
+
+      // Verify local file is purged only AFTER confirmed completion
+      expect(await File(localPath).exists(), isFalse, reason: 'Temporary local media must be safely removed after confirmation');
+
+      // Verify outbox mutation is removed on success
+      final remainingMutations = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).get();
+      expect(remainingMutations.isEmpty, isTrue);
+    });
+
+    test('11. Server Rejection (4xx): Rolls back optimistic duty state to NOT_STARTED and preserves evidence', () async {
+      final fakeSelfieBytes = MediaUploadService.createSyntheticJpeg();
+      final localPath = await mediaService.savePendingImageFile(
+        prefix: 'rejection_test_selfie',
+        bytes: fakeSelfieBytes,
+      );
+      expect(await File(localPath).exists(), isTrue);
+
+      // Queue offline punch-in
+      final idempKey = await syncService.queuePunchIn(
+        workspaceId: 'ws-1',
+        shiftId: 'shift-999',
+        note: 'Attempt outside geofence',
+        localFilePath: localPath,
+      );
+
+      // State is optimistically ON_DUTY before sync
+      final preAttendance = await (testDb.select(testDb.cachedAttendance)..where((a) => a.workspaceId.equals('ws-1'))).getSingle();
+      expect(preAttendance.dutyState, equals('ON_DUTY'));
+
+      // Process outbox with rejecting client
+      final rejectionClient = _MockRejectionApiClient();
+      final rejectingSync = SyncService(
+        db: testDb,
+        client: rejectionClient,
+        mediaService: mediaService,
+        autoProcessOutbox: false,
+      );
+
+      // Process outbox (handles error)
+      try {
+        await rejectingSync.processOutbox();
+      } catch (_) {}
+
+      // Verify mutation is marked FAILED (never silently ignored or turned into confirmed)
+      final failedMutation = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).getSingle();
+      expect(failedMutation.status, equals('FAILED'));
+      expect(failedMutation.lastError, contains('Outside assigned work perimeter'));
+
+      // Verify duty state is ROLLED BACK to NOT_STARTED (No off-duty tracking masquerading as duty)
+      final rolledBackAttendance = await (testDb.select(testDb.cachedAttendance)..where((a) => a.workspaceId.equals('ws-1'))).getSingle();
+      expect(rolledBackAttendance.dutyState, equals('NOT_STARTED'));
+
+      // Verify local selfie evidence is preserved for auditing / worker retry
+      expect(await File(localPath).exists(), isTrue, reason: 'Evidence must be preserved when sync is rejected');
+
+      // Clean up test file
+      await File(localPath).delete();
+    });
+
+    test('12. Task Proof offline restart & recovery: Preserves proof across restarts and cleans up after confirmation', () async {
+      final fakeProofBytes = MediaUploadService.createSyntheticJpeg();
+      final localPath = await mediaService.savePendingImageFile(
+        prefix: 'proof_restart_test',
+        bytes: fakeProofBytes,
+      );
+      expect(await File(localPath).exists(), isTrue);
+
+      // Queue media proof confirmation offline
+      final idempKey = await syncService.queueProofConfirmation(
+        workspaceId: 'ws-1',
+        taskId: 'task-777',
+        userId: 'user-1',
+        proofType: 'PHOTO',
+        fileKey: 'pending_key',
+        localFilePath: localPath,
+        isBinaryUploaded: false,
+        notes: 'HVAC unit repaired',
+      );
+
+      // App crash / restart simulation
+      final restartedClient = _MockApiClient();
+      final restartedSync = SyncService(
+        db: testDb,
+        client: restartedClient,
+        mediaService: mediaService,
+        autoProcessOutbox: false,
+      );
+
+      // Verify pending outbox entry persists across restarts
+      final pendingMutations = await (testDb.select(testDb.outboxMutations)..where((m) => m.status.equals('PENDING'))).get();
+      expect(pendingMutations.any((m) => m.idempotencyKey == idempKey), isTrue);
+      expect(await File(localPath).exists(), isTrue);
+
+      // Reconnect and process outbox
+      await restartedSync.processOutbox();
+
+      expect(restartedClient.confirmProofCalled, isTrue);
+      expect(restartedClient.lastConfirmProofFileKey, equals('ws-1/proofs/task-777/proof_123.jpg'));
+      expect(await File(localPath).exists(), isFalse, reason: 'Local proof photo deleted only after remote confirmation');
+
+      final remainingMutations = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).get();
+      expect(remainingMutations.isEmpty, isTrue);
+    });
+
+    test('13. Duty-Hours Privacy Invariant: Punch-out immediately sets OFF_DUTY and terminates tracking', () async {
+      // First ensure user is ON_DUTY
+      await testDb.into(testDb.cachedAttendance).insertOnConflictUpdate(
+            CachedAttendanceCompanion.insert(
+              id: 'active_state_ws-1',
+              workspaceId: 'ws-1',
+              dutyState: 'ON_DUTY',
+              activeSessionId: const Value('session-active-1'),
+              punchInTime: Value(DateTime.now()),
+              lastUpdated: Value(DateTime.now()),
+            ),
+          );
+
+      // Queue punch-out
+      final idempKey = await syncService.queuePunchOut(
+        workspaceId: 'ws-1',
+        note: 'End of shift',
+      );
+
+      // Immediately upon queuing, local cached duty state must be OFF_DUTY to terminate tracking
+      final immediateDutyState = await (testDb.select(testDb.cachedAttendance)..where((a) => a.workspaceId.equals('ws-1'))).getSingle();
+      expect(immediateDutyState.dutyState, equals('OFF_DUTY'));
+
+      // Synchronize punch out
+      await syncService.processOutbox();
+
+      final postSyncDutyState = await (testDb.select(testDb.cachedAttendance)..where((a) => a.workspaceId.equals('ws-1'))).getSingle();
+      expect(postSyncDutyState.dutyState, equals('OFF_DUTY'));
+
+      final remainingMutations = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).get();
+      expect(remainingMutations.isEmpty, isTrue);
     });
   });
 }
