@@ -32,11 +32,22 @@
       "**/node_modules/**",
       "**/.git/**",
     ],
-    "java.project.resourceFilters": ["node_modules", ".git", ".turbo", "research"],
+    "java.project.resourceFilters": [
+      "node_modules",
+      ".git",
+      ".turbo",
+      "research"
+    ],
     "java.compile.nullAnalysis.mode": "automatic",
     "gradle.nestedProjects": false,
-    "gradle.projectExclusions": ["**/research/**", "**/archived-spikes/**"],
-    "dart.projectSearchPaths": ["apps/mobile", "generated/dart-api"],
+    "gradle.projectExclusions": [
+      "**/research/**",
+      "**/archived-spikes/**"
+    ],
+    "dart.projectSearchPaths": [
+      "apps/mobile",
+      "generated/dart-api"
+    ],
     "dart.analysisExcludedFolders": [
       "research",
       "research/archived-spikes",
@@ -44,7 +55,14 @@
       "node_modules",
     ],
     "typescript.tsserver.watchOptions": {
-      "excludeDirectories": ["**/node_modules", "**/dist", "**/.next", "**/build", "**/research"],
+      "excludeDirectories": [
+        "**/node_modules",
+        "**/dist",
+        "**/.next",
+        "**/build",
+        "**/research"
+      ],
     },
+    "java.configuration.updateBuildConfiguration": "interactive",
   },
 }
