@@ -42,18 +42,23 @@ If the Fastify backend encounters fatal startup loops or unhandled API crashes:
 6. Confirm `/health/ready` returns:
    ```json
    {
-     "status": "ready",
-     "database": "connected",
-     "redis": "connected"
+     "status": "ok",
+     "timestamp": "2026-10-15T06:41:44.587Z",
+     "services": {
+       "database": "connected",
+       "redis": "connected"
+     }
    }
    ```
 7. Because migration 0005 is additive, the rolled-back API container will function without errors against the database.
+8. *Plan Reality Note:* On Render Free Tier, rolling back triggers an image redeployment or container restart. Free tier containers take 1–3 minutes to warm up and spin down after 15 minutes of inactivity. Instant zero-downtime rolling deploys require a paid Render instance type with zero-downtime deploys enabled.
 
 ### C. Neon Serverless PostgreSQL Non-Destructive Recovery
 **Under NO circumstances run `DROP TABLE` or `DROP COLUMN` on production.**
 
 If data corruption or bad application writes occurred:
 1. **Immediate Point-In-Time Snapshot Branching (Isolated Sandbox):**
+   *Plan Reality Note:* On Neon Free Tier, Point-in-Time branching history is bounded to a 24-hour restore window. Instant branching is fully supported:
    ```bash
    # Create a recovery branch from the precise timestamp immediately prior to the incident
    neonctl branches create \
@@ -100,11 +105,8 @@ If background worker jobs fail or queue processing stalls:
    await taskSlaQueue.resume();
    await recurringTaskQueue.resume();
    ```
-5. **Drain Stale Locks Only (if worker crashes left orphaned locks):**
-   ```bash
-   # Remove only specific orphaned BullMQ lock keys, preserving all queue payloads
-   redis-cli -u $REDIS_URL --scan --pattern "bull:*:lock" | xargs redis-cli -u $REDIS_URL DEL
-   ```
+5. **Lock Lifecycle & Stalled Job Recovery:**
+   Do **NOT** execute wildcard key deletions (`DEL bull:*:lock`). BullMQ automatically releases stalled locks when the lock TTL expires (default 30s) and moves abandoned jobs to the stalled queue via internal heartbeats. Manually deleting active locks while workers are executing can result in race conditions and duplicate job processing. Operator intervention should be limited to `queue.getFailed()` inspection and `job.retry()`.
 
 ### E. Android Mobile Client Remediation
 Mobile apps installed on physical devices cannot be forcefully uninstalled remotely:

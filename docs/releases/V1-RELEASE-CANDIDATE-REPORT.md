@@ -68,6 +68,12 @@ To maintain strict truth-in-engineering standards, this report explicitly distin
 6. **[P2 Web Bug] Reports Page Undefined Reduce Crash:**
    - *Location:* `apps/web/src/app/reports/page.tsx` (line 210).
    - *Fix:* Added nullish coalescing guards `(attendanceReport.items ?? []).reduce(...)` and empty-state table rendering.
+7. **[P1 Mobile Security] Strict Localhost & Private Interface Allowlist:**
+   - *Location:* `apps/mobile/lib/core/config/app_config.dart`.
+   - *Fix:* Replaced loose check with strict RFC-1918 / loopback allowlist (`isAuthorizedLocalHost`). Rejects arbitrary external HTTP domains and public IPs; enforces strict HTTPS in staging and production. Verified with 18 automated unit tests.
+8. **[P1 Auth Security] Better Auth Production Trusted Origins:**
+   - *Location:* `services/api/src/auth/better-auth.ts`.
+   - *Fix:* Added verified live production domain `https://oprino.vercel.app` to `trustedOrigins`, restricted `localhost` to development, and stripped wildcard `*` origins.
 
 ---
 
