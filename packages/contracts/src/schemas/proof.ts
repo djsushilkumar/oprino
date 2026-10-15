@@ -11,12 +11,21 @@ export const TaskProofSchema = z
     id: z.string().uuid().openapi({ example: 'p1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     workspaceId: z.string().uuid().openapi({ example: 'w1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     taskId: z.string().uuid().openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
-    visitId: z.string().uuid().nullable().optional().openapi({ example: 'v1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    visitId: z
+      .string()
+      .uuid()
+      .nullable()
+      .optional()
+      .openapi({ example: 'v1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     userId: z.string().uuid().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     userName: z.string().optional().openapi({ example: 'Jane Field Tech' }),
     proofType: ProofTypeEnum.openapi({ example: 'PHOTO' }),
     fileKey: z.string().openapi({ example: 'workspace-1/proofs/2026/10/task-1/proof-1.jpg' }),
-    fileUrl: z.string().nullable().optional().openapi({ example: 'https://storage.oprino.com/proof-1.jpg' }),
+    fileUrl: z
+      .string()
+      .nullable()
+      .optional()
+      .openapi({ example: 'https://storage.oprino.com/proof-1.jpg' }),
     fileSizeBytes: z.number().int().nullable().optional().openapi({ example: 284500 }),
     mimeType: z.string().nullable().optional().openapi({ example: 'image/jpeg' }),
     signerName: z.string().nullable().optional().openapi({ example: 'Alice Customer' }),
@@ -30,7 +39,11 @@ export const TaskProofSchema = z
 export const MediaUploadUrlRequestSchema = z
   .object({
     taskId: z.string().uuid().openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
-    visitId: z.string().uuid().optional().openapi({ example: 'v1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    visitId: z
+      .string()
+      .uuid()
+      .optional()
+      .openapi({ example: 'v1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     proofType: ProofTypeEnum.openapi({ example: 'PHOTO' }),
     fileName: z.string().min(1).openapi({ example: 'ac_compressor_replaced.jpg' }),
     mimeType: z.string().min(1).openapi({ example: 'image/jpeg' }),
@@ -40,7 +53,9 @@ export const MediaUploadUrlRequestSchema = z
 
 export const MediaUploadUrlResponseSchema = z
   .object({
-    uploadUrl: z.string().openapi({ example: 'https://s3.us-east-1.amazonaws.com/oprino-proofs/upload?...' }),
+    uploadUrl: z
+      .string()
+      .openapi({ example: 'https://s3.us-east-1.amazonaws.com/oprino-proofs/upload?...' }),
     fileKey: z.string().openapi({ example: 'workspace-1/proofs/2026/10/task-1/photo-abc.jpg' }),
     expiresInSeconds: z.number().int().openapi({ example: 600 }),
   })
@@ -51,13 +66,19 @@ export const ConfirmMediaUploadRequestSchema = z
     taskId: z.string().uuid().openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     visitId: z.string().uuid().optional(),
     proofType: ProofTypeEnum.openapi({ example: 'PHOTO' }),
-    fileKey: z.string().min(1).openapi({ example: 'workspace-1/proofs/2026/10/task-1/photo-abc.jpg' }),
+    fileKey: z
+      .string()
+      .min(1)
+      .openapi({ example: 'workspace-1/proofs/2026/10/task-1/photo-abc.jpg' }),
     fileSizeBytes: z.number().int().optional().openapi({ example: 320000 }),
     mimeType: z.string().optional().openapi({ example: 'image/jpeg' }),
     signerName: z.string().optional().openapi({ example: 'Alice Customer' }),
     signerPhone: z.string().optional().openapi({ example: '+1-555-0199' }),
     watermarkMetadata: z.record(z.unknown()).optional(),
-    notes: z.string().optional().openapi({ example: 'Compressor valve replaced and pressure tested.' }),
+    notes: z
+      .string()
+      .optional()
+      .openapi({ example: 'Compressor valve replaced and pressure tested.' }),
   })
   .openapi('ConfirmMediaUploadRequest');
 
@@ -67,8 +88,26 @@ export const ListTaskProofsResponseSchema = z
   })
   .openapi('ListTaskProofsResponse');
 
+export const MediaDownloadUrlRequestSchema = z
+  .object({
+    fileKey: z.string().min(1).openapi({ example: 'workspace-1/proofs/task-1/photo.jpg' }),
+  })
+  .openapi('MediaDownloadUrlRequest');
+
+export const MediaDownloadUrlResponseSchema = z
+  .object({
+    downloadUrl: z
+      .string()
+      .openapi({ example: 'https://s3.us-east-1.amazonaws.com/oprino-proofs/photo.jpg?...' }),
+    fileKey: z.string().openapi({ example: 'workspace-1/proofs/task-1/photo.jpg' }),
+    expiresInSeconds: z.number().int().openapi({ example: 900 }),
+  })
+  .openapi('MediaDownloadUrlResponse');
+
 export type TaskProof = z.infer<typeof TaskProofSchema>;
 export type MediaUploadUrlRequest = z.infer<typeof MediaUploadUrlRequestSchema>;
 export type MediaUploadUrlResponse = z.infer<typeof MediaUploadUrlResponseSchema>;
 export type ConfirmMediaUploadRequest = z.infer<typeof ConfirmMediaUploadRequestSchema>;
 export type ListTaskProofsResponse = z.infer<typeof ListTaskProofsResponseSchema>;
+export type MediaDownloadUrlRequest = z.infer<typeof MediaDownloadUrlRequestSchema>;
+export type MediaDownloadUrlResponse = z.infer<typeof MediaDownloadUrlResponseSchema>;

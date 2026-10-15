@@ -3,7 +3,7 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Deciders:** Lead Systems Architect, Mobile Engineering, Backend Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
 
 ---
 
@@ -153,7 +153,7 @@ flowchart TD
   - Requires maintaining Apple Developer Push Certificates / Auth Keys and Google Service Account JSONs per deployment environment.
   - Mobile developers must handle push notification permission dialogs and native channel configurations (Android 13+ runtime permissions).
 - **Mitigation:**
-  - Use official Flutter plugins (`firebase_core`, `firebase_messaging`, `flutter_local_notifications`) with standard native Gradle and APNs configurations as established in [`ADR-001`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md).
+  - Use official Flutter plugins (`firebase_core`, `firebase_messaging`, `flutter_local_notifications`) with standard native Gradle and APNs configurations as established in [`ADR-001`](./ADR-001-mobile-framework.md).
 
 ---
 

@@ -3,7 +3,7 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Deciders:** Lead Systems Architect, Web Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/APP-SURFACES.md`](file:///workspace/oprino/docs/product/APP-SURFACES.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/APP-SURFACES.md`](../product/APP-SURFACES.md))
 
 ---
 

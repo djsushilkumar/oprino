@@ -60,6 +60,9 @@ class _TestSyncService extends SyncService {
   Stream<CachedAttendanceData?> watchAttendance(String workspaceId) => Stream.value(null);
 
   @override
+  Stream<OutboxMutation?> watchPendingAttendanceMutation(String workspaceId) => Stream.value(null);
+
+  @override
   Stream<List<CachedTask>> watchTasks(String workspaceId) => Stream.value([]);
 
   @override

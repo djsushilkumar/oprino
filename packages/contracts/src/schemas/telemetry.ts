@@ -32,6 +32,8 @@ export const LocationIngestResponseSchema = z
     dropped: z.number().int().openapi({ example: 0 }),
     reason: z.string().nullable().optional().openapi({ example: null }),
     serverTimestamp: z.string().openapi({ example: '2026-10-08T10:15:35.000Z' }),
+    acceptedIds: z.array(z.string().uuid()).optional().openapi({ example: ['c56a4180-65aa-42ec-a945-5fd21dec0538'] }),
+    rejectedIds: z.array(z.string().uuid()).optional().openapi({ example: [] }),
   })
   .openapi('LocationIngestResponse');
 

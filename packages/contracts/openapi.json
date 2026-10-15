@@ -1562,6 +1562,34 @@
             ],
             "example": 480
           },
+          "selfieMediaKey": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "w1/attendance/u1/selfie.jpg"
+          },
+          "punchInLatitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 28.6139
+          },
+          "punchInLongitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 77.209
+          },
+          "punchInAccuracy": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 10.5
+          },
           "isLate": {
             "type": "boolean",
             "example": false
@@ -1620,6 +1648,22 @@
           "note": {
             "type": "string",
             "example": "Starting shift on site A"
+          },
+          "selfieMediaKey": {
+            "type": "string",
+            "example": "w1/attendance/u1/selfie.jpg"
+          },
+          "latitude": {
+            "type": "number",
+            "example": 28.6139
+          },
+          "longitude": {
+            "type": "number",
+            "example": 77.209
+          },
+          "accuracy": {
+            "type": "number",
+            "example": 10.5
           }
         },
         "required": [
@@ -1881,6 +1925,24 @@
           "serverTimestamp": {
             "type": "string",
             "example": "2026-10-08T10:15:35.000Z"
+          },
+          "acceptedIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": [
+              "c56a4180-65aa-42ec-a945-5fd21dec0538"
+            ]
+          },
+          "rejectedIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": []
           }
         },
         "required": [

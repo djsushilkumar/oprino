@@ -207,7 +207,7 @@ export default function ReportsPage() {
                   <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60">
                     <p className="text-xs uppercase font-bold text-slate-400">Total Late Incidents</p>
                     <p className="text-3xl font-black text-amber-400 mt-2">
-                      {attendanceReport.items.reduce((acc, i) => acc + i.lateDays, 0)}
+                      {(attendanceReport.items ?? []).reduce((acc, i) => acc + (i.lateDays || 0), 0)}
                     </p>
                   </div>
                   <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60">
@@ -238,35 +238,43 @@ export default function ReportsPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800">
-                        {attendanceReport.items.map((item) => (
-                          <tr key={item.userId} className="hover:bg-slate-700/30 transition-colors">
-                            <td className="p-4 font-bold text-white flex items-center gap-2">
-                              <span className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-black text-indigo-400">
-                                {item.userName.charAt(0)}
-                              </span>
-                              {item.userName}
-                            </td>
-                            <td className="p-4 text-slate-400">{item.userEmail}</td>
-                            <td className="p-4 text-center font-bold text-emerald-400">
-                              {item.presentDays}
-                            </td>
-                            <td className="p-4 text-center font-mono font-bold text-indigo-400">
-                              {item.totalHours} hrs
-                            </td>
-                            <td className="p-4 text-center">
-                              {item.lateDays > 0 ? (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                                  {item.lateDays} days
-                                </span>
-                              ) : (
-                                <span className="text-slate-500">0</span>
-                              )}
-                            </td>
-                            <td className="p-4 text-center font-mono text-slate-400">
-                              {item.totalLateMinutes} m
+                        {(!attendanceReport.items || attendanceReport.items.length === 0) ? (
+                          <tr>
+                            <td colSpan={6} className="p-8 text-center text-slate-400">
+                              No attendance records found for this period.
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          attendanceReport.items.map((item) => (
+                            <tr key={item.userId} className="hover:bg-slate-700/30 transition-colors">
+                              <td className="p-4 font-bold text-white flex items-center gap-2">
+                                <span className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-black text-indigo-400">
+                                  {item.userName.charAt(0)}
+                                </span>
+                                {item.userName}
+                              </td>
+                              <td className="p-4 text-slate-400">{item.userEmail}</td>
+                              <td className="p-4 text-center font-bold text-emerald-400">
+                                {item.presentDays}
+                              </td>
+                              <td className="p-4 text-center font-mono font-bold text-indigo-400">
+                                {item.totalHours} hrs
+                              </td>
+                              <td className="p-4 text-center">
+                                {item.lateDays > 0 ? (
+                                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                    {item.lateDays} days
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-500">0</span>
+                                )}
+                              </td>
+                              <td className="p-4 text-center font-mono text-slate-400">
+                                {item.totalLateMinutes} m
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -314,7 +322,7 @@ export default function ReportsPage() {
                 <div className="bg-slate-800/80 p-6 rounded-2xl border border-slate-700/60">
                   <h3 className="font-bold text-white mb-4">Task Status Distribution</h3>
                   <div className="flex flex-wrap gap-4">
-                    {Object.entries(taskSlaReport.statusDistribution).map(([status, count]) => (
+                    {Object.entries(taskSlaReport.statusDistribution ?? {}).map(([status, count]) => (
                       <div
                         key={status}
                         className="p-4 bg-slate-900/60 rounded-xl border border-slate-700 flex items-center gap-3 min-w-[140px]"

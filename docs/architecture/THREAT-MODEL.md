@@ -3,10 +3,10 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`docs/architecture/SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md)
-- [`ADR-005: Multi-Tenancy Architecture`](file:///workspace/oprino/docs/architecture/ADR-005-multitenancy.md)
-- [`ADR-008: Background Location Tracking`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`docs/architecture/SECURITY-ARCHITECTURE.md`](./SECURITY-ARCHITECTURE.md)
+- [`ADR-005: Multi-Tenancy Architecture`](./ADR-005-multitenancy.md)
+- [`ADR-008: Background Location Tracking`](./ADR-008-background-location.md)
 
 ---
 
@@ -80,7 +80,7 @@ Field workers may attempt to use mock GPS applications on Android to pretend the
 3. **Operational Consequence:** The system **DOES NOT** crash or lock the worker out (which could disrupt legitimate field emergencies). Instead, it quietly flags the record as an anomaly/risk for manager review (not automatically treated as proven fraud) and notifies the assigned manager via an Operational Exception Alert on their dashboard.
 
 ### 3.2 Mitigating Cross-Tenant Data Leaks (T-04)
-The highest risk in SaaS is multi-tenant data leakage. The platform enforces the 5-stage zero-trust verification pipeline ([`ADR-005`](file:///workspace/oprino/docs/architecture/ADR-005-multitenancy.md), [`SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md)):
+The highest risk in SaaS is multi-tenant data leakage. The platform enforces the 5-stage zero-trust verification pipeline ([`ADR-005`](./ADR-005-multitenancy.md), [`SECURITY-ARCHITECTURE.md`](./SECURITY-ARCHITECTURE.md)):
 1. **Authenticated Identity:** Verifies cryptographic signature of JWT or session cookie to resolve canonical `userId`.
 2. **Workspace Membership Verification:** Validates that user holds an active membership record in the target workspace in `workspace_memberships`.
 3. **Authorized Active Context:** Binds validated `workspace_id` to request scope; arbitrary client tenant claims are rejected.

@@ -1,25 +1,32 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 import 'package:oprino_api/oprino_api.dart';
 import '../database/database.dart';
 import '../network/api_client_provider.dart';
+import '../network/media_upload_service.dart';
 import '../storage/secure_storage_service.dart';
+import '../utils/media_validator.dart';
 
 final syncServiceProvider = Provider<SyncService>((ref) {
   final db = ref.watch(databaseProvider);
   final client = ref.watch(apiClientProvider);
-  return SyncService(db: db, client: client);
+  final mediaService = ref.watch(mediaUploadServiceProvider);
+  return SyncService(db: db, client: client, mediaService: mediaService);
 });
 
 class SyncService {
   final AppDatabase db;
   final OprinoApiClient client;
+  final MediaUploadService? mediaService;
   final bool autoProcessOutbox;
 
   SyncService({
     required this.db,
     required this.client,
+    this.mediaService,
     this.autoProcessOutbox = true,
   });
 
@@ -32,6 +39,11 @@ class SyncService {
     required String workspaceId,
     String? shiftId,
     String? note,
+    String? selfieMediaKey,
+    String? localFilePath,
+    double? latitude,
+    double? longitude,
+    double? accuracy,
   }) async {
     final mutationId = SecureStorageService.generateUuidV4();
     final idempotencyKey = 'mut-punch-in-$mutationId';
@@ -40,6 +52,11 @@ class SyncService {
     final payload = jsonEncode({
       'shiftId': shiftId,
       'note': note,
+      'selfieMediaKey': selfieMediaKey,
+      'localFilePath': localFilePath,
+      'latitude': latitude,
+      'longitude': longitude,
+      'accuracy': accuracy,
     });
 
     await db.transaction(() async {
@@ -310,6 +327,8 @@ class SyncService {
     required String proofType,
     required String fileKey,
     String? fileUrl,
+    String? localFilePath,
+    bool isBinaryUploaded = true,
     String? signerName,
     String? signerPhone,
     Map<String, dynamic>? watermarkMetadata,
@@ -324,6 +343,8 @@ class SyncService {
       'visitId': visitId,
       'proofType': proofType,
       'fileKey': fileKey,
+      'localFilePath': localFilePath,
+      'isBinaryUploaded': isBinaryUploaded,
       'signerName': signerName,
       'signerPhone': signerPhone,
       'watermarkMetadata': watermarkMetadata,
@@ -333,17 +354,17 @@ class SyncService {
     await db.transaction(() async {
       await db.into(db.outboxMutations).insert(
             OutboxMutationsCompanion.insert(
-              id: mutationId,
-              workspaceId: workspaceId,
-              entityType: 'PROOF',
-              entityId: mutationId,
-              mutationType: 'CONFIRM_PROOF',
-              payload: payload,
-              idempotencyKey: idempotencyKey,
-              createdAt: Value(now),
-              updatedAt: Value(now),
-            ),
-          );
+               id: mutationId,
+               workspaceId: workspaceId,
+               entityType: 'PROOF',
+               entityId: mutationId,
+               mutationType: 'CONFIRM_PROOF',
+               payload: payload,
+               idempotencyKey: idempotencyKey,
+               createdAt: Value(now),
+               updatedAt: Value(now),
+             ),
+           );
 
       await db.into(db.cachedTaskProofs).insertOnConflictUpdate(
             CachedTaskProofsCompanion.insert(
@@ -362,6 +383,55 @@ class SyncService {
               createdAt: now,
             ),
           );
+    });
+
+    if (autoProcessOutbox) processOutbox().ignore();
+    return idempotencyKey;
+  }
+
+  /// Queues Task Verification mutation by supervisor/manager.
+  Future<String> queueTaskVerification({
+    required String workspaceId,
+    required String taskId,
+    required String action, // 'APPROVE' or 'REJECT'
+    String? notes,
+  }) async {
+    final mutationId = SecureStorageService.generateUuidV4();
+    final idempotencyKey = 'mut-verify-$mutationId';
+    final now = DateTime.now();
+
+    final payload = jsonEncode({
+      'taskId': taskId,
+      'action': action,
+      'notes': notes,
+    });
+
+    await db.transaction(() async {
+      await db.into(db.outboxMutations).insert(
+            OutboxMutationsCompanion.insert(
+              id: mutationId,
+              workspaceId: workspaceId,
+              entityType: 'TASK',
+              entityId: taskId,
+              mutationType: 'VERIFY_TASK',
+              payload: payload,
+              idempotencyKey: idempotencyKey,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+
+      if (action == 'APPROVE') {
+        await (db.update(db.cachedTasks)..where((t) => t.id.equals(taskId))).write(
+          CachedTasksCompanion(
+            status: const Value('VERIFIED'),
+            verifierName: const Value('Supervisor'),
+            verifiedAt: Value(now),
+            verificationNotes: Value(notes),
+            updatedAt: Value(now),
+          ),
+        );
+      }
     });
 
     if (autoProcessOutbox) processOutbox().ignore();
@@ -456,11 +526,78 @@ class SyncService {
 
         switch (mutation.mutationType) {
           case 'PUNCH_IN':
-            await client.punchIn(
-              idempotencyKey: mutation.idempotencyKey,
-              shiftId: data['shiftId'] as String?,
-              note: data['note'] as String?,
-            );
+            String? selfieKey = data['selfieMediaKey'] as String?;
+            final localSelfiePath = data['localFilePath'] as String?;
+
+            // If selfie was captured offline and not yet uploaded to storage:
+            if (localSelfiePath != null && (selfieKey == null || selfieKey.isEmpty) && mediaService != null) {
+              final localFile = File(localSelfiePath);
+              if (await localFile.exists()) {
+                final bytes = await localFile.readAsBytes();
+                final uploadMeta = await mediaService!.requestAttendanceSelfieUploadUrl(
+                  fileName: 'selfie.jpg',
+                );
+                await mediaService!.uploadBinaryBytes(
+                  uploadUrl: uploadMeta.uploadUrl,
+                  bytes: bytes,
+                  contentType: 'image/jpeg',
+                );
+                selfieKey = uploadMeta.fileKey;
+
+                // Persist uploaded key in payload for retry resilience
+                data['selfieMediaKey'] = selfieKey;
+                await (db.update(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).write(
+                  OutboxMutationsCompanion(
+                    payload: Value(jsonEncode(data)),
+                    updatedAt: Value(DateTime.now()),
+                  ),
+                );
+              }
+            }
+
+            try {
+              final punchRes = await client.punchIn(
+                idempotencyKey: mutation.idempotencyKey,
+                shiftId: data['shiftId'] as String?,
+                note: data['note'] as String?,
+                selfieMediaKey: selfieKey,
+                latitude: (data['latitude'] as num?)?.toDouble(),
+                longitude: (data['longitude'] as num?)?.toDouble(),
+                accuracy: (data['accuracy'] as num?)?.toDouble(),
+              );
+
+              // Server confirmed! Update cached attendance with server canonical session ID and punch time
+              await db.into(db.cachedAttendance).insertOnConflictUpdate(
+                    CachedAttendanceCompanion.insert(
+                      id: 'active_state_${mutation.workspaceId}',
+                      workspaceId: mutation.workspaceId,
+                      dutyState: punchRes.status == 'ON_DUTY' ? 'ON_DUTY' : 'NOT_STARTED',
+                      activeSessionId: Value(punchRes.id),
+                      punchInTime: Value(punchRes.punchInTime),
+                      lastUpdated: Value(DateTime.now()),
+                    ),
+                  );
+
+              // Cleanup local temporary selfie file after confirmed delivery
+              if (localSelfiePath != null && mediaService != null) {
+                await mediaService!.deleteLocalMediaFile(localSelfiePath);
+              }
+            } on DioException catch (dioErr) {
+              final statusCode = dioErr.response?.statusCode;
+              // If client error (4xx: rejection by business rules, invalid shift, geofence mismatch, etc.)
+              if (statusCode != null && statusCode >= 400 && statusCode < 500 && statusCode != 408 && statusCode != 429) {
+                // Roll back optimistic ON_DUTY state to prevent masquerading unverified punch as duty
+                await db.into(db.cachedAttendance).insertOnConflictUpdate(
+                      CachedAttendanceCompanion.insert(
+                        id: 'active_state_${mutation.workspaceId}',
+                        workspaceId: mutation.workspaceId,
+                        dutyState: 'NOT_STARTED',
+                        lastUpdated: Value(DateTime.now()),
+                      ),
+                    );
+              }
+              rethrow;
+            }
             break;
 
           case 'PUNCH_OUT':
@@ -468,6 +605,14 @@ class SyncService {
               idempotencyKey: mutation.idempotencyKey,
               note: data['note'] as String?,
             );
+            await db.into(db.cachedAttendance).insertOnConflictUpdate(
+                  CachedAttendanceCompanion.insert(
+                    id: 'active_state_${mutation.workspaceId}',
+                    workspaceId: mutation.workspaceId,
+                    dutyState: 'OFF_DUTY',
+                    lastUpdated: Value(DateTime.now()),
+                  ),
+                );
             break;
 
           case 'TRANSITION':
@@ -511,14 +656,74 @@ class SyncService {
             break;
 
           case 'CONFIRM_PROOF':
+            String fileKey = data['fileKey'] as String;
+            final localProofPath = data['localFilePath'] as String?;
+            final isBinaryUploaded = data['isBinaryUploaded'] as bool? ?? true;
+            final proofType = (data['proofType'] as String?) ?? 'PHOTO';
+            final isSignature = proofType == 'SIGNATURE';
+            final defaultFileName = isSignature ? 'signature.png' : 'photo_proof.jpg';
+            final defaultMimeType = isSignature ? 'image/png' : 'image/jpeg';
+
+            // If proof photo or signature was saved offline and binary not yet uploaded:
+            if (!isBinaryUploaded && localProofPath != null && mediaService != null) {
+              final localFile = File(localProofPath);
+              if (await localFile.exists()) {
+                final bytes = await localFile.readAsBytes();
+                final detectedMime = MediaValidator.detectMimeType(bytes) ?? defaultMimeType;
+                final uploadMeta = await mediaService!.requestTaskProofUploadUrl(
+                  taskId: data['taskId'] as String,
+                  visitId: data['visitId'] as String?,
+                  proofType: proofType,
+                  fileName: defaultFileName,
+                  mimeType: detectedMime,
+                  fileSizeBytes: bytes.length,
+                );
+                await mediaService!.uploadBinaryBytes(
+                  uploadUrl: uploadMeta.uploadUrl,
+                  bytes: bytes,
+                  contentType: detectedMime,
+                );
+                fileKey = uploadMeta.fileKey;
+                data['fileKey'] = fileKey;
+                data['isBinaryUploaded'] = true;
+
+                // Update cached proof entry with durable fileKey
+                await (db.update(db.cachedTaskProofs)..where((p) => p.id.equals(mutation.entityId))).write(
+                  CachedTaskProofsCompanion(fileKey: Value(fileKey)),
+                );
+
+                await (db.update(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).write(
+                  OutboxMutationsCompanion(
+                    payload: Value(jsonEncode(data)),
+                    updatedAt: Value(DateTime.now()),
+                  ),
+                );
+              } else {
+                throw Exception('Local proof binary not found on device at path: $localProofPath');
+              }
+            }
+
             await client.confirmMediaUpload(
               taskId: data['taskId'] as String,
               visitId: data['visitId'] as String?,
-              proofType: data['proofType'] as String,
-              fileKey: data['fileKey'] as String,
+              proofType: proofType,
+              fileKey: fileKey,
               signerName: data['signerName'] as String?,
               signerPhone: data['signerPhone'] as String?,
               watermarkMetadata: data['watermarkMetadata'] as Map<String, dynamic>?,
+              notes: data['notes'] as String?,
+            );
+
+            // Cleanup local photo or signature file after confirmed delivery
+            if (localProofPath != null && mediaService != null) {
+              await mediaService!.deleteLocalMediaFile(localProofPath);
+            }
+            break;
+
+          case 'VERIFY_TASK':
+            await client.verifyTask(
+              taskId: data['taskId'] as String,
+              action: data['action'] as String,
               notes: data['notes'] as String?,
             );
             break;
@@ -527,11 +732,20 @@ class SyncService {
         // Successfully acknowledged: remove from outbox
         await (db.delete(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).go();
       } catch (err) {
+        String errMsg = err.toString();
+        if (err is DioException) {
+          final resData = err.response?.data;
+          if (resData is Map && resData['message'] != null) {
+            errMsg = resData['message'].toString();
+          } else if (err.message != null && err.message!.isNotEmpty) {
+            errMsg = err.message!;
+          }
+        }
         // Record failure and retry count
         await (db.update(db.outboxMutations)..where((m) => m.id.equals(mutation.id))).write(
           OutboxMutationsCompanion(
             status: const Value('FAILED'),
-            lastError: Value(err.toString()),
+            lastError: Value(errMsg),
             updatedAt: Value(DateTime.now()),
           ),
         );
@@ -702,6 +916,14 @@ class SyncService {
         .watchSingleOrNull();
   }
 
+  Stream<OutboxMutation?> watchPendingAttendanceMutation(String workspaceId) {
+    return (db.select(db.outboxMutations)
+          ..where((m) => m.workspaceId.equals(workspaceId) & m.entityType.equals('ATTENDANCE'))
+          ..orderBy([(m) => OrderingTerm.desc(m.createdAt)])
+          ..limit(1))
+        .watchSingleOrNull();
+  }
+
   Stream<List<CachedVisit>> watchVisits(String workspaceId) {
     return (db.select(db.cachedVisits)
           ..where((v) => v.workspaceId.equals(workspaceId))
@@ -721,5 +943,188 @@ class SyncService {
           ..where((m) => m.status.equals('PENDING') | m.status.equals('SYNCING'))
           ..orderBy([(m) => OrderingTerm.asc(m.createdAt)]))
         .watch();
+  }
+
+  // =========================================================================
+  // DURABLE OFFLINE GPS QUEUE & SYNCHRONIZATION
+  // =========================================================================
+
+  /// Persists a captured on-duty GPS fix into the local SQLite durable queue.
+  Future<void> queueLocation({
+    required String id,
+    required String workspaceId,
+    required String userId,
+    String? sessionId,
+    required double latitude,
+    required double longitude,
+    required double accuracy,
+    double? speed,
+    double? heading,
+    double? altitude,
+    double? batteryLevel,
+    bool? isCharging,
+    String? activityType,
+    bool? isMoving,
+    required DateTime recordedAt,
+  }) async {
+    await db.into(db.cachedLocations).insert(
+          CachedLocationsCompanion.insert(
+            id: id,
+            workspaceId: workspaceId,
+            userId: userId,
+            sessionId: Value(sessionId),
+            latitude: latitude,
+            longitude: longitude,
+            accuracy: accuracy,
+            speed: Value(speed),
+            heading: Value(heading),
+            altitude: Value(altitude),
+            batteryLevel: Value(batteryLevel),
+            isCharging: Value(isCharging),
+            activityType: Value(activityType),
+            isMoving: Value(isMoving),
+            recordedAt: recordedAt,
+            status: const Value('PENDING'),
+            attemptCount: const Value(0),
+            createdAt: Value(DateTime.now()),
+          ),
+        );
+  }
+
+  /// Flushes pending GPS locations in batches from SQLite to the server ingestion endpoint.
+  /// Strictly filters by authenticated workspaceId and userId to prevent cross-tenant/user data leakage.
+  /// Implements lossless per-point acknowledgment semantics:
+  /// - ONLY points acknowledged in response.acceptedIds are deleted.
+  /// - Points in response.rejectedIds are updated to REJECTED with error reason (never deleted).
+  /// - Points unacknowledged in response are returned to PENDING for retry.
+  Future<int> flushPendingLocations({
+    required String workspaceId,
+    required String userId,
+    int batchSize = 30,
+  }) async {
+    final pending = await (db.select(db.cachedLocations)
+          ..where((l) =>
+              l.workspaceId.equals(workspaceId) &
+              l.userId.equals(userId) &
+              (l.status.equals('PENDING') | l.status.equals('FAILED')))
+          ..orderBy([(l) => OrderingTerm.asc(l.recordedAt)])
+          ..limit(batchSize))
+        .get();
+
+    if (pending.isEmpty) return 0;
+
+    final batch = pending.map((l) {
+      return LocationPoint(
+        id: l.id,
+        recordedAt: l.recordedAt,
+        latitude: l.latitude,
+        longitude: l.longitude,
+        accuracy: l.accuracy,
+        speed: l.speed ?? 0.0,
+        heading: l.heading ?? 0.0,
+        batteryLevel: l.batteryLevel ?? 1.0,
+        isCharging: l.isCharging ?? false,
+        activityType: l.activityType ?? 'still',
+        isMoving: l.isMoving ?? false,
+      );
+    }).toList();
+
+    final ids = pending.map((l) => l.id).toList();
+
+    await (db.update(db.cachedLocations)..where((l) => l.id.isIn(ids))).write(
+      const CachedLocationsCompanion(
+        status: Value('SYNCING'),
+      ),
+    );
+
+    try {
+      final response = await client.ingestLocationBreadcrumbs(batch);
+
+      final acceptedSet = response.acceptedIds != null
+          ? response.acceptedIds!.toSet()
+          : (response.accepted == batch.length ? ids.toSet() : <String>{});
+      final rejectedSet = response.rejectedIds?.toSet() ?? <String>{};
+
+      // 1. Lossless per-point acknowledgment: delete ONLY server-accepted records
+      if (acceptedSet.isNotEmpty) {
+        await (db.delete(db.cachedLocations)..where((l) => l.id.isIn(acceptedSet))).go();
+      }
+
+      // 2. Never delete rejected records: mark them as REJECTED for auditability
+      if (rejectedSet.isNotEmpty) {
+        await (db.update(db.cachedLocations)..where((l) => l.id.isIn(rejectedSet))).write(
+          CachedLocationsCompanion(
+            status: const Value('REJECTED'),
+            lastError: Value(response.reason ?? 'Server rejected point'),
+          ),
+        );
+      }
+
+      // 3. Unresolved / unacknowledged records remain safe: revert to PENDING for retry
+      final unresolved = ids.where((id) => !acceptedSet.contains(id) && !rejectedSet.contains(id)).toList();
+      if (unresolved.isNotEmpty) {
+        await (db.update(db.cachedLocations)..where((l) => l.id.isIn(unresolved))).write(
+          const CachedLocationsCompanion(
+            status: Value('PENDING'),
+          ),
+        );
+      }
+
+      return acceptedSet.length;
+    } catch (err) {
+      // Offline fallback: mark as FAILED and increment attemptCount; NEVER delete records
+      for (final l in pending) {
+        await (db.update(db.cachedLocations)..where((row) => row.id.equals(l.id))).write(
+          CachedLocationsCompanion(
+            status: const Value('FAILED'),
+            attemptCount: Value(l.attemptCount + 1),
+            lastError: Value(err.toString()),
+          ),
+        );
+      }
+      return 0;
+    }
+  }
+
+  /// Drains pending GPS locations across multiple bounded batches without collecting new off-duty points.
+  /// Bounded to [maxBatches] (default 10) to prevent infinite loops during large queues.
+  Future<int> drainPendingLocations({
+    required String workspaceId,
+    required String userId,
+    int maxBatches = 10,
+    int batchSize = 30,
+  }) async {
+    int totalSynced = 0;
+    int batchesRun = 0;
+
+    while (batchesRun < maxBatches) {
+      final synced = await flushPendingLocations(
+        workspaceId: workspaceId,
+        userId: userId,
+        batchSize: batchSize,
+      );
+      if (synced == 0) break;
+      totalSynced += synced;
+      batchesRun++;
+    }
+
+    return totalSynced;
+  }
+
+  Stream<List<CachedLocation>> watchPendingLocations({String? workspaceId, String? userId}) {
+    final query = db.select(db.cachedLocations);
+    if (workspaceId != null && userId != null) {
+      query.where((l) =>
+          l.workspaceId.equals(workspaceId) &
+          l.userId.equals(userId) &
+          (l.status.equals('PENDING') | l.status.equals('SYNCING')));
+    } else if (workspaceId != null) {
+      query.where((l) =>
+          l.workspaceId.equals(workspaceId) &
+          (l.status.equals('PENDING') | l.status.equals('SYNCING')));
+    } else {
+      query.where((l) => l.status.equals('PENDING') | l.status.equals('SYNCING'));
+    }
+    return (query..orderBy([(l) => OrderingTerm.asc(l.recordedAt)])).watch();
   }
 }

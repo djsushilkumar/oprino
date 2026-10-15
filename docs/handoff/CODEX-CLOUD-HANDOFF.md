@@ -3,8 +3,8 @@
 **Project:** Oprino  
 **Category:** Multi-Industry Task Management + Workforce Management + Field Operations SaaS for SMBs  
 **Target Market:** SMBs with 5–500 employees (optimized primarily for 10–200 employees)  
-**Date of Handoff:** October 2026  
-**Repository State:** Baseline Planning & Reconciled Technical Architecture
+**Date of Handoff:** October 15, 2026\
+**Repository State:** V1 release candidate stabilized; commercial launch gated
 
 ---
 
@@ -14,14 +14,15 @@
 - **Phase 01A (Technical Architecture Research & ADR Freeze):** **APPROVED & FROZEN**.
 - **Phase 01B (Technical Validation Spikes):** **CONDITIONALLY CLOSED** (Physical OEM mobile validation formally deferred to mobile release gate).
 - **Pre-Phase-01C Repository Cleanup:** **COMPLETED**.
-- **Phase 01C (Production Monorepo Scaffolding):** **COMPLETED & VERIFIED** ([`docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md`](file:///workspace/oprino/docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md)).
-- **Phase 02A (Identity, Workspace & Multi-Tenant Foundation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md)).
-- **Phase 02B (Task & Attendance Domain Implementation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md)).
-- **Phase 02C (GPS Location Pipeline, Geofencing & Tracking Engine):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md)).
-- **Phase 03 (Field Operations, Customer Sites, Visits & Proof of Work):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md)).
-- **Phase 04 (Advanced Scheduling, Dispatch Routing & Analytics):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-04-ADVANCED-OPERATIONS-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-04-ADVANCED-OPERATIONS-REPORT.md)).
-- **Phase 05 (Production Hardening, Monitoring & Launch Readiness):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-05-PRODUCTION-HARDENING-REPORT.md`](file:///workspace/oprino/docs/implementation/PHASE-05-PRODUCTION-HARDENING-REPORT.md)).
-- **Current Milestone State:** **ALL CORE PRODUCTION PHASES (00 THROUGH 05) VERIFIED & PRODUCTION READY**.
+- **Phase 01C (Production Monorepo Scaffolding):** **COMPLETED & VERIFIED** ([`docs/architecture/PHASE-01C-SCAFFOLDING-REPORT.md`](../architecture/PHASE-01C-SCAFFOLDING-REPORT.md)).
+- **Phase 02A (Identity, Workspace & Multi-Tenant Foundation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md`](../implementation/PHASE-02A-IDENTITY-TENANCY-REPORT.md)).
+- **Phase 02B (Task & Attendance Domain Implementation):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md`](../implementation/PHASE-02B-TASK-ATTENDANCE-REPORT.md)).
+- **Phase 02C (GPS Location Pipeline, Geofencing & Tracking Engine):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md`](../implementation/PHASE-02C-LOCATION-PIPELINE-REPORT.md)).
+- **Phase 03 (Field Operations, Customer Sites, Visits & Proof of Work):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md`](../implementation/PHASE-03-FIELD-OPERATIONS-REPORT.md)).
+- **Phase 04 (Advanced Scheduling, Dispatch Routing & Analytics):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-04-ADVANCED-OPERATIONS-REPORT.md`](../implementation/PHASE-04-ADVANCED-OPERATIONS-REPORT.md)).
+- **Phase 05 (Production Hardening, Monitoring & Launch Readiness):** **COMPLETED & VERIFIED** ([`docs/implementation/PHASE-05-PRODUCTION-HARDENING-REPORT.md`](../implementation/PHASE-05-PRODUCTION-HARDENING-REPORT.md)).
+- **Current Milestone State:** **V1 RELEASE CANDIDATE STABILIZED — COMMERCIAL LAUNCH GATED**. Earlier phase completion reports are historical evidence, not launch approval. The [October 15 launch checklist](../releases/V1-COMMERCIAL-LAUNCH-CHECKLIST.md) and [release candidate report](../releases/V1-RELEASE-CANDIDATE-REPORT.md) record the outstanding gates: production S3/R2 credentials, Android release signing, physical background GPS validation, and owner acceptance.
+- **Latest local project check (`d35b8f3`, October 15):** Lint, typecheck, and builds passed across 18 tasks (13 cached); API 182 passed / 4 live R2 tests skipped; web 7 passed; worker 2 passed; Flutter analysis clean and 60 tests passed. These results do not establish live deployment or physical-device readiness.
 
 ---
 
@@ -31,15 +32,15 @@
 
 The single, authoritative source of truth for all product requirements, feature classifications, business rules, and non-goals is:
 
-- [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)
+- [`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md)
 
 ### Primary Technical Architecture Authority:
 
 The system architecture, component topologies, and physical designs are governed by:
 
-- [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md)
-- [`docs/architecture/ADR/README.md`](file:///workspace/oprino/docs/architecture/ADR/README.md) (Register of ADR-001 through ADR-020)
-- [`docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md`](file:///workspace/oprino/docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md)
+- [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](../architecture/OPRINO-TECHNICAL-ARCHITECTURE.md)
+- [`docs/architecture/ADR/README.md`](../architecture/ADR/README.md) (Register of ADR-001 through ADR-021)
+- [`docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md`](../architecture/PHASE-01A-FREEZE-CHECKLIST.md)
 
 ---
 
@@ -49,31 +50,31 @@ Before modifying code or configuration, Codex and all coding agents **MUST** rea
 
 ### A. Product Baseline & Boundaries
 
-1. [`docs/product/V1-SCOPE.md`](file:///workspace/oprino/docs/product/V1-SCOPE.md) — Strict classification of MUST, SHOULD, LATER, and OUT-OF-SCOPE features for V1.
-2. [`docs/product/PRODUCT-DEFINITION.md`](file:///workspace/oprino/docs/product/PRODUCT-DEFINITION.md) — Core principles, target multi-industry SMB market, and explicit non-goals.
-3. [`docs/product/APP-SURFACES.md`](file:///workspace/oprino/docs/product/APP-SURFACES.md) — Surfaces: Unified Mobile App (Field & Manager modes) and Web Dashboard.
-4. [`docs/product/ROLES-AND-PERMISSIONS-PLAN.md`](file:///workspace/oprino/docs/product/ROLES-AND-PERMISSIONS-PLAN.md) — Default and custom RBAC permissions model.
+1. [`docs/product/V1-SCOPE.md`](../product/V1-SCOPE.md) — Strict classification of MUST, SHOULD, LATER, and OUT-OF-SCOPE features for V1.
+2. [`docs/product/PRODUCT-DEFINITION.md`](../product/PRODUCT-DEFINITION.md) — Core principles, target multi-industry SMB market, and explicit non-goals.
+3. [`docs/product/APP-SURFACES.md`](../product/APP-SURFACES.md) — Surfaces: Unified Mobile App (Field & Manager modes) and Web Dashboard.
+4. [`docs/product/ROLES-AND-PERMISSIONS-PLAN.md`](../product/ROLES-AND-PERMISSIONS-PLAN.md) — Default and custom RBAC permissions model.
 
 ### B. Core Architecture & Invariant Specifications
 
-5. [`docs/architecture/PRIVACY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/PRIVACY-ARCHITECTURE.md) — 3-boundary duty-hours controls, safe local deadline strategy, and off-duty privacy enforcement.
-6. [`docs/architecture/RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md) — 30-day default location retention, multi-tier deletion lifecycle, and least-privileged maintenance procedure.
-7. [`docs/architecture/LOCATION-PIPELINE.md`](file:///workspace/oprino/docs/architecture/LOCATION-PIPELINE.md) — Separation of domain SQLite vs. Transistor SDK native persistence; measurable SLO targets; device validation matrix.
-8. [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md) — Offline-first conflict resolution rules for all entities.
-9. [`docs/architecture/SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md) — 5-tier defense-in-depth model, 5-stage tenant verification, and transaction-scoped `SET LOCAL` RLS.
-10. [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md) — Single source of truth `@oprino/contracts` schema strategy.
-11. [`docs/architecture/INFRA-COST-MODEL.md`](file:///workspace/oprino/docs/architecture/INFRA-COST-MODEL.md) — Parameterized SMB infrastructure economics and margin targets.
+5. [`docs/architecture/PRIVACY-ARCHITECTURE.md`](../architecture/PRIVACY-ARCHITECTURE.md) — 3-boundary duty-hours controls, safe local deadline strategy, and off-duty privacy enforcement.
+6. [`docs/architecture/RETENTION-ARCHITECTURE.md`](../architecture/RETENTION-ARCHITECTURE.md) — 30-day default location retention, multi-tier deletion lifecycle, and least-privileged maintenance procedure.
+7. [`docs/architecture/LOCATION-PIPELINE.md`](../architecture/LOCATION-PIPELINE.md) — Pipeline requirements, measurable SLO targets, and device validation matrix. Read with [ADR-021](../architecture/ADR-021-zero-cost-gps-pipeline.md), which supersedes the Transistorsoft dependency for development and pilot operations with geolocator and a durable Drift queue.
+8. [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](../architecture/SYNC-CONFLICT-MATRIX.md) — Offline-first conflict resolution rules for all entities.
+9. [`docs/architecture/SECURITY-ARCHITECTURE.md`](../architecture/SECURITY-ARCHITECTURE.md) — 5-tier defense-in-depth model, 5-stage tenant verification, and transaction-scoped `SET LOCAL` RLS.
+10. [`docs/architecture/CONTRACT-STRATEGY.md`](../architecture/CONTRACT-STRATEGY.md) — Single source of truth `@oprino/contracts` schema strategy.
+11. [`docs/architecture/INFRA-COST-MODEL.md`](../architecture/INFRA-COST-MODEL.md) — Parameterized SMB infrastructure economics and margin targets.
 
 ### C. Authoritative Brand System
 
-12. [`docs/brand/OPRINO-BRAND-SYSTEM.md`](file:///workspace/oprino/docs/brand/OPRINO-BRAND-SYSTEM.md) — Canonical logo variations, color tokens, typography scales, and spacing units derived from `Oprino-Brand-Kit/`.
+12. [`docs/brand/OPRINO-BRAND-SYSTEM.md`](../brand/OPRINO-BRAND-SYSTEM.md) — Canonical logo variations, color tokens, typography scales, and spacing units derived from `Oprino-Brand-Kit/`.
 
 ---
 
 ## 4. Invariant Rules for Autonomous & Assisted Development
 
 1. **Frozen Baseline Immutability:** Phase 00 product requirements cannot be silently changed or reinterpreted. Technology must adapt to product requirements, never vice-versa.
-2. **ADR Governance:** All architectural decisions are frozen in ADR-001 through ADR-020. Any material change to database technology, frameworks, protocols, or storage patterns requires an explicit new or superseding ADR.
+2. **ADR Governance:** Consult ADR-001 through ADR-021 and honor explicit superseding decisions. Any material change to database technology, frameworks, protocols, or storage patterns requires an explicit new or superseding ADR.
 3. **Duty-Hours Privacy Invariant:** **Off-duty employee location tracking must NEVER be an intended Oprino behavior.** Tracking occurs strictly within active authorized shifts. Peer location visibility remains **OFF BY DEFAULT**.
 4. **Scope Creep Prohibition:** Oprino is a task management and field workforce operational platform. Do **NOT** introduce:
    - CRM or customer pipeline management
@@ -88,9 +89,9 @@ Before modifying code or configuration, Codex and all coding agents **MUST** rea
 
 ---
 
-## 5. Next Intended Milestones & Next Gate
+## 5. Historical Milestones & Current Release Gate
 
-The repository has completed Phase 01C Production Monorepo Scaffolding and Stabilization:
+The milestones below retain the verification recorded at each phase. Older SDK choices, cloud health probes, APK builds, and test totals are historical; they do not replace the current release gates in section 1 or the October 15 launch checklist.
 
 1. **Phase 00:** **APPROVED & FROZEN**.
 2. **Phase 01A (Flutter Technical Architecture):** **APPROVED & FROZEN**.
@@ -140,7 +141,7 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
    - Full quality gates passed: TypeScript, ESLint, API integration tests (69/69), Flutter analyze (0 err), Flutter tests (22/22), Dart API tests (11/11), and Next.js production build.
 9. **Phase 04 (Advanced Scheduling, Dispatch Routing, Conflict Resilience & Analytics):** **COMPLETED & VERIFIED**.
    - PostgreSQL RLS tenant isolation across `recurring_task_templates`, `shift_rosters`, `sync_mutation_records`, `notifications`, and route sequencing on `visits`.
-   - Comprehensive Offline-First Sync Engine executing [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md) with idempotency deduplication, punch-out hardware override, managerial cancellation precedence, and checklist union merging.
+   - Comprehensive Offline-First Sync Engine executing [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](../architecture/SYNC-CONFLICT-MATRIX.md) with idempotency deduplication, punch-out hardware override, managerial cancellation precedence, and checklist union merging.
    - Dispatch Stop Sequencing with `PUT /v1/visits/sequence` and interactive web/mobile route reordering controls.
    - Recurring Task Templates with cron evaluation and BullMQ worker job `tasks.recurring.generate`.
    - Shift Roster Assignment with roster calendar view and BullMQ worker job `tasks.sla.check_overdue`.
@@ -154,7 +155,7 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
     - Zero-downtime execution & graceful shutdown: Signal handling (`SIGTERM`/`SIGINT`) for API and BullMQ worker with connection pool draining and hard watchdog timers.
     - Physical OEM Android build scripting: Keystore signing template (`key.properties.example`), R8/ProGuard native reflection rules for Drift SQLite and Transistor Geolocation, and automated build scripts (`build-release-apk.ps1`/`build-release-apk.sh`).
     - Full quality gates passed: TypeScript monorepo typecheck (8/8 pkgs, 9 tasks), Phase 05 unit & security tests (9/9), full API test suite (23/23 tests pass), and Next.js 15 production build (14 static pages).
-11. **Launch Status:** **ENTERPRISE CORE MONOREPO READY FOR PRODUCTION DEPLOYMENT & FIELD PILOT RELEASE**.
+11. **Historical Phase 05 Assessment:** Core implementation was reported ready for deployment and pilot evaluation at that milestone. Commercial launch remains subject to the current release checklist.
 12. **Physical Device Installation & End-to-End Smoke Test:** **COMPLETED & VERIFIED (OCTOBER 2026)**.
     - Production Release APK (`57.0 MB`, with R8 code shrinking and icon tree shaking) built and installed via ADB onto physical Android hardware.
     - Automated end-to-end smoke test (`scripts/smoke_test.mjs`) verified 100% across all 10 domain flows:
@@ -173,7 +174,7 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
       - `Lint, Typecheck, Test & Build (TypeScript)`: PASSED (Turbo build + all 88 integration tests against live PostGIS 17 & Redis 7 service containers).
       - `Full End-to-End Smoke Test`: PASSED (self-bootstrapping tenant creation, attendance punch lifecycle, visit routing, checklists, proof upload, and Next.js routes).
     - Production multi-stage Docker containerization (`Dockerfile.api`, `Dockerfile.worker`, `Dockerfile.web`).
-    - 100% Free Cloud Deployment specifications (`render.yaml`, `apps/web/vercel.json`, and [`docs/deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md`](file:///workspace/oprino/docs/deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md)) across Supabase (PostgreSQL 17 + PostGIS), Upstash (Redis), Render (Fastify API & Worker), and Vercel (Next.js 15 Web Dashboard).
+    - 100% Free Cloud Deployment specifications (`render.yaml`, `apps/web/vercel.json`, and [`docs/deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md`](../deployment/FREE-CLOUD-DEPLOYMENT-GUIDE.md)) across Supabase (PostgreSQL 17 + PostGIS), Upstash (Redis), Render (Fastify API & Worker), and Vercel (Next.js 15 Web Dashboard).
 14. **Cloud Deployment Execution & Free-Tier Optimization:** **COMPLETED & VERIFIED (OCTOBER 11, 2026)**.
     - **Vercel Web Dashboard:** Deployed live to Vercel CDN from `apps/web` with automatic Git push CI/CD.
     - **Render Free-Tier Re-architecture:**
@@ -193,9 +194,10 @@ The repository has completed Phase 01C Production Monorepo Scaffolding and Stabi
     - **Upstash Serverless Redis:** 100% free TLS Redis provisioned and verified (`PONG` response).
     - **Render Fastify API (`oprino-api`):** Configured with cloud connection strings in Oregon region; readiness probe `/health/ready` returns `HTTP 200 OK` with `database: connected` and `redis: connected`.
     - **Live Cloud E2E Smoke Test:** Automated smoke test (`scripts/smoke_test.mjs`) executed against `https://oprino-api.onrender.com` passing 100% of domain flows (bootstrap tenant, duty punch in/out, visits GPS routing, checklists, watermarked photo and signature proof of work, and supervisor verification).
-16. **Current Status & Active Gate:** **LIVE CLOUD BACKEND 100% OPERATIONAL**.
-    - Cloud API Public Endpoint: `https://oprino-api.onrender.com`
-    - Next Step: Configure `NEXT_PUBLIC_API_URL=https://oprino-api.onrender.com` on Vercel Web Dashboard and execute live pilot testing from mobile APK and browser.
+16. **Current Status & Active Gate (October 15):** **COMMERCIAL LAUNCH GATED**.
+    - The release report records earlier successful probes of the Render API and Vercel dashboard. Those probes do not verify deployment of the current candidate.
+    - Configure and verify real production S3/R2 storage, complete Android release signing, conduct a physical background GPS field trial, and obtain owner acceptance before commercial release.
+    - Use the [release candidate report](../releases/V1-RELEASE-CANDIDATE-REPORT.md) and [launch checklist](../releases/V1-COMMERCIAL-LAUNCH-CHECKLIST.md) for rollout prerequisites. Cloud health and physical-device behavior were not rechecked during the latest local project check.
 
 
 

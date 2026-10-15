@@ -61,7 +61,6 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
           statusCode: 500,
           error: 'Internal Server Error',
           message: err.message || 'Failed to ingest locations',
-          stack: err.stack,
         });
       }
     },
@@ -92,7 +91,6 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
           statusCode: 500,
           error: 'Internal Server Error',
           message: err.message || 'Failed to get live workers',
-          stack: err.stack,
         });
       }
     },
@@ -137,18 +135,18 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
           statusCode: 500,
           error: 'Internal Server Error',
           message: err.message || 'Failed to get location history',
-          stack: err.stack,
         });
       }
     },
   );
 
   /**
-   * GET /v1/telemetry/stream
-   * Realtime Server-Sent Events (SSE) stream for web live map.
+   * POST /v1/telemetry/stream-ticket
+   * Issues a short-lived (60s) single-use ticket for secure browser SSE streaming.
+   * Eliminates transmitting persistent tokens in query strings.
    */
-  fastify.get(
-    '/v1/telemetry/stream',
+  fastify.post(
+    '/v1/telemetry/stream-ticket',
     {
       preHandler: [
         authMiddleware.authenticate,
@@ -157,7 +155,43 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
       ],
     },
     async (request, reply) => {
-      const activeWorkspaceId = request.workspaceId!;
+      const ticket = await pubsub.createStreamingTicket(request.user!.id, request.workspaceId!);
+      return reply.status(200).send({ ticket, expiresInSeconds: 60 });
+    },
+  );
+
+  /**
+   * GET /v1/telemetry/stream
+   * Realtime Server-Sent Events (SSE) stream for web live map.
+   * Supports secure single-use ticket (?ticket=) or standard auth headers/cookies.
+   */
+  fastify.get(
+    '/v1/telemetry/stream',
+    async (request, reply) => {
+      const query = request.query as Record<string, string> | undefined;
+      let activeWorkspaceId: string | null = null;
+
+      // 1. Single-use ticket authentication
+      if (query?.ticket) {
+        const ticketData = await pubsub.consumeStreamingTicket(query.ticket);
+        if (!ticketData) {
+          return reply.status(401).send({
+            statusCode: 401,
+            error: 'Unauthorized',
+            message: 'Invalid or expired streaming ticket',
+          });
+        }
+        activeWorkspaceId = ticketData.workspaceId;
+      } else {
+        // 2. Standard authentication through cookies or Authorization header
+        await authMiddleware.authenticate(request, reply);
+        if (reply.sent) return;
+        await authMiddleware.requireWorkspace(request, reply);
+        if (reply.sent) return;
+        await authMiddleware.requirePermission(PERMISSIONS.LOCATION_READ)(request, reply);
+        if (reply.sent) return;
+        activeWorkspaceId = request.workspaceId!;
+      }
 
       reply.raw.setHeader('Content-Type', 'text/event-stream');
       reply.raw.setHeader('Cache-Control', 'no-cache, no-transform');

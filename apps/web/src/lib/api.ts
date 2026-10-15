@@ -9,6 +9,23 @@ import {
   type SwitchWorkspaceResponse,
   type AddWorkspaceMemberRequest,
   type AddWorkspaceMemberResponse,
+  // V1 Blockers: Invitations, Import, Lifecycle & Settings
+  type InviteWorkspaceMemberRequest,
+  type InviteWorkspaceMemberResponse,
+  type WorkspaceInvitation,
+  type ListWorkspaceInvitationsResponse,
+  type RevokeInvitationRequest,
+  type AcceptInvitationRequest,
+  type ValidateInvitationResponse,
+  type BulkImportMembersRequest,
+  type BulkImportMembersResponse,
+  type BulkImportRow,
+  type BulkImportRowResult,
+  type UpdateWorkspaceMemberRequest,
+  type UpdateWorkspaceMemberResponse,
+  type WorkspaceSettings,
+  type UpdateWorkspaceSettingsRequest,
+  type WorkspaceSettingsResponse,
   // Phase 02B Tasks
   type TaskResponse,
   type ListTasksResponse,
@@ -228,7 +245,11 @@ export const webApi = {
   },
 
   async listWorkspaceMembers(workspaceId?: string | null): Promise<{ members: WorkspaceMember[] }> {
-    return request<{ members: WorkspaceMember[] }>('/v1/workspaces/members', { method: 'GET' }, workspaceId);
+    return request<{ members: WorkspaceMember[] }>(
+      '/v1/workspaces/members',
+      { method: 'GET' },
+      workspaceId,
+    );
   },
 
   async addWorkspaceMember(
@@ -243,6 +264,144 @@ export const webApi = {
       },
       workspaceId,
     );
+  },
+
+  // V1 Blockers: Member Invitations & Lifecycle
+  async inviteWorkspaceMember(
+    data: InviteWorkspaceMemberRequest,
+    workspaceId?: string | null,
+  ): Promise<InviteWorkspaceMemberResponse> {
+    return request<InviteWorkspaceMemberResponse>(
+      '/v1/workspaces/members/invite',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      workspaceId,
+    );
+  },
+
+  async listWorkspaceInvitations(
+    workspaceId?: string | null,
+  ): Promise<ListWorkspaceInvitationsResponse> {
+    return request<ListWorkspaceInvitationsResponse>(
+      '/v1/workspaces/members/invitations',
+      { method: 'GET' },
+      workspaceId,
+    );
+  },
+
+  async revokeWorkspaceInvitation(
+    data: RevokeInvitationRequest,
+    workspaceId?: string | null,
+  ): Promise<{ revoked: boolean }> {
+    return request<{ revoked: boolean }>(
+      '/v1/workspaces/members/invitations/revoke',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      workspaceId,
+    );
+  },
+
+  async validateInvitation(token: string): Promise<ValidateInvitationResponse> {
+    return request<ValidateInvitationResponse>(
+      `/v1/auth/invitations/${encodeURIComponent(token)}/validate`,
+      { method: 'GET' },
+    );
+  },
+
+  async acceptInvitation(data: AcceptInvitationRequest): Promise<AuthResponse> {
+    const res = await request<AuthResponse>('/v1/auth/invitations/accept', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if (res.token) {
+      setStoredToken(res.token);
+    }
+    if (res.activeWorkspaceId) {
+      setStoredWorkspaceId(res.activeWorkspaceId);
+    }
+    return res;
+  },
+
+  async importMembersCsv(
+    data: BulkImportMembersRequest,
+    workspaceId?: string | null,
+  ): Promise<BulkImportMembersResponse> {
+    return request<BulkImportMembersResponse>(
+      '/v1/workspaces/members/import-csv',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      workspaceId,
+    );
+  },
+
+  async updateWorkspaceMember(
+    membershipId: string,
+    data: UpdateWorkspaceMemberRequest,
+    workspaceId?: string | null,
+  ): Promise<UpdateWorkspaceMemberResponse> {
+    return request<UpdateWorkspaceMemberResponse>(
+      `/v1/workspaces/members/${encodeURIComponent(membershipId)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      },
+      workspaceId,
+    );
+  },
+
+  // V1 Blockers: Workspace Settings & Retention
+  async getWorkspaceSettings(workspaceId?: string | null): Promise<WorkspaceSettingsResponse> {
+    return request<WorkspaceSettingsResponse>(
+      '/v1/workspaces/settings',
+      { method: 'GET' },
+      workspaceId,
+    );
+  },
+
+  async updateWorkspaceSettings(
+    data: UpdateWorkspaceSettingsRequest,
+    workspaceId?: string | null,
+  ): Promise<WorkspaceSettingsResponse> {
+    return request<WorkspaceSettingsResponse>(
+      '/v1/workspaces/settings',
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      },
+      workspaceId,
+    );
+  },
+
+  // V1 Blockers: Selfie Media Upload
+  async getAttendanceSelfieUploadUrl(data: {
+    fileName: string;
+    contentType: string;
+  }): Promise<{ uploadUrl: string; mediaKey: string }> {
+    return request<{ uploadUrl: string; mediaKey: string }>('/v1/media/attendance-selfie-url', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getMediaDownloadUrl(mediaKey: string): Promise<string> {
+    const res = await request<{ downloadUrl: string; fileKey: string; expiresInSeconds: number }>(
+      '/v1/media/download-url',
+      {
+        method: 'POST',
+        body: JSON.stringify({ fileKey: mediaKey }),
+      },
+    );
+    return res.downloadUrl;
+  },
+
+  getMediaFileUrl(mediaKey: string): string {
+    return `${getApiBaseUrl()}/v1/media/files/${encodeURIComponent(mediaKey)}`;
   },
 
   // Phase 02B: Tasks
@@ -335,6 +494,12 @@ export const webApi = {
   // Phase 02C: Telemetry & Live Operations Map
   async getLiveWorkers(): Promise<ListLiveWorkersResponse> {
     return request<ListLiveWorkersResponse>('/v1/telemetry/live', { method: 'GET' });
+  },
+
+  async getStreamTicket(): Promise<{ ticket: string; expiresInSeconds: number }> {
+    return request<{ ticket: string; expiresInSeconds: number }>('/v1/telemetry/stream-ticket', {
+      method: 'POST',
+    });
   },
 
   async getLocationHistory(userId: string, date: string): Promise<LocationHistoryResponse> {
@@ -593,4 +758,3 @@ export const webApi = {
     });
   },
 };
-

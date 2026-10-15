@@ -3,9 +3,9 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md)
-- [`docs/architecture/LOCATION-PIPELINE.md`](file:///workspace/oprino/docs/architecture/LOCATION-PIPELINE.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](./SYNC-CONFLICT-MATRIX.md)
+- [`docs/architecture/LOCATION-PIPELINE.md`](./LOCATION-PIPELINE.md)
 
 ---
 
@@ -59,7 +59,7 @@ The Oprino platform is architected around **Graceful Degradation, Zero Data Loss
 
 | ID | Failure Scenario | Impact | Detection Mechanism | Automated Recovery Behavior | User Experience |
 |---|---|---|---|---|---|
-| **F-16** | **Manager Cancels Task While Worker Completes Offline** | Conflicting task states. | Sync replay arrives with `COMPLETED` for task currently `CANCELLED`. | [`SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md) Rule: Cancellation stands, but worker's submitted proof and time are preserved as an audit attachment. | Worker informed: *"Task was cancelled by Manager. Your work notes have been archived."* |
+| **F-16** | **Manager Cancels Task While Worker Completes Offline** | Conflicting task states. | Sync replay arrives with `COMPLETED` for task currently `CANCELLED`. | [`SYNC-CONFLICT-MATRIX.md`](./SYNC-CONFLICT-MATRIX.md) Rule: Cancellation stands, but worker's submitted proof and time are preserved as an audit attachment. | Worker informed: *"Task was cancelled by Manager. Your work notes have been archived."* |
 | **F-17** | **Worker Forgets to Punch Out (Overnight)** | Runaway tracking risk into personal hours. | Auto-Punchout Engine detects shift duration > scheduled end + 2 hours. | Server automatically closes shift with reason `AUTO_SYSTEM_TIMEOUT`. Native local deadline triggers SDK shutdown; local queue purges post-duty points; server drops any out-of-shift telemetry. Explicit punch-out always executes immediate native stop. | Tracking terminates; morning notification prompts employee to review/regularize shift end. |
 | **F-18** | **Accidental Employee Deletion During Active Shift** | Shift orphan / token revocation. | Admin clicks delete/deactivate on active worker. | System converts delete into `DEACTIVATED`; auto-terminates active shift; revokes tokens gracefully. | Mobile app displays: *"Your company account has been deactivated. Please contact your manager."* |
 | **F-19** | **Simultaneous Multi-Device Login by Same Worker** | Race condition on attendance and outbox sync. | Device token registry detects new device login for non-manager employee. | Previous device session revoked immediately. Mobile app on old device displays session expired modal. | Prevents dual-device location spoofing. |

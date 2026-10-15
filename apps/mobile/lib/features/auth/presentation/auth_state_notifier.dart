@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oprino_api/oprino_api.dart';
 import '../../../core/network/api_client_provider.dart';
 import '../../../core/storage/secure_storage_service.dart';
+import '../../../core/location/location_service.dart';
 
 enum AuthStatus {
   initial,
@@ -69,10 +70,12 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final OprinoApiClient client;
   final SecureStorageService storage;
+  final LocationService? locationService;
 
   AuthNotifier({
     required this.client,
     required this.storage,
+    this.locationService,
   }) : super(const AuthState.initial()) {
     checkSession();
   }
@@ -173,6 +176,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> switchWorkspace(String workspaceId) async {
+    // Terminate tracking immediately upon switching companies to prevent cross-workspace location leakage
+    await locationService?.stopTracking();
+
     try {
       await client.switchWorkspace(workspaceId: workspaceId);
       await storage.saveActiveWorkspaceId(workspaceId);
@@ -190,6 +196,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
+    // Terminate tracking immediately upon logout to guarantee zero off-duty tracking
+    await locationService?.stopTracking();
+
     try {
       await client.signOut();
     } catch (_) {
@@ -202,12 +211,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void handleRevocationDetected() {
+    locationService?.stopTracking();
     state = const AuthState.deviceRevoked(
       reason: 'This device installation has been revoked by your workspace administrator.',
     );
   }
 
   void handleSessionExpired() {
+    locationService?.stopTracking();
     state = const AuthState.unauthenticated(
       errorMessage: 'Your session has expired. Please sign in again.',
     );
@@ -223,5 +234,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final client = ref.watch(apiClientProvider);
   final storage = ref.watch(secureStorageProvider);
-  return AuthNotifier(client: client, storage: storage);
+  final locationService = ref.watch(locationServiceProvider);
+  return AuthNotifier(
+    client: client,
+    storage: storage,
+    locationService: locationService,
+  );
 });

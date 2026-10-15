@@ -2,9 +2,10 @@ name: Oprino Monorepo CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/**', 'release/**', 'docs/**']
   pull_request:
-    branches: [main]
+    branches: [main, 'feat/**', 'release/**', 'docs/**']
+  workflow_dispatch:
 
 jobs:
   validate-web-and-services:
@@ -82,6 +83,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Tokens & Contracts
+        run: pnpm turbo generate
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -108,6 +126,21 @@ jobs:
         run: |
           cd apps/mobile
           flutter test
+
+      - name: Build LOCAL_PILOT_DEBUG Android APK
+        run: |
+          cd apps/mobile
+          flutter build apk --debug \
+            --dart-define=ENVIRONMENT=LOCAL_PILOT_DEBUG \
+            --dart-define=API_BASE_URL=http://localhost:3001
+
+      - name: Upload LOCAL_PILOT_DEBUG APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oprino-local-pilot-debug-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
 
   e2e-smoke-test:
     name: Full End-to-End Smoke Test

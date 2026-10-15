@@ -1,3 +1,4 @@
+import http from 'node:http';
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
@@ -40,11 +41,13 @@ import { syncRoutes } from './routes/sync.js';
 import { schedulingRoutes } from './routes/scheduling.js';
 import { reportRoutes } from './routes/reports.js';
 import { notificationRoutes } from './routes/notifications.js';
+import { createStorageDriver, type StorageDriver } from './storage/index.js';
 
 export function buildServer(options?: {
   env?: Record<string, unknown>;
   logger?: boolean;
   dbClient?: ReturnType<typeof createDatabaseClient>;
+  storageDriver?: StorageDriver;
 }): {
   app: FastifyInstance;
   env: Env;
@@ -57,6 +60,7 @@ export function buildServer(options?: {
   customerService: CustomerService;
   visitService: VisitService;
   mediaService: MediaService;
+  storageDriver: StorageDriver;
   syncService: SyncService;
   schedulingService: SchedulingService;
   reportService: ReportService;
@@ -89,11 +93,12 @@ export function buildServer(options?: {
   const deviceService = new DeviceService(dbClient.db);
   const workspaceService = new WorkspaceService(dbClient.db);
   const taskService = new TaskService(dbClient.db);
-  const attendanceService = new AttendanceService(dbClient.db);
+  const storageDriver = options?.storageDriver ?? createStorageDriver(env);
+  const mediaService = new MediaService(dbClient.db, storageDriver, env.API_PUBLIC_URL);
+  const attendanceService = new AttendanceService(dbClient.db, mediaService);
   const telemetryService = new TelemetryService(dbClient.db, pubsub);
   const customerService = new CustomerService(dbClient.db);
   const visitService = new VisitService(dbClient.db);
-  const mediaService = new MediaService(dbClient.db, env.API_PUBLIC_URL);
   const syncService = new SyncService(dbClient.db);
   const schedulingService = new SchedulingService(dbClient.db);
   const reportService = new ReportService(dbClient.db);
@@ -125,18 +130,32 @@ export function buildServer(options?: {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
-  const allowedOrigins = [
+  const allowedOrigins: (string | RegExp)[] = [
     env.API_PUBLIC_URL,
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001',
     'https://oprino.vercel.app',
     /\.vercel\.app$/,
     'oprino://app',
   ];
+  if (env.NODE_ENV !== 'production' && env.APP_ENV !== 'production') {
+    allowedOrigins.push(
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3001',
+    );
+  }
   if (env.CORS_ORIGINS) {
-    const extraOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+    const isProdOrStaging = env.NODE_ENV === 'production' || env.APP_ENV === 'production' || env.APP_ENV === 'staging';
+    const extraOrigins = env.CORS_ORIGINS.split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)
+      .filter((o) => {
+        if (isProdOrStaging && o === '*') {
+          app.log.warn('⚠️ Wildcard CORS origin "*" ignored in production/staging environment for credential security.');
+          return false;
+        }
+        return true;
+      });
     allowedOrigins.push(...extraOrigins);
   }
 
@@ -174,7 +193,7 @@ export function buildServer(options?: {
   app.register(openapiRoutes);
 
   // Auth & Identity Routes
-  app.register(authRoutes, { auth, db: dbClient.db });
+  app.register(authRoutes, { auth, db: dbClient.db, workspaceService });
   app.register(workspaceRoutes, { workspaceService, authMiddleware, auth });
   app.register(meRoutes, { db: dbClient.db, authMiddleware });
   app.register(deviceRoutes, { deviceService, authMiddleware });
@@ -198,6 +217,44 @@ export function buildServer(options?: {
   app.register(reportRoutes, { reportService, authMiddleware });
   app.register(notificationRoutes, { notificationService, authMiddleware });
 
+  // Security-hardened error handler: suppress stack traces and internal errors in production
+  app.setErrorHandler((error: any, request, reply) => {
+    const statusCode =
+      error.statusCode && error.statusCode >= 400 && error.statusCode < 600
+        ? error.statusCode
+        : 500;
+    const isProduction =
+      env.NODE_ENV === 'production' ||
+      env.APP_ENV === 'production' ||
+      env.APP_ENV === 'staging';
+
+    request.log.error(error);
+
+    if (statusCode === 500 && isProduction) {
+      return reply.status(500).send({
+        statusCode: 500,
+        error: 'Internal Server Error',
+        message: 'An unexpected internal error occurred.',
+      });
+    }
+
+    const errorTitle =
+      error.error ||
+      (http.STATUS_CODES[statusCode] ? http.STATUS_CODES[statusCode] : error.name || 'Error');
+
+    const responsePayload: Record<string, any> = {
+      statusCode,
+      error: errorTitle,
+      message: error.message,
+    };
+
+    if (!isProduction && error.stack) {
+      responsePayload.stack = error.stack;
+    }
+
+    return reply.status(statusCode).send(responsePayload);
+  });
+
   return {
     app,
     env,
@@ -210,6 +267,7 @@ export function buildServer(options?: {
     customerService,
     visitService,
     mediaService,
+    storageDriver,
     syncService,
     schedulingService,
     reportService,

@@ -3,10 +3,10 @@
 **Status:** Updated & Recommended for Phase 01A  
 **Date:** October 2026 (Reconciled)  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
 - Phase 00 Stakeholder Sign-Off (Frozen Retention Policy)
-- [`ADR-004: Database & Geospatial Architecture`](file:///workspace/oprino/docs/architecture/ADR-004-database-geospatial.md)
-- [`docs/architecture/PRIVACY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/PRIVACY-ARCHITECTURE.md)
+- [`ADR-004: Database & Geospatial Architecture`](./ADR-004-database-geospatial.md)
+- [`docs/architecture/PRIVACY-ARCHITECTURE.md`](./PRIVACY-ARCHITECTURE.md)
 
 ---
 

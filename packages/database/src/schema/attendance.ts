@@ -7,6 +7,7 @@ import {
   timestamp,
   jsonb,
   integer,
+  doublePrecision,
   unique,
   index,
 } from 'drizzle-orm/pg-core';
@@ -53,6 +54,10 @@ export const attendanceSessions = pgTable('attendance_sessions', {
   durationMinutes: integer('duration_minutes'),
   punchInIdempotencyKey: varchar('punch_in_idempotency_key', { length: 255 }),
   punchOutIdempotencyKey: varchar('punch_out_idempotency_key', { length: 255 }),
+  selfieMediaKey: text('selfie_media_key'),
+  punchInLatitude: doublePrecision('punch_in_latitude'),
+  punchInLongitude: doublePrecision('punch_in_longitude'),
+  punchInAccuracy: doublePrecision('punch_in_accuracy'),
   isLate: boolean('is_late').notNull().default(false),
   lateMinutes: integer('late_minutes').notNull().default(0),
   isManualAdjustment: boolean('is_manual_adjustment').notNull().default(false),

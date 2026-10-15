@@ -3,7 +3,7 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Deciders:** Lead Systems Architect, Security Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
 
 ---
 

@@ -1015,6 +1015,10 @@ class AttendanceSessionResponse {
   final DateTime punchInTime;
   final DateTime? punchOutTime;
   final int? durationMinutes;
+  final String? selfieMediaKey;
+  final double? punchInLatitude;
+  final double? punchInLongitude;
+  final double? punchInAccuracy;
   final bool isLate;
   final int lateMinutes;
   final bool isManualAdjustment;
@@ -1034,6 +1038,10 @@ class AttendanceSessionResponse {
     required this.punchInTime,
     this.punchOutTime,
     this.durationMinutes,
+    this.selfieMediaKey,
+    this.punchInLatitude,
+    this.punchInLongitude,
+    this.punchInAccuracy,
     this.isLate = false,
     this.lateMinutes = 0,
     this.isManualAdjustment = false,
@@ -1057,6 +1065,10 @@ class AttendanceSessionResponse {
           ? DateTime.parse(json['punchOutTime'] as String)
           : null,
       durationMinutes: json['durationMinutes'] as int?,
+      selfieMediaKey: json['selfieMediaKey'] as String?,
+      punchInLatitude: (json['punchInLatitude'] as num?)?.toDouble(),
+      punchInLongitude: (json['punchInLongitude'] as num?)?.toDouble(),
+      punchInAccuracy: (json['punchInAccuracy'] as num?)?.toDouble(),
       isLate: json['isLate'] as bool? ?? false,
       lateMinutes: json['lateMinutes'] as int? ?? 0,
       isManualAdjustment: json['isManualAdjustment'] as bool? ?? false,
@@ -1078,6 +1090,10 @@ class AttendanceSessionResponse {
         'punchInTime': punchInTime.toIso8601String(),
         if (punchOutTime != null) 'punchOutTime': punchOutTime!.toIso8601String(),
         if (durationMinutes != null) 'durationMinutes': durationMinutes,
+        if (selfieMediaKey != null) 'selfieMediaKey': selfieMediaKey,
+        if (punchInLatitude != null) 'punchInLatitude': punchInLatitude,
+        if (punchInLongitude != null) 'punchInLongitude': punchInLongitude,
+        if (punchInAccuracy != null) 'punchInAccuracy': punchInAccuracy,
         'isLate': isLate,
         'lateMinutes': lateMinutes,
         'isManualAdjustment': isManualAdjustment,
@@ -1273,12 +1289,16 @@ class LocationIngestResponse {
   final int dropped;
   final String? reason;
   final DateTime serverTimestamp;
+  final List<String>? acceptedIds;
+  final List<String>? rejectedIds;
 
   const LocationIngestResponse({
     required this.accepted,
     required this.dropped,
     this.reason,
     required this.serverTimestamp,
+    this.acceptedIds,
+    this.rejectedIds,
   });
 
   factory LocationIngestResponse.fromJson(Map<String, dynamic> json) {
@@ -1287,6 +1307,8 @@ class LocationIngestResponse {
       dropped: json['dropped'] as int? ?? 0,
       reason: json['reason'] as String?,
       serverTimestamp: DateTime.parse(json['serverTimestamp'] as String),
+      acceptedIds: (json['acceptedIds'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      rejectedIds: (json['rejectedIds'] as List<dynamic>?)?.map((e) => e as String).toList(),
     );
   }
 
@@ -1295,6 +1317,8 @@ class LocationIngestResponse {
         'dropped': dropped,
         if (reason != null) 'reason': reason,
         'serverTimestamp': serverTimestamp.toIso8601String(),
+        if (acceptedIds != null) 'acceptedIds': acceptedIds,
+        if (rejectedIds != null) 'rejectedIds': rejectedIds,
       };
 }
 
@@ -2037,6 +2061,32 @@ class ListTaskProofsResponse {
         'proofs': proofs.map((p) => p.toJson()).toList(),
       };
 }
+
+class MediaDownloadUrlResponse {
+  final String downloadUrl;
+  final String fileKey;
+  final int expiresInSeconds;
+
+  const MediaDownloadUrlResponse({
+    required this.downloadUrl,
+    required this.fileKey,
+    required this.expiresInSeconds,
+  });
+
+  factory MediaDownloadUrlResponse.fromJson(Map<String, dynamic> json) {
+    return MediaDownloadUrlResponse(
+      downloadUrl: json['downloadUrl'] as String,
+      fileKey: json['fileKey'] as String,
+      expiresInSeconds: json['expiresInSeconds'] as int? ?? 900,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'downloadUrl': downloadUrl,
+        'fileKey': fileKey,
+        'expiresInSeconds': expiresInSeconds,
+      };
+}
 `;
 fs.writeFileSync(path.resolve(modelDir, 'proof_models.dart'), proofModelsContent, 'utf-8');
 
@@ -2561,6 +2611,10 @@ class OprinoApiClient {
     required String idempotencyKey,
     String? shiftId,
     String? note,
+    String? selfieMediaKey,
+    double? latitude,
+    double? longitude,
+    double? accuracy,
   }) async {
     try {
       final response = await dio.post<Map<String, dynamic>>(
@@ -2569,6 +2623,10 @@ class OprinoApiClient {
           'idempotencyKey': idempotencyKey,
           if (shiftId != null) 'shiftId': shiftId,
           if (note != null) 'note': note,
+          if (selfieMediaKey != null) 'selfieMediaKey': selfieMediaKey,
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
+          if (accuracy != null) 'accuracy': accuracy,
         },
       );
       return AttendanceSessionResponse.fromJson(response.data!);
@@ -2982,6 +3040,40 @@ class OprinoApiClient {
         },
       );
       return MediaUploadUrlResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<MediaUploadUrlResponse> requestAttendanceSelfieUploadUrl({
+    String fileName = 'selfie.jpg',
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/attendance-selfie-url',
+        data: {
+          'fileName': fileName,
+        },
+      );
+      return MediaUploadUrlResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      _handleDioException(e);
+      rethrow;
+    }
+  }
+
+  Future<MediaDownloadUrlResponse> requestMediaDownloadUrl({
+    required String fileKey,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/v1/media/download-url',
+        data: {
+          'fileKey': fileKey,
+        },
+      );
+      return MediaDownloadUrlResponse.fromJson(response.data!);
     } on DioException catch (e) {
       _handleDioException(e);
       rethrow;

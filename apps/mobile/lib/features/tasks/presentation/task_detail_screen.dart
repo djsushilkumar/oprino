@@ -1,11 +1,16 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/oprino_theme.dart';
 import '../../../../core/sync/sync_service.dart';
 import '../../../../core/database/database.dart';
+import '../../../../core/location/location_service.dart';
+import '../../../../core/network/media_upload_service.dart';
+import '../../../../core/utils/signature_rasterizer.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
 import 'widgets/customer_signature_sheet.dart';
 import 'widgets/photo_proof_sheet.dart';
+import 'widgets/proof_viewer_sheet.dart';
 
 class TaskDetailScreen extends ConsumerStatefulWidget {
   final String taskId;
@@ -167,27 +172,154 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           required String signerName,
           String? signerPhone,
           required List<List<Offset>> strokes,
+          Uint8List? signaturePngBytes,
         }) async {
           final sync = ref.read(syncServiceProvider);
-          final timestamp = DateTime.now().millisecondsSinceEpoch;
-          final fileKey = '$workspaceId/proofs/${widget.taskId}/signature_$timestamp.png';
+          final mediaService = ref.read(mediaUploadServiceProvider);
+          final now = DateTime.now();
+
+          // Ensure valid PNG bytes exist
+          final pngBytes = signaturePngBytes ??
+              await SignatureRasterizer.renderStrokesToPng(strokes: strokes);
+
+          try {
+            // 1. Try online direct binary upload to R2/S3
+            final uploadMeta = await mediaService.requestTaskProofUploadUrl(
+              taskId: widget.taskId,
+              visitId: null,
+              proofType: 'SIGNATURE',
+              fileName: 'signature_${widget.taskId}.png',
+              mimeType: 'image/png',
+              fileSizeBytes: pngBytes.length,
+            );
+
+            await mediaService.uploadBinaryBytes(
+              uploadUrl: uploadMeta.uploadUrl,
+              bytes: pngBytes,
+              contentType: 'image/png',
+            );
+
+            await sync.queueProofConfirmation(
+              workspaceId: workspaceId,
+              taskId: widget.taskId,
+              userId: userId,
+              proofType: 'SIGNATURE',
+              fileKey: uploadMeta.fileKey,
+              localFilePath: null,
+              isBinaryUploaded: true,
+              signerName: signerName,
+              signerPhone: signerPhone,
+              notes: 'Digital signature on glass captured via mobile client',
+            );
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Customer signature captured and uploaded successfully!'),
+                  backgroundColor: Color(0xFF059669),
+                ),
+              );
+            }
+          } catch (_) {
+            // 2. Offline Resilience: save signature PNG to local private storage & queue confirmation for outbox sync
+            try {
+              final localPath = await mediaService.savePendingImageFile(
+                prefix: 'sig_${widget.taskId}',
+                bytes: pngBytes,
+                extension: 'png',
+              );
+
+              await sync.queueProofConfirmation(
+                workspaceId: workspaceId,
+                taskId: widget.taskId,
+                userId: userId,
+                proofType: 'SIGNATURE',
+                fileKey: 'pending_sig_${now.millisecondsSinceEpoch}.png',
+                localFilePath: localPath,
+                isBinaryUploaded: false,
+                signerName: signerName,
+                signerPhone: signerPhone,
+                notes: 'Digital signature on glass captured offline',
+              );
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Customer signature saved locally (offline mode). Will sync automatically when online.'),
+                    backgroundColor: Color(0xFF2563EB),
+                  ),
+                );
+              }
+            } catch (saveErr) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to save signature: ${saveErr.toString()}'),
+                    backgroundColor: const Color(0xFFDC2626),
+                  ),
+                );
+              }
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  void _openPhotoSheet(String workspaceId, String userId) async {
+    final locationAdapter = ref.read(locationHardwareAdapterProvider);
+    final currentLoc = await locationAdapter.getCurrentPosition();
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => PhotoProofSheet(
+        taskId: widget.taskId,
+        currentLatitude: currentLoc?.latitude,
+        currentLongitude: currentLoc?.longitude,
+        accuracy: currentLoc?.accuracy,
+        onConfirm: ({
+          required String fileKey,
+          String? localFilePath,
+          required bool isBinaryUploaded,
+          required String notes,
+          double? latitude,
+          double? longitude,
+          double? accuracy,
+          required DateTime timestamp,
+        }) async {
+          final sync = ref.read(syncServiceProvider);
 
           await sync.queueProofConfirmation(
             workspaceId: workspaceId,
             taskId: widget.taskId,
             userId: userId,
-            proofType: 'SIGNATURE',
+            proofType: 'PHOTO',
             fileKey: fileKey,
-            signerName: signerName,
-            signerPhone: signerPhone,
-            notes: 'Digital signature on glass captured via mobile client',
+            localFilePath: localFilePath,
+            isBinaryUploaded: isBinaryUploaded,
+            watermarkMetadata: {
+              if (latitude != null) 'latitude': latitude,
+              if (longitude != null) 'longitude': longitude,
+              if (accuracy != null) 'accuracy': accuracy,
+              'timestamp': timestamp.toIso8601String(),
+              'geotagged': latitude != null && longitude != null,
+            },
+            notes: notes.isNotEmpty ? notes : null,
           );
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Customer signature captured successfully!'),
-                backgroundColor: Color(0xFF059669),
+              SnackBar(
+                content: Text(
+                  latitude != null
+                      ? 'Geotagged photo proof recorded successfully!'
+                      : 'Photo proof recorded successfully (un-geotagged)!',
+                ),
+                backgroundColor: const Color(0xFF059669),
               ),
             );
           }
@@ -196,48 +328,63 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     );
   }
 
-  void _openPhotoSheet(String workspaceId, String userId) {
-    showModalBottomSheet(
+  void _openVerificationDialog(String workspaceId) {
+    final notesController = TextEditingController();
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => PhotoProofSheet(
-        taskId: widget.taskId,
-        onConfirm: ({
-          required String notes,
-          required double latitude,
-          required double longitude,
-          required double accuracy,
-          required DateTime timestamp,
-        }) async {
-          final sync = ref.read(syncServiceProvider);
-          final ts = timestamp.millisecondsSinceEpoch;
-          final fileKey = '$workspaceId/proofs/${widget.taskId}/photo_$ts.jpg';
-
-          await sync.queueProofConfirmation(
-            workspaceId: workspaceId,
-            taskId: widget.taskId,
-            userId: userId,
-            proofType: 'PHOTO',
-            fileKey: fileKey,
-            watermarkMetadata: {
-              'latitude': latitude,
-              'longitude': longitude,
-              'accuracy': accuracy,
-              'timestamp': timestamp.toIso8601String(),
-            },
-            notes: notes.isNotEmpty ? notes : null,
-          );
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Geotagged photo proof recorded successfully!'),
-                backgroundColor: Color(0xFF059669),
+      builder: (ctx) => AlertDialog(
+        title: const Text('Verify Task Completion', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Confirm that the task deliverables, checklists, and photo proofs meet quality standards.',
+              style: TextStyle(fontSize: 13, color: OprinoColors.slate),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: notesController,
+              decoration: const InputDecoration(
+                labelText: 'Verification Notes (Optional)',
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
-            );
-          }
-        },
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final sync = ref.read(syncServiceProvider);
+              await sync.queueTaskVerification(
+                workspaceId: workspaceId,
+                taskId: widget.taskId,
+                action: 'APPROVE',
+                notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Task verified and closed successfully!'),
+                    backgroundColor: Color(0xFF059669),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF059669),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Approve & Verify'),
+          ),
+        ],
       ),
     );
   }
@@ -546,18 +693,34 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: const Color(0xFFA7F3D0)),
                             ),
-                            child: const Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Icon(Icons.check_circle, color: Color(0xFF059669)),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Task is completed and awaiting manager verification review.',
-                                    style: TextStyle(
-                                      color: Color(0xFF065F46),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
+                                const Row(
+                                  children: [
+                                    Icon(Icons.check_circle, color: Color(0xFF059669)),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Task is completed and awaiting manager verification review.',
+                                        style: TextStyle(
+                                          color: Color(0xFF065F46),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
                                     ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: () => _openVerificationDialog(workspaceId),
+                                  icon: const Icon(Icons.verified, size: 18),
+                                  label: const Text('Verify Task Completion (Manager Action)', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF059669),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
                                   ),
                                 ),
                               ],
@@ -649,32 +812,48 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: OprinoColors.slate),
                                     ),
                                     const SizedBox(height: 6),
-                                    ...proofs.map((p) => Container(
-                                          margin: const EdgeInsets.only(bottom: 6),
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF8FAFC),
-                                            borderRadius: BorderRadius.circular(6),
-                                            border: Border.all(color: OprinoColors.border),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                p.proofType == 'SIGNATURE' ? Icons.draw : Icons.camera_alt,
-                                                size: 16,
-                                                color: p.proofType == 'SIGNATURE' ? OprinoColors.cobalt : const Color(0xFF059669),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  p.proofType == 'SIGNATURE'
-                                                      ? 'Signed by: ${p.signerName ?? "Customer"}'
-                                                      : 'Geotagged Photo Proof',
-                                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                    ...proofs.map((p) => InkWell(
+                                          onTap: () {
+                                            showModalBottomSheet(
+                                              context: context,
+                                              isScrollControlled: true,
+                                              backgroundColor: Colors.transparent,
+                                              builder: (_) => ProofViewerSheet(proof: p),
+                                            );
+                                          },
+                                          borderRadius: BorderRadius.circular(6),
+                                          child: Container(
+                                            margin: const EdgeInsets.only(bottom: 6),
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF8FAFC),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: OprinoColors.border),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  p.proofType == 'SIGNATURE' ? Icons.draw : Icons.camera_alt,
+                                                  size: 16,
+                                                  color: p.proofType == 'SIGNATURE' ? OprinoColors.cobalt : const Color(0xFF059669),
                                                 ),
-                                              ),
-                                              const Icon(Icons.check_circle, size: 14, color: Color(0xFF059669)),
-                                            ],
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    p.proofType == 'SIGNATURE'
+                                                        ? 'Signed by: ${p.signerName ?? "Customer"}'
+                                                        : 'Geotagged Photo Proof',
+                                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                                  ),
+                                                ),
+                                                const Text(
+                                                  'View',
+                                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: OprinoColors.cobalt),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                const Icon(Icons.chevron_right, size: 14, color: OprinoColors.cobalt),
+                                              ],
+                                            ),
                                           ),
                                         )),
                                   ],

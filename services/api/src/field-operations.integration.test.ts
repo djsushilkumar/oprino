@@ -133,7 +133,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
           name: 'North Logistics Depot',
           address: '742 Evergreen Terrace, Springfield',
           latitude: 28.6139,
-          longitude: 77.2090,
+          longitude: 77.209,
           geofenceRadiusMeters: 150.0,
           contactName: 'Site Foreman',
           contactPhone: '+1-555-0102',
@@ -231,7 +231,11 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
           requiresPhotoProof: true,
           requiresSignature: true,
           assigneeIds: [userEmployeeAId],
-          checklist: ['Lockout electrical breaker', 'Inspect compressor pressure', 'Replace intake filters'],
+          checklist: [
+            'Lockout electrical breaker',
+            'Inspect compressor pressure',
+            'Replace intake filters',
+          ],
         },
       });
       assert.equal(resTask.statusCode, 201);
@@ -275,7 +279,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
         },
         payload: {
           latitude: 28.6139,
-          longitude: 77.2090,
+          longitude: 77.209,
           accuracy: 5.0,
           notes: 'Checked in at security desk',
         },
@@ -286,7 +290,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
       assert.equal(visit.status, 'CHECKED_IN');
       assert.ok(visit.checkInTime);
       assert.equal(visit.checkInLatitude, 28.6139);
-      assert.equal(visit.checkInLongitude, 77.2090);
+      assert.equal(visit.checkInLongitude, 77.209);
     });
 
     test('Employee A checks out with GPS coordinates and calculates duration', async () => {
@@ -298,7 +302,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
           'x-workspace-id': workspaceAId,
         },
         payload: {
-          latitude: 28.6140,
+          latitude: 28.614,
           longitude: 77.2091,
           accuracy: 4.5,
           notes: 'Job completed on site',
@@ -309,7 +313,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
       const visit = resCheckOut.json();
       assert.equal(visit.status, 'CHECKED_OUT');
       assert.ok(visit.checkOutTime);
-      assert.equal(visit.checkOutLatitude, 28.6140);
+      assert.equal(visit.checkOutLatitude, 28.614);
       assert.equal(visit.checkOutLongitude, 77.2091);
       assert.ok(visit.durationMinutes >= 0);
     });
@@ -317,6 +321,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
 
   describe('3. Proof of Work & ADR-012 Pre-Signed Direct Upload', () => {
     let photoKey: string;
+    let photoUploadUrl: string;
     let signatureKey: string;
 
     test('Request pre-signed upload URL enforces workspace prefix partitioning', async () => {
@@ -342,6 +347,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
       assert.ok(body.uploadUrl);
       assert.ok(body.fileKey.startsWith(`${workspaceAId}/proofs/${task1Id}/`));
       photoKey = body.fileKey;
+      photoUploadUrl = body.uploadUrl;
     });
 
     test('Security barrier: cross-tenant fileKey confirmation rejected with 403', async () => {
@@ -363,6 +369,16 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
     });
 
     test('Confirm photo proof and signature proof successfully recorded', async () => {
+      // Upload photo binary using signed upload URL
+      const photoUri = new URL(photoUploadUrl);
+      const putPhotoRes = await app.inject({
+        method: 'PUT',
+        url: `${photoUri.pathname}${photoUri.search}`,
+        headers: { 'content-type': 'image/jpeg' },
+        payload: Buffer.from('fake-jpeg-photo-bytes-for-test'),
+      });
+      assert.equal(putPhotoRes.statusCode, 200);
+
       // 1. Confirm Photo Proof
       const resPhoto = await app.inject({
         method: 'POST',
@@ -380,7 +396,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
           mimeType: 'image/jpeg',
           watermarkMetadata: {
             latitude: 28.6139,
-            longitude: 77.2090,
+            longitude: 77.209,
             timestamp: new Date().toISOString(),
             accuracyMeters: 5.0,
           },
@@ -410,7 +426,18 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
           mimeType: 'image/png',
         },
       });
-      signatureKey = resSigUrl.json().fileKey;
+      const sigBody = resSigUrl.json();
+      signatureKey = sigBody.fileKey;
+      const sigUri = new URL(sigBody.uploadUrl);
+
+      // Upload signature binary using signed upload URL
+      const putSigRes = await app.inject({
+        method: 'PUT',
+        url: `${sigUri.pathname}${sigUri.search}`,
+        headers: { 'content-type': 'image/png' },
+        payload: Buffer.from('fake-png-signature-bytes-for-test'),
+      });
+      assert.equal(putSigRes.statusCode, 200);
 
       const resSig = await app.inject({
         method: 'POST',
@@ -573,7 +600,10 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
       assert.equal(resReject.statusCode, 200);
       const rejectedTask = resReject.json();
       assert.equal(rejectedTask.status, 'IN_PROGRESS');
-      assert.equal(rejectedTask.verificationNotes, 'Please provide clearer photo of the relief valve');
+      assert.equal(
+        rejectedTask.verificationNotes,
+        'Please provide clearer photo of the relief valve',
+      );
 
       // 3. Employee completes task again
       const resReComplete = await app.inject({
@@ -604,7 +634,10 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
       assert.equal(verifiedTask.verifiedBy, userOwnerAId);
       assert.equal(verifiedTask.verifierName, 'Owner Alpha');
       assert.ok(verifiedTask.verifiedAt);
-      assert.equal(verifiedTask.verificationNotes, 'Relief valve photo verified, signature confirmed.');
+      assert.equal(
+        verifiedTask.verificationNotes,
+        'Relief valve photo verified, signature confirmed.',
+      );
     });
   });
 });

@@ -44,9 +44,6 @@ export function createAuthMiddleware(auth: Auth, deviceService: DeviceService, d
     try {
       const query = req.query as Record<string, string> | undefined;
       const headers = { ...(req.headers as Record<string, string>) };
-      if (!headers.authorization && query?.token) {
-        headers.authorization = `Bearer ${query.token}`;
-      }
 
       const session = await auth.api.getSession({
         headers,

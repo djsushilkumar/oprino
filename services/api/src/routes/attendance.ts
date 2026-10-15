@@ -48,7 +48,7 @@ export const attendanceRoutes: FastifyPluginAsync<AttendanceRoutesOptions> = asy
         const status = err.statusCode || 500;
         return reply.status(status).send({
           statusCode: status,
-          error: status === 400 ? 'Bad Request' : 'Internal Server Error',
+          error: err.code || (status === 400 ? 'Bad Request' : 'Internal Server Error'),
           message: err.message || 'Failed to punch in',
         });
       }

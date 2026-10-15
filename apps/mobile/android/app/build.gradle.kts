@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.oprino.app.oprino_mobile"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -52,12 +52,8 @@ android {
                 keyAlias = keyAliasStr
                 keyPassword = keyPasswordStr
             } else {
-                // Fallback to debug signing for development convenience if release keystore is not yet configured
-                val debugConfig = signingConfigs.getByName("debug")
-                storeFile = debugConfig.storeFile
-                storePassword = debugConfig.storePassword
-                keyAlias = debugConfig.keyAlias
-                keyPassword = debugConfig.keyPassword
+                // Fail-closed security invariant: Never silently sign a production release with debug keys!
+                // For controlled internal test APKs, use the explicit 'debug' buildType instead.
             }
         }
     }

@@ -11,11 +11,11 @@
 **Connected Hardware:** `adb devices -l` = 0 physical devices attached (No Samsung or Xiaomi/Redmi hardware connected); iOS physically blocked by missing macOS/Xcode  
 **Controlling Documents:**
 
-- [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)
-- [`docs/architecture/ADR/README.md`](file:///workspace/oprino/docs/architecture/ADR/README.md)
-- [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md)
-- [`docs/architecture/LOCATION-PIPELINE.md`](file:///workspace/oprino/docs/architecture/LOCATION-PIPELINE.md)
-- [`docs/architecture/SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md)
+- [`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md)
+- [`docs/architecture/ADR/README.md`](./ADR/README.md)
+- [`docs/architecture/CONTRACT-STRATEGY.md`](./CONTRACT-STRATEGY.md)
+- [`docs/architecture/LOCATION-PIPELINE.md`](./LOCATION-PIPELINE.md)
+- [`docs/architecture/SECURITY-ARCHITECTURE.md`](./SECURITY-ARCHITECTURE.md)
 
 ---
 
@@ -111,7 +111,7 @@ Therefore, pursuant to the strict Phase 01B entry criteria, **Phase 01B cannot b
 - **Physical Keystore / Keychain Execution (PARTIAL / UNTESTED ON SILICON):**
   - Android Keystore-backed encrypted storage and iOS Keychain (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`) tested via software abstraction on host.
   - Real hardware encryption, key invalidation on biometric change, and hardware reboot unlock pending physical device execution.
-  - **Android Backup & Migration Security:** Mandated `android:dataExtractionRules` (Android 12+) and `android:fullBackupContent` (Android 11-) in [`SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md) to exclude session credentials, installation identity, and Drift SQLite databases from Google Drive cloud backups and Device-to-Device (D2D) migration.
+  - **Android Backup & Migration Security:** Mandated `android:dataExtractionRules` (Android 12+) and `android:fullBackupContent` (Android 11-) in [`SECURITY-ARCHITECTURE.md`](./SECURITY-ARCHITECTURE.md) to exclude session credentials, installation identity, and Drift SQLite databases from Google Drive cloud backups and Device-to-Device (D2D) migration.
 
 ---
 

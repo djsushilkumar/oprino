@@ -6,6 +6,10 @@ import {
   CreateWorkspaceRequestSchema,
   SwitchWorkspaceRequestSchema,
   AddWorkspaceMemberRequestSchema,
+  InviteWorkspaceMemberRequestSchema,
+  BulkImportMembersRequestSchema,
+  UpdateWorkspaceMemberRequestSchema,
+  UpdateWorkspaceSettingsRequestSchema,
 } from '@oprino/contracts';
 import { PERMISSIONS } from '../auth/permissions.js';
 
@@ -160,4 +164,272 @@ export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async
       }
     },
   );
+
+  // POST /v1/workspaces/members/invite - BLK-002: Secure invitation link generation
+  app.post(
+    '/v1/workspaces/members/invite',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.MEMBERS_MANAGE),
+      ],
+    },
+    async (req, reply) => {
+      const parsed = InviteWorkspaceMemberRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid invitation payload',
+          details: parsed.error.issues,
+        });
+      }
+
+      try {
+        const baseUrl =
+          (req.headers.origin as string) ||
+          (req.headers.referer ? new URL(req.headers.referer as string).origin : '') ||
+          process.env.APP_PUBLIC_URL ||
+          'http://localhost:3000';
+
+        const invitation = await workspaceService.createInvitation(
+          req.workspaceId!,
+          req.user!.id,
+          parsed.data,
+          baseUrl,
+        );
+
+        return reply.status(201).send({
+          invitation,
+          message: `Invitation generated successfully for ${invitation.email}`,
+        });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to create invitation');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: err.code || 'INVITATION_FAILED',
+          message: err.message || 'Failed to create workspace invitation',
+        });
+      }
+    },
+  );
+
+  // GET /v1/workspaces/members/invitations - List invitations
+  app.get(
+    '/v1/workspaces/members/invitations',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.MEMBERS_READ),
+      ],
+    },
+    async (req, reply) => {
+      try {
+        const invitations = await workspaceService.listWorkspaceInvitations(req.workspaceId!);
+        return reply.status(200).send({ invitations });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to list invitations');
+        return reply.status(500).send({
+          statusCode: 500,
+          error: 'Internal Server Error',
+          message: 'Failed to retrieve workspace invitations',
+        });
+      }
+    },
+  );
+
+  // POST /v1/workspaces/members/invitations/:invitationId/revoke - Revoke invitation
+  app.post(
+    '/v1/workspaces/members/invitations/:invitationId/revoke',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.MEMBERS_MANAGE),
+      ],
+    },
+    async (req, reply) => {
+      const { invitationId } = req.params as { invitationId: string };
+      try {
+        await workspaceService.revokeInvitation(req.workspaceId!, invitationId, req.user!.id);
+        return reply.status(200).send({ success: true, message: 'Invitation revoked successfully' });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to revoke invitation');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: err.code || 'REVOKE_FAILED',
+          message: err.message || 'Failed to revoke invitation',
+        });
+      }
+    },
+  );
+
+  // POST /v1/workspaces/members/import-csv - BLK-003: Bulk employee onboarding
+  app.post(
+    '/v1/workspaces/members/import-csv',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.MEMBERS_MANAGE),
+      ],
+    },
+    async (req, reply) => {
+      const parsed = BulkImportMembersRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid bulk import payload',
+          details: parsed.error.issues,
+        });
+      }
+
+      try {
+        const baseUrl =
+          (req.headers.origin as string) ||
+          (req.headers.referer ? new URL(req.headers.referer as string).origin : '') ||
+          process.env.APP_PUBLIC_URL ||
+          'http://localhost:3000';
+
+        const result = await workspaceService.bulkImportMembersCsv(
+          req.workspaceId!,
+          req.user!.id,
+          parsed.data.members,
+          baseUrl,
+        );
+
+        return reply.status(200).send(result);
+      } catch (err: any) {
+        req.log.error(err, 'Failed to process bulk member import');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: err.code || 'IMPORT_FAILED',
+          message: err.message || 'Failed to process CSV import',
+        });
+      }
+    },
+  );
+
+  // PATCH /v1/workspaces/members/:membershipId - BLK-005: Employee lifecycle management
+  app.patch(
+    '/v1/workspaces/members/:membershipId',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.MEMBERS_MANAGE),
+      ],
+    },
+    async (req, reply) => {
+      const { membershipId } = req.params as { membershipId: string };
+      const parsed = UpdateWorkspaceMemberRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid member update payload',
+          details: parsed.error.issues,
+        });
+      }
+
+      try {
+        const updated = await workspaceService.updateWorkspaceMember(
+          req.workspaceId!,
+          req.user!.id,
+          membershipId,
+          parsed.data,
+        );
+
+        return reply.status(200).send({
+          member: updated,
+          message: 'Member updated successfully',
+        });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to update workspace member');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: err.code || 'UPDATE_MEMBER_FAILED',
+          message: err.message || 'Failed to update member',
+        });
+      }
+    },
+  );
+
+  // GET /v1/workspaces/settings - BLK-006 & BLK-004: Workspace configuration
+  app.get(
+    '/v1/workspaces/settings',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.WORKSPACE_READ),
+      ],
+    },
+    async (req, reply) => {
+      try {
+        const settings = await workspaceService.getWorkspaceSettings(req.workspaceId!);
+        return reply.status(200).send({ settings });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to get workspace settings');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: 'SETTINGS_ERROR',
+          message: err.message || 'Failed to retrieve workspace settings',
+        });
+      }
+    },
+  );
+
+  // PATCH /v1/workspaces/settings - Update retention and attendance policy
+  app.patch(
+    '/v1/workspaces/settings',
+    {
+      preHandler: [
+        authMiddleware.authenticate,
+        authMiddleware.requireWorkspace,
+        authMiddleware.requirePermission(PERMISSIONS.WORKSPACE_MANAGE),
+      ],
+    },
+    async (req, reply) => {
+      const parsed = UpdateWorkspaceSettingsRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Invalid workspace settings payload',
+          details: parsed.error.issues,
+        });
+      }
+
+      try {
+        const settings = await workspaceService.updateWorkspaceSettings(
+          req.workspaceId!,
+          req.user!.id,
+          parsed.data,
+        );
+
+        return reply.status(200).send({
+          settings,
+          message: 'Workspace settings updated successfully',
+        });
+      } catch (err: any) {
+        req.log.error(err, 'Failed to update workspace settings');
+        const status = err.statusCode || 500;
+        return reply.status(status).send({
+          statusCode: status,
+          error: 'UPDATE_SETTINGS_FAILED',
+          message: err.message || 'Failed to update workspace settings',
+        });
+      }
+    },
+  );
 };
+

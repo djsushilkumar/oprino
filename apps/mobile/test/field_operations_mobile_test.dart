@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:oprino_mobile/core/utils/signature_rasterizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,11 +9,49 @@ import 'package:oprino_mobile/core/database/database.dart';
 import 'package:oprino_mobile/core/network/api_client_provider.dart';
 import 'package:oprino_mobile/core/sync/sync_service.dart';
 import 'package:oprino_mobile/features/auth/presentation/auth_state_notifier.dart';
+import 'package:oprino_mobile/core/network/media_upload_service.dart';
 import 'package:oprino_mobile/features/tasks/presentation/widgets/customer_signature_sheet.dart';
 import 'package:oprino_mobile/features/tasks/presentation/widgets/photo_proof_sheet.dart';
 import 'package:oprino_mobile/features/tasks/presentation/task_detail_screen.dart';
 import 'package:oprino_mobile/features/visits/presentation/visits_view.dart';
 import 'package:oprino_api/oprino_api.dart';
+
+class _TestMediaUploadService extends MediaUploadService {
+  _TestMediaUploadService({required super.client});
+
+  @override
+  Future<MediaUploadUrlResponse> requestTaskProofUploadUrl({
+    required String taskId,
+    String? visitId,
+    required String proofType,
+    required String fileName,
+    String mimeType = 'image/jpeg',
+    int? fileSizeBytes,
+  }) async {
+    return MediaUploadUrlResponse(
+      uploadUrl: 'http://127.0.0.1:3001/v1/media/storage/upload/test',
+      fileKey: 'ws-test/proofs/$taskId/proof.jpg',
+      expiresInSeconds: 600,
+    );
+  }
+
+  @override
+  Future<void> uploadBinaryBytes({
+    required String uploadUrl,
+    required List<int> bytes,
+    String contentType = 'image/jpeg',
+  }) async {}
+
+  @override
+  Future<String> savePendingImageFile({
+    required String prefix,
+    required List<int> bytes,
+    String? extension,
+  }) async {
+    final ext = extension ?? 'jpg';
+    return '/tmp/$prefix.$ext';
+  }
+}
 
 class _TestSyncService extends SyncService {
   List<CachedTask> testTasks = [];
@@ -41,6 +81,9 @@ class _TestSyncService extends SyncService {
 
   @override
   Stream<CachedAttendanceData?> watchAttendance(String workspaceId) => Stream.value(null);
+
+  @override
+  Stream<OutboxMutation?> watchPendingAttendanceMutation(String workspaceId) => Stream.value(null);
 
   @override
   Stream<List<CachedTask>> watchTasks(String workspaceId) => Stream.value(testTasks);
@@ -127,6 +170,7 @@ void main() {
   testWidgets('1. CustomerSignatureSheet validates required signer name and canvas strokes', (WidgetTester tester) async {
     String? capturedName;
     String? capturedPhone;
+    Uint8List? capturedPngBytes;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -134,12 +178,14 @@ void main() {
           body: CustomerSignatureSheet(
             taskId: 't-1',
             onConfirm: ({
+              Uint8List? signaturePngBytes,
               required String signerName,
               String? signerPhone,
               required List<List<Offset>> strokes,
             }) {
               capturedName = signerName;
               capturedPhone = signerPhone;
+              capturedPngBytes = signaturePngBytes;
             },
           ),
         ),
@@ -180,34 +226,57 @@ void main() {
     await tester.ensureVisible(confirmFinder);
     await tester.pumpAndSettle();
     await tester.tap(confirmFinder);
-    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await Future.delayed(const Duration(milliseconds: 150));
+    });
+    await tester.pump();
 
     expect(capturedName, equals('John Customer'));
     expect(capturedPhone, isNull);
+    expect(capturedPngBytes, isNotNull);
+    expect(capturedPngBytes!.take(4), equals([0x89, 0x50, 0x4E, 0x47]));
   });
 
   testWidgets('2. PhotoProofSheet displays watermark banner and confirms geotagged proof', (WidgetTester tester) async {
     String? confirmedNotes;
     double? confirmedLat;
 
+    final testMediaService = _TestMediaUploadService(client: testClient);
+
+    Uint8List? testBytes;
+    await tester.runAsync(() async {
+      testBytes = await SignatureRasterizer.renderStrokesToPng(strokes: [
+        [const Offset(10, 10), const Offset(50, 50)]
+      ]);
+    });
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: PhotoProofSheet(
-            taskId: 't-1',
-            currentLatitude: 37.77492,
-            currentLongitude: -122.41941,
-            accuracy: 3.5,
-            onConfirm: ({
-              required String notes,
-              required double latitude,
-              required double longitude,
-              required double accuracy,
-              required DateTime timestamp,
-            }) {
-              confirmedNotes = notes;
-              confirmedLat = latitude;
-            },
+      ProviderScope(
+        overrides: [
+          mediaUploadServiceProvider.overrideWithValue(testMediaService),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: PhotoProofSheet(
+              taskId: 't-1',
+              currentLatitude: 37.77492,
+              currentLongitude: -122.41941,
+              accuracy: 3.5,
+              initialBytes: testBytes,
+              onConfirm: ({
+                required String fileKey,
+                String? localFilePath,
+                required bool isBinaryUploaded,
+                required String notes,
+                double? latitude,
+                double? longitude,
+                double? accuracy,
+                required DateTime timestamp,
+              }) {
+                confirmedNotes = notes;
+                confirmedLat = latitude;
+              },
+            ),
           ),
         ),
       ),
@@ -223,8 +292,17 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Compressor pressure verified.');
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm & Save Geotagged Proof'));
+    final confirmBtn = find.text('Confirm & Save Geotagged Proof');
+    await tester.ensureVisible(confirmBtn);
     await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await tester.tap(confirmBtn);
+      for (int i = 0; i < 60; i++) {
+        if (confirmedNotes != null) break;
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+    });
+    await tester.pump();
 
     expect(confirmedNotes, equals('Compressor pressure verified.'));
     expect(confirmedLat, equals(37.77492));

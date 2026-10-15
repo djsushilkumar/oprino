@@ -3,8 +3,8 @@
 **Status:** APPROVED (Updated for Modern Drift Native SQLite Architecture)  
 **Date:** October 2026 (Revised & Re-Architected)  
 **Deciders:** Lead Systems Architect, Mobile Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))  
-**Underlying Framework:** Flutter Stable (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) ([`ADR-001`](file:///workspace/oprino/docs/architecture/ADR-001-mobile-framework.md))  
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))\
+**Underlying Framework:** Flutter Stable (Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain) ([`ADR-001`](./ADR-001-mobile-framework.md))\
 **Superseded Storage:** `op-sqlite` (React Native-specific driver superseded)  
 **Selected Storage Architecture:** **Drift + SQLite (`package:drift` + `package:sqlite3` with bundled native SQLite)**
 
@@ -96,7 +96,7 @@ Following the stakeholder decision to build Oprino mobile with Flutter, the prev
    - Manages local business state transitions and offline operational continuity.
    - Utilizes `NativeDatabase.createInBackground(...)` to isolate database I/O from the Flutter UI thread.
 2. **Background Geolocation SDK Native Persistence:**
-   - As established in [`ADR-008`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md), high-frequency continuous location breadcrumbs are stored and managed exclusively within Transistor Software's native SQLite queue and uploaded directly via its native HTTP client to `/v1/telemetry/locations`.
+   - As established in [`ADR-008`](./ADR-008-background-location.md), high-frequency continuous location breadcrumbs are stored and managed exclusively within Transistor Software's native SQLite queue and uploaded directly via its native HTTP client to `/v1/telemetry/locations`.
    - Continuous GPS breadcrumbs are **NEVER** duplicated into the application's Drift domain outbox, avoiding competing sync engines and double-write overhead.
 
 ### Architectural Schema & Synchronization Workflow:
@@ -172,6 +172,6 @@ sequenceDiagram
 - **Consequence:** Code generation step required (`dart run build_runner build`) for Drift tables.  
   *Mitigation:* Integrated into developer toolchains and CI pre-build scripts. Drift's incremental generator executes in < 3 seconds on standard codebases.
 - **Consequence:** Stale data can exist on device if assigned tasks were cancelled by a manager while worker was offline.  
-  *Mitigation:* Upon reconnect, the inbound sync pull runs first to refresh active task states before replaying invalid outbound mutations. Detailed conflict resolution rules are codified in [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md).
+  *Mitigation:* Upon reconnect, the inbound sync pull runs first to refresh active task states before replaying invalid outbound mutations. Detailed conflict resolution rules are codified in [`docs/architecture/SYNC-CONFLICT-MATRIX.md`](./SYNC-CONFLICT-MATRIX.md).
 - **Consequence:** Clock drift or manipulated device time on the mobile device.  
   *Mitigation:* The client records both the device local time and monotonic boot uptime. The server cross-verifies client timestamps against server receipt time; anomalies exceeding 15 minutes are flagged in audit logs.

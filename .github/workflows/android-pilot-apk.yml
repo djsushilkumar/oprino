@@ -1,0 +1,93 @@
+name: Oprino Android Pilot Debug APK Build
+
+on:
+  push:
+    branches:
+      - 'feat/v1-android-pilot-**'
+      - 'feat/v1-android-pilot-kit'
+      - 'feat/v1-android-pilot-readiness'
+      - 'release/**'
+      - main
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/tokens/**'
+      - 'packages/contracts/**'
+      - '.github/workflows/android-pilot-apk.yml'
+  pull_request:
+    branches:
+      - main
+      - 'feat/**'
+      - 'release/**'
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/tokens/**'
+      - 'packages/contracts/**'
+      - '.github/workflows/android-pilot-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build-pilot-debug-apk:
+    name: Build & Verify Android Pilot Debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install Monorepo Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Design Tokens & Dart API Client
+        run: pnpm turbo generate
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter Stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Mobile Flutter Dependencies
+        run: |
+          cd apps/mobile
+          flutter pub get
+
+      - name: Flutter Analyze
+        run: |
+          cd apps/mobile
+          flutter analyze lib test
+
+      - name: Run Mobile Test Suite
+        run: |
+          cd apps/mobile
+          flutter test
+
+      - name: Compile LOCAL_PILOT_DEBUG Android APK
+        run: |
+          cd apps/mobile
+          flutter build apk --debug \
+            --dart-define=ENVIRONMENT=LOCAL_PILOT_DEBUG \
+            --dart-define=API_BASE_URL=http://localhost:3001
+
+      - name: Upload LOCAL_PILOT_DEBUG APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oprino-local-pilot-debug-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7

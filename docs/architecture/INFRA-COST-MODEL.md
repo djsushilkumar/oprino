@@ -3,10 +3,10 @@
 **Status:** Updated & Recommended for Phase 01A  
 **Date:** October 2026 (Reconciled)  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`ADR-011: Maps & Geospatial Services Provider Strategy`](file:///workspace/oprino/docs/architecture/ADR-011-maps-geospatial-provider.md)
-- [`ADR-012: File Storage Architecture`](file:///workspace/oprino/docs/architecture/ADR-012-file-storage.md)
-- [`ADR-014: Background Job Processing`](file:///workspace/oprino/docs/architecture/ADR-014-background-jobs.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`ADR-011: Maps & Geospatial Services Provider Strategy`](./ADR-011-maps-geospatial-provider.md)
+- [`ADR-012: File Storage Architecture`](./ADR-012-file-storage.md)
+- [`ADR-014: Background Job Processing`](./ADR-014-background-jobs.md)
 
 ---
 
@@ -53,7 +53,7 @@ This document establishes a fully parameterized, bottom-up infrastructure cost m
 | **Secrets Manager** | Centralized Secrets Distribution | Doppler / Infisical Team | ~$18.00 / month | Fixed |
 
 ### 2.1 Commercial Software Licensing (Transistor SDK Model)
-Per [`ADR-020`](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md), Oprino distributes a single unified role-aware mobile application (`com.oprino.app`). Commercial SDK licensing is modeled separately from recurring cloud hosting:
+Per [`ADR-020`](./ADR-020-mobile-packaging.md), Oprino distributes a single unified role-aware mobile application (`com.oprino.app`). Commercial SDK licensing is modeled separately from recurring cloud hosting:
 - **Planning Reference:** Current Transistor Software Starter package: **$399 one-time perpetual license** covering iOS and Android under a single application bundle ID (`com.oprino.app`), supporting unlimited devices/users.
 - **Included Support/Updates:** 12 months of version updates and developer support included at initial purchase.
 - **Future Maintenance Renewal Assumption:** Any subsequent optional annual update/support renewal is **TBD / verify with vendor at purchase time** and modeled strictly as a periodic software maintenance assumption, NOT a recurring monthly cloud infrastructure hosting charge.
@@ -117,13 +117,13 @@ Below is the mathematical gross margin model at 2,500 active employees (Total Mo
 
 1. **Proof Photo Bloat (Cloudflare R2):**
    - *Risk:* 2,500 technicians uploading 10MB raw photos from 50MP smartphone cameras could accumulate terabytes of storage rapidly.
-   - *Mitigation:* Client-side image compression ([`ADR-012`](file:///workspace/oprino/docs/architecture/ADR-012-file-storage.md)) scales all photos to 1600x1200 JPEG (80% quality, ~200–250KB average) with burned-in watermarks before upload. 500,000 photos consume only ~110GB.
+   - *Mitigation:* Client-side image compression ([`ADR-012`](./ADR-012-file-storage.md)) scales all photos to 1600x1200 JPEG (80% quality, ~200–250KB average) with burned-in watermarks before upload. 500,000 photos consume only ~110GB.
 2. **Web Live Map Vector Tile Surges:**
    - *Risk:* Operations managers leaving live dashboards open 24/7 causing millions of tile fetches.
    - *Mitigation:* Browser tab idle detection pauses SSE streams after 15 minutes of inactivity; vector tiles are cached on Cloudflare Edge with a 7-day TTL.
 3. **Continuous Location Telemetry Database Bloat:**
    - *Risk:* Unbounded coordinate breadcrumbs consuming expensive SSD storage and bogging down PostgreSQL query performance.
-   - *Mitigation:* Partitioning by day and executing the automated 30-day purge engine ([`RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md)) strictly limits active telemetry rows to a rolling 30-day window.
+   - *Mitigation:* Partitioning by day and executing the automated 30-day purge engine ([`RETENTION-ARCHITECTURE.md`](./RETENTION-ARCHITECTURE.md)) strictly limits active telemetry rows to a rolling 30-day window.
 
 ---
 

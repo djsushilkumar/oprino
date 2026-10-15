@@ -77,10 +77,15 @@ export function createAuth(env: Env, dbClient?: ReturnType<typeof createDatabase
     baseURL: env.BETTER_AUTH_URL,
     trustedOrigins: [
       env.API_PUBLIC_URL,
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
+      'https://oprino.vercel.app',
       'oprino://app',
-    ],
+      ...(env.NODE_ENV !== 'production' && env.APP_ENV !== 'production'
+        ? ['http://localhost:3000', 'http://127.0.0.1:3000']
+        : []),
+      ...(env.CORS_ORIGINS
+        ? env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter((o) => o && o !== '*')
+        : []),
+    ].filter(Boolean),
     plugins: [bearer()],
   });
 }

@@ -2,10 +2,10 @@
 
 Welcome to the Oprino repository. All autonomous and assisted coding agents working on this codebase must adhere to the following mandatory instructions:
 
-1. **Read the Handoff Specification First:** Always inspect [`docs/handoff/CODEX-CLOUD-HANDOFF.md`](file:///workspace/oprino/docs/handoff/CODEX-CLOUD-HANDOFF.md) to understand current phase status, boundaries, and active milestones.
-2. **Consult Controlling Product PRD:** Read [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md) before implementing or modifying any user-facing feature or domain workflow.
-3. **Consult Relevant ADRs:** Read the applicable Architecture Decision Records in [`docs/architecture/ADR/README.md`](file:///workspace/oprino/docs/architecture/ADR/README.md) prior to writing code or introducing new dependencies.
-4. **Preserve Brand Assets & Tokens:** Do not modify, compress, or replace the approved assets in `Oprino-Brand-Kit/`. Adhere strictly to the design tokens codified in [`docs/brand/OPRINO-BRAND-SYSTEM.md`](file:///workspace/oprino/docs/brand/OPRINO-BRAND-SYSTEM.md).
+1. **Read the Handoff Specification First:** Always inspect [`docs/handoff/CODEX-CLOUD-HANDOFF.md`](./docs/handoff/CODEX-CLOUD-HANDOFF.md) to understand current phase status, boundaries, and active milestones.
+2. **Consult Controlling Product PRD:** Read [`docs/product/OPRINO-MASTER-PRD.md`](./docs/product/OPRINO-MASTER-PRD.md) before implementing or modifying any user-facing feature or domain workflow.
+3. **Consult Relevant ADRs:** Read the applicable Architecture Decision Records in [`docs/architecture/ADR/README.md`](./docs/architecture/ADR/README.md) prior to writing code or introducing new dependencies.
+4. **Preserve Brand Assets & Tokens:** Do not modify, compress, or replace the approved assets in `Oprino-Brand-Kit/`. Adhere strictly to the design tokens codified in [`docs/brand/OPRINO-BRAND-SYSTEM.md`](./docs/brand/OPRINO-BRAND-SYSTEM.md).
 5. **Never Silently Change Frozen Requirements:** Phase 00 requirements are locked. Technology must adapt to product requirements, never vice-versa.
 6. **Preserve Core Invariants:**
    - **Duty-Hours-Only Tracking:** Off-duty location tracking must **NEVER** occur. Peer location visibility remains **OFF by default**.
