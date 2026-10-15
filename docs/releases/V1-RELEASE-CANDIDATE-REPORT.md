@@ -5,7 +5,7 @@
 **Release Candidate Branch:** `release/v1-stabilization`  
 **Base Commit (`main`):** `8db713b38a2acf4f4baa12d137b31e47f698c131`  
 **Current Head Commit:** `release/v1-stabilization`  
-**Status:** **CODE STABILIZED — CANDIDATE READY FOR REVIEW (COMMERCIAL LAUNCH GATED)**  
+**Status:** **CODE STABILIZED & OWNER UAT APPROVED — READY FOR PR MERGE (COMMERCIAL LAUNCH GATED)**  
 
 ---
 
@@ -90,9 +90,9 @@ Probed live cloud environments via read-only HTTP probes:
 
 ---
 
-## 6. Commercial Pilot Next Steps (Awaiting Owner Decision)
+## 6. Commercial Pilot Next Steps (Post-UAT)
 
-1. **Review & Open Draft PR:** Review the Draft PR targeting `main` on GitHub.
-2. **Configure Cloudflare R2 Credentials in Render:** Set `S3_BUCKET_NAME`, `S3_ACCESS_KEY_ID`, and `S3_SECRET_ACCESS_KEY` in `oprino-api` environment variables on Render.
-3. **Generate Android Release Keystore:** Supply `upload-keystore.jks` for Google Play release bundle generation.
-4. **Approve Production Rollout:** Provide explicit owner sign-off prior to merging into `main` or deploying to production.
+1. **Owner UAT & Sign-Off:** **COMPLETED & APPROVED** on October 15, 2026. Real Android device workflows (duty punch-in, selfie, real camera photo proof with permanent raster watermark, customer digital signature rasterization, and offline Drift SQLite queue sync) verified.
+2. **Merge Draft PR #7 into `main`:** Draft PR #7 ([#7](https://github.com/djsushilkumar/oprino/pull/7)) is authorized for merge into `main`.
+3. **Configure Cloudflare R2 Credentials in Render:** Set `S3_BUCKET_NAME`, `S3_ACCESS_KEY_ID`, and `S3_SECRET_ACCESS_KEY` in `oprino-api` environment variables on Render prior to commercial production deployment.
+4. **Generate Android Release Keystore:** Supply `upload-keystore.jks` for Google Play release bundle generation.
