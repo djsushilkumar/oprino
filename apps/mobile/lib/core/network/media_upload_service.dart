@@ -87,6 +87,7 @@ class MediaUploadService {
   Future<String> savePendingImageFile({
     required String prefix,
     required List<int> bytes,
+    String? extension,
   }) async {
     Directory dir;
     if (baseDirectory != null) {
@@ -108,7 +109,8 @@ class MediaUploadService {
     }
 
     final id = SecureStorageService.generateUuidV4().substring(0, 8);
-    final fileName = '${prefix}_${DateTime.now().millisecondsSinceEpoch}_$id.jpg';
+    final ext = extension ?? (prefix.contains('sig') ? 'png' : 'jpg');
+    final fileName = '${prefix}_${DateTime.now().millisecondsSinceEpoch}_$id.$ext';
     final filePath = '${mediaDir.path}/$fileName';
 
     final file = File(filePath);

@@ -3,7 +3,7 @@
 **Document:** Authoritative Mobile Technical Architecture  
 **Auditor:** Principal Flutter Engineer  
 **Branch:** `release/v1-stabilization`  
-**Framework:** Flutter 3.47 / Dart 3.x (Stable)  
+**Framework:** Flutter 3.47.6 / Dart 3.13.5 (Stable)  
 **Platforms:** Android (API 24–36, TargetSdk 35, CompileSdk 36) & iOS (iOS 15+)  
 **ADR References:** [`ADR-001`](./ADR-001-mobile-framework.md), [`ADR-008`](./ADR-008-background-location.md), [`ADR-009`](./ADR-009-offline-sync.md), [`ADR-020`](./ADR-020-mobile-packaging.md), [`ADR-021`](./ADR-021-zero-cost-gps-pipeline.md)  
 
@@ -41,13 +41,13 @@ graph TD
 * **Privacy Guarantee:** Zero off-duty location fixes are captured, queued, or transmitted.
 
 ### C. Media Capture & Proof-of-Work Pipeline (`ADR-012`)
-* **Camera Capture:** Uses `image_picker` configured for physical camera acquisition.
-* **Client Watermarking:** Overlays an authoritative watermark directly onto the JPEG bitmap before upload:
-  - Timestamp (UTC & local format).
-  - Geotagged coordinates (Latitude, Longitude).
-  - Task ID and Worker Name.
-* **Persistent Storage:** Un-synced media is saved in `getApplicationSupportDirectory()`, surviving Doze mode and OS cache purges.
-* **Customer Signature Pad:** Hand-drawn vector signature captured on glass, converted to PNG binary, and submitted with the proof bundle.
+* **Camera Capture:** Uses `image_picker` configured for physical camera acquisition, with strict image byte validation via `MediaValidator` (magic bytes, dimensions, and size limits).
+* **3-Tier Watermark System:**
+  1. **Permanent Bitmap Watermark:** Burned onto raw pixels by `WatermarkService` using `Canvas` and `ui.PictureRecorder`, producing immutable PNG pixels with a high-contrast metadata banner (timestamp, GPS coordinates, task ID).
+  2. **UI Preview Overlay:** Real-time Flutter widget preview displayed in `PhotoProofSheet` before and after photo capture.
+  3. **Audit JSON Metadata:** Structured audit payload persisted in PostgreSQL database `task_proofs.watermark_metadata` JSONB column.
+* **Customer Digital Signature:** Hand-drawn vector strokes captured on glass via `CustomerSignatureSheet`, rasterized into authentic PNG image bytes (`0x89, 0x50, 0x4E, 0x47`) by `SignatureRasterizer`, uploaded directly to authorized object storage, and queued with `isBinaryUploaded: false` in Drift outbox if offline.
+* **Persistent Storage:** Un-synced media is saved in `getApplicationSupportDirectory()` (`pending_media/`), surviving Doze mode and OS cache purges.
 
 ---
 

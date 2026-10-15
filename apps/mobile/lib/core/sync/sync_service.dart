@@ -8,6 +8,7 @@ import '../database/database.dart';
 import '../network/api_client_provider.dart';
 import '../network/media_upload_service.dart';
 import '../storage/secure_storage_service.dart';
+import '../utils/media_validator.dart';
 
 final syncServiceProvider = Provider<SyncService>((ref) {
   final db = ref.watch(databaseProvider);
@@ -658,24 +659,29 @@ class SyncService {
             String fileKey = data['fileKey'] as String;
             final localProofPath = data['localFilePath'] as String?;
             final isBinaryUploaded = data['isBinaryUploaded'] as bool? ?? true;
+            final proofType = (data['proofType'] as String?) ?? 'PHOTO';
+            final isSignature = proofType == 'SIGNATURE';
+            final defaultFileName = isSignature ? 'signature.png' : 'photo_proof.jpg';
+            final defaultMimeType = isSignature ? 'image/png' : 'image/jpeg';
 
-            // If proof photo was saved offline and binary not yet uploaded:
+            // If proof photo or signature was saved offline and binary not yet uploaded:
             if (!isBinaryUploaded && localProofPath != null && mediaService != null) {
               final localFile = File(localProofPath);
               if (await localFile.exists()) {
                 final bytes = await localFile.readAsBytes();
+                final detectedMime = MediaValidator.detectMimeType(bytes) ?? defaultMimeType;
                 final uploadMeta = await mediaService!.requestTaskProofUploadUrl(
                   taskId: data['taskId'] as String,
                   visitId: data['visitId'] as String?,
-                  proofType: data['proofType'] as String,
-                  fileName: 'photo_proof.jpg',
-                  mimeType: 'image/jpeg',
+                  proofType: proofType,
+                  fileName: defaultFileName,
+                  mimeType: detectedMime,
                   fileSizeBytes: bytes.length,
                 );
                 await mediaService!.uploadBinaryBytes(
                   uploadUrl: uploadMeta.uploadUrl,
                   bytes: bytes,
-                  contentType: 'image/jpeg',
+                  contentType: detectedMime,
                 );
                 fileKey = uploadMeta.fileKey;
                 data['fileKey'] = fileKey;
@@ -692,13 +698,15 @@ class SyncService {
                     updatedAt: Value(DateTime.now()),
                   ),
                 );
+              } else {
+                throw Exception('Local proof binary not found on device at path: $localProofPath');
               }
             }
 
             await client.confirmMediaUpload(
               taskId: data['taskId'] as String,
               visitId: data['visitId'] as String?,
-              proofType: data['proofType'] as String,
+              proofType: proofType,
               fileKey: fileKey,
               signerName: data['signerName'] as String?,
               signerPhone: data['signerPhone'] as String?,
@@ -706,7 +714,7 @@ class SyncService {
               notes: data['notes'] as String?,
             );
 
-            // Cleanup local photo file after confirmed delivery
+            // Cleanup local photo or signature file after confirmed delivery
             if (localProofPath != null && mediaService != null) {
               await mediaService!.deleteLocalMediaFile(localProofPath);
             }

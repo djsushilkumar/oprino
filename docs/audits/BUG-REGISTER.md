@@ -32,6 +32,8 @@
 | **BUG-010** | **P1** | Mobile / Build | [`apps/mobile/android/build.gradle.kts`](../../apps/mobile/android/build.gradle.kts) | Unconditional `subprojects { project.layout.buildDirectory.value(...) }` threw `IllegalArgumentException: this and base files have different roots` on Windows across drive letters (D: vs C:) | **RESOLVED** | Guarded with `projectRoot == buildRoot` check; Android assembleDebug passed |
 | **BUG-011** | **P2** | Mobile / Repo | [`apps/mobile/android/.gitignore`](../../apps/mobile/android/.gitignore) | JVM crash dumps (`hs_err_pid*.log`, `replay_pid*.log`) left in repository and not tracked by gitignore | **RESOLVED** | Added `hs_err_pid*.log` and `replay_pid*.log` to `.gitignore`; files deleted |
 | **BUG-012** | **P2** | Docs | 54 Markdown Files in `docs/` | Hardcoded Linux absolute paths `file:///workspace/oprino/...` broke link navigation on Windows/clones | **RESOLVED** | Converted all 473 links to relative paths; `validate-doc-links.mjs` returns 0 broken links |
+| **BUG-013** | **P1** | Mobile / API | [`apps/mobile/lib/features/tasks/presentation/task_detail_screen.dart`](../../apps/mobile/lib/features/tasks/presentation/task_detail_screen.dart) | Signature sheet generated dummy fileKey without converting drawn strokes or uploading PNG binary; backend confirmed missing object | **RESOLVED** | `SignatureRasterizer` converts strokes to valid PNG bytes; real binary uploaded via storage API; offline retry via Drift outbox; API tests 15-19 & mobile tests 14-16 pass |
+| **BUG-014** | **P1** | Mobile / API | [`apps/mobile/lib/core/utils/media_validator.dart`](../../apps/mobile/lib/core/utils/media_validator.dart) | Inverted condition `if (!isJpeg && bytes.length < 100)` accepted non-image arbitrary bytes if >100 bytes | **RESOLVED** | Comprehensive `MediaValidator` enforcing magic bytes (JPEG/PNG/WebP), size limits, header checks, and native image decoding; API PUT route enforces magic byte validation |
 
 ---
 
@@ -105,4 +107,39 @@
   Integrated `image_picker` camera capture, validated legitimate binary JPEG fixtures, and overlaid real client-side watermarks (timestamp, GPS coordinates, task ID).
 - **Regression Test:**
   `apps/mobile/test/field_operations_mobile_test.dart` (PASS) and `apps/mobile/test/media_workflow_and_offline_reliability_test.dart` (PASS).
+- **Status:** **RESOLVED**
+
+---
+
+### BUG-013: Customer Signature False Confirmation & Missing Binary Storage
+- **Unique ID:** `BUG-013`
+- **Severity:** `P1` (High — Legal/Operational Verification Defect)
+- **Affected Module:** `apps/mobile` & `services/api`
+- **File:** [`apps/mobile/lib/features/tasks/presentation/task_detail_screen.dart`](../../apps/mobile/lib/features/tasks/presentation/task_detail_screen.dart) & [`services/api/src/services/media.service.ts`](../../services/api/src/services/media.service.ts)
+- **Root Cause:**
+  `CustomerSignatureSheet` returned raw canvas drawing strokes, but `TaskDetailScreen` fabricated an imaginary `fileKey` without rasterizing strokes to PNG or uploading the binary to storage. `SyncService` subsequently queued confirmation with `isBinaryUploaded: true`. In environments requiring verified object existence, `MediaService.confirmUpload` threw `STORAGE_OBJECT_NOT_FOUND` because no storage object was ever uploaded.
+- **Fix Strategy:**
+  1. Implemented `SignatureRasterizer` (`apps/mobile/lib/core/utils/signature_rasterizer.dart`) using `ui.PictureRecorder` and `Canvas` to render strokes into valid PNG bytes (`0x89, 0x50, 0x4E, 0x47`).
+  2. Updated `TaskDetailScreen` to request an authorized upload URL and upload real PNG binary bytes before calling confirmation.
+  3. Added offline support in `SyncService`: when offline, signature PNG is saved to durable app storage (`pending_media/sig_*.png`) with `isBinaryUploaded: false`, drained upon reconnect, and purged only after backend confirmation.
+  4. Backend storage route verifies magic bytes on upload and confirms physical storage object existence before creating database record.
+- **Regression Test:**
+  Mobile unit/widget tests: `apps/mobile/test/signature_rasterizer_test.dart` (PASS), `field_operations_mobile_test.dart` (PASS), and `media_workflow_and_offline_reliability_test.dart` tests 14, 15, 16 (PASS). Backend API tests: `services/api/src/media-storage.unit.test.ts` tests 15–19 (PASS).
+- **Status:** **RESOLVED**
+
+---
+
+### BUG-014: Inverted Image Byte Validation Bypassing Format Checks
+- **Unique ID:** `BUG-014`
+- **Severity:** `P1` (High — Media Integrity & Security Vulnerability)
+- **Affected Module:** `apps/mobile` & `services/api`
+- **File:** [`apps/mobile/lib/core/utils/media_validator.dart`](../../apps/mobile/lib/core/utils/media_validator.dart) & [`services/api/src/routes/media.ts`](../../services/api/src/routes/media.ts)
+- **Root Cause:**
+  Photo and selfie validation used the condition `if (!isJpeg && bytes.length < 100)`, which inadvertently allowed arbitrary non-image binaries to pass validation simply because their length exceeded 100 bytes.
+- **Fix Strategy:**
+  1. Created `MediaValidator` (`apps/mobile/lib/core/utils/media_validator.dart`) enforcing magic bytes for JPEG (`FF D8 FF`), PNG (`89 50 4E 47`), and WebP (`RIFF...WEBP`), header length checks (>=32 bytes), max size limits (<=10MB), and native decoding with positive dimensions.
+  2. Applied `MediaValidator.validateImageBytes` to `AttendanceSelfieSheet` and `PhotoProofSheet`.
+  3. Added binary magic byte verification to backend storage direct PUT route (`services/api/src/routes/media.ts`), rejecting corrupted or mismatched payloads with `400 Bad Request`.
+- **Regression Test:**
+  Mobile tests: `apps/mobile/test/media_validator_test.dart` (7/7 tests PASS). Backend tests: `services/api/src/media-storage.unit.test.ts` tests 16–17 (PASS).
 - **Status:** **RESOLVED**

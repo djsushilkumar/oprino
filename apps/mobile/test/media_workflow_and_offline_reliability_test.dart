@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,8 @@ import 'package:oprino_mobile/core/sync/sync_service.dart';
 import 'package:oprino_mobile/features/attendance/presentation/widgets/attendance_selfie_sheet.dart';
 import 'package:oprino_mobile/features/tasks/presentation/widgets/proof_viewer_sheet.dart';
 import 'package:oprino_api/oprino_api.dart';
+import 'package:oprino_mobile/core/utils/signature_rasterizer.dart';
+import 'package:oprino_mobile/core/utils/media_validator.dart';
 
 class _MockApiClient extends OprinoApiClient {
   _MockApiClient() : super(dio: Dio());
@@ -20,6 +23,9 @@ class _MockApiClient extends OprinoApiClient {
   String? lastPunchInSelfieKey;
   bool confirmProofCalled = false;
   String? lastConfirmProofFileKey;
+  String? lastConfirmProofType;
+  String? lastSignerName;
+  String? lastSignerPhone;
   bool verifyTaskCalled = false;
   String? lastVerifyAction;
 
@@ -43,9 +49,10 @@ class _MockApiClient extends OprinoApiClient {
     required String mimeType,
     int? fileSizeBytes,
   }) async {
+    final ext = mimeType == 'image/png' ? 'png' : 'jpg';
     return MediaUploadUrlResponse(
       uploadUrl: 'https://storage.staging.oprino.com/proofs/upload?sig=xyz',
-      fileKey: 'ws-1/proofs/$taskId/proof_123.jpg',
+      fileKey: 'ws-1/proofs/$taskId/proof_123.$ext',
       expiresInSeconds: 600,
     );
   }
@@ -122,6 +129,9 @@ class _MockApiClient extends OprinoApiClient {
   }) async {
     confirmProofCalled = true;
     lastConfirmProofFileKey = fileKey;
+    lastConfirmProofType = proofType;
+    lastSignerName = signerName;
+    lastSignerPhone = signerPhone;
     return TaskProof(
       id: 'proof-1',
       workspaceId: 'ws-1',
@@ -186,6 +196,9 @@ class _MockFailingApiClient extends _MockApiClient {
 }
 
 class _MockRejectionApiClient extends _MockApiClient {
+  final bool rejectConfirmProof;
+  _MockRejectionApiClient({this.rejectConfirmProof = false});
+
   @override
   Future<AttendanceSessionResponse> punchIn({
     required String idempotencyKey,
@@ -206,10 +219,53 @@ class _MockRejectionApiClient extends _MockApiClient {
       ),
     );
   }
+
+  @override
+  Future<TaskProof> confirmMediaUpload({
+    required String taskId,
+    String? visitId,
+    required String proofType,
+    required String fileKey,
+    int? fileSizeBytes,
+    String? mimeType,
+    String? signerName,
+    String? signerPhone,
+    Map<String, dynamic>? watermarkMetadata,
+    String? notes,
+  }) async {
+    if (rejectConfirmProof) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/v1/media/confirm'),
+        message: 'Storage object not found or invalid signature bytes',
+        response: Response(
+          statusCode: 400,
+          requestOptions: RequestOptions(path: '/v1/media/confirm'),
+          data: {'error': 'STORAGE_OBJECT_NOT_FOUND', 'message': 'Storage object not found or invalid signature bytes'},
+        ),
+      );
+    }
+    return super.confirmMediaUpload(
+      taskId: taskId,
+      visitId: visitId,
+      proofType: proofType,
+      fileKey: fileKey,
+      fileSizeBytes: fileSizeBytes,
+      mimeType: mimeType,
+      signerName: signerName,
+      signerPhone: signerPhone,
+      watermarkMetadata: watermarkMetadata,
+      notes: notes,
+    );
+  }
 }
 
 class _TestMediaUploadService extends MediaUploadService {
   _TestMediaUploadService({required super.client, super.baseDirectory});
+
+  bool uploadBinaryCalled = false;
+  String? lastUploadedContentType;
+  List<int>? lastUploadedBytes;
+  bool shouldFailUpload = false;
 
   @override
   Future<void> uploadBinaryBytes({
@@ -217,9 +273,16 @@ class _TestMediaUploadService extends MediaUploadService {
     required List<int> bytes,
     String contentType = 'image/jpeg',
   }) async {
-    // Simulated instant direct upload without external sockets
+    if (shouldFailUpload) {
+      throw DioException(
+        requestOptions: RequestOptions(path: uploadUrl),
+        error: 'Network connection failed during binary upload',
+      );
+    }
+    uploadBinaryCalled = true;
+    lastUploadedContentType = contentType;
+    lastUploadedBytes = bytes;
   }
-
 }
 
 class _WidgetFailingMediaUploadService extends _TestMediaUploadService {
@@ -229,8 +292,10 @@ class _WidgetFailingMediaUploadService extends _TestMediaUploadService {
   Future<String> savePendingImageFile({
     required String prefix,
     required List<int> bytes,
+    String? extension,
   }) async {
-    return 'pending_media/${prefix}_test_local.jpg';
+    final ext = extension ?? 'jpg';
+    return 'pending_media/${prefix}_test_local.$ext';
   }
 }
 
@@ -730,6 +795,182 @@ void main() {
 
       final remainingMutations = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).get();
       expect(remainingMutations.isEmpty, isTrue);
+    });
+
+    test('14. Offline Customer Signature: Persists PNG across crash/restart, executes direct binary upload on reconnect, confirms proof with signer info, and deletes local temp PNG', () async {
+      // Step 1: Draw strokes and rasterize to authentic PNG bytes
+      final strokes = [
+        [const Offset(10, 10), const Offset(60, 60), const Offset(120, 30)],
+        [const Offset(30, 80), const Offset(100, 80)],
+      ];
+      final sigPngBytes = await SignatureRasterizer.renderStrokesToPng(strokes: strokes);
+      final valRes = await MediaValidator.validateImageBytes(sigPngBytes);
+      expect(valRes.isValid, isTrue);
+      expect(valRes.mimeType, equals('image/png'));
+
+      // Step 2: Save locally as durable PNG file
+      final localSigPath = await mediaService.savePendingImageFile(
+        prefix: 'cust_sig_offline',
+        bytes: sigPngBytes,
+        extension: 'png',
+      );
+      expect(localSigPath.endsWith('.png'), isTrue);
+      expect(await File(localSigPath).exists(), isTrue);
+
+      // Step 3: Queue proof confirmation offline with isBinaryUploaded: false
+      final idempKey = await syncService.queueProofConfirmation(
+        workspaceId: 'ws-1',
+        taskId: 'task-sig-1',
+        userId: 'user-worker-1',
+        proofType: 'SIGNATURE',
+        fileKey: 'pending_sig_key',
+        localFilePath: localSigPath,
+        isBinaryUploaded: false,
+        signerName: 'Sunita Sharma',
+        signerPhone: '+919876543210',
+        notes: 'Customer signed at site',
+      );
+
+      // Verify pending outbox entry has isBinaryUploaded = false
+      final queuedMutation = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).getSingle();
+      final queuedData = jsonDecode(queuedMutation.payload) as Map<String, dynamic>;
+      expect(queuedData['isBinaryUploaded'], isFalse);
+      expect(queuedData['signerName'], equals('Sunita Sharma'));
+      expect(queuedData['signerPhone'], equals('+919876543210'));
+
+      // Step 4: Simulate App Crash / Force Restart
+      final restartedClient = _MockApiClient();
+      final restartedMediaService = _TestMediaUploadService(client: restartedClient, baseDirectory: Directory.systemTemp);
+      final restartedSync = SyncService(
+        db: testDb,
+        client: restartedClient,
+        mediaService: restartedMediaService,
+        autoProcessOutbox: false,
+      );
+
+      // Verify persistence across restart
+      expect(await File(localSigPath).exists(), isTrue, reason: 'Signature PNG file must persist across restart');
+      final pendingAfterRestart = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).getSingle();
+      expect(pendingAfterRestart.status, equals('PENDING'));
+
+      // Step 5: Network Reconnect -> Drain outbox
+      await restartedSync.processOutbox();
+
+      // Verify binary upload executed with image/png
+      expect(restartedMediaService.uploadBinaryCalled, isTrue);
+      expect(restartedMediaService.lastUploadedContentType, equals('image/png'));
+      expect(restartedMediaService.lastUploadedBytes, equals(sigPngBytes));
+
+      // Verify server confirmMediaUpload was called with correct metadata
+      expect(restartedClient.confirmProofCalled, isTrue);
+      expect(restartedClient.lastConfirmProofType, equals('SIGNATURE'));
+      expect(restartedClient.lastSignerName, equals('Sunita Sharma'));
+      expect(restartedClient.lastSignerPhone, equals('+919876543210'));
+      expect(restartedClient.lastConfirmProofFileKey, equals('ws-1/proofs/task-sig-1/proof_123.png'));
+
+      // Verify local temporary PNG is safely deleted
+      expect(await File(localSigPath).exists(), isFalse, reason: 'Signature PNG must be purged only after server confirmation');
+
+      // Verify outbox mutation is removed
+      final remainingMutations = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).get();
+      expect(remainingMutations.isEmpty, isTrue);
+    });
+
+    test('15. Signature Upload Network Failure: Preserves mutation and local PNG binary without false success, then succeeds on retry', () async {
+      final sigBytes = await SignatureRasterizer.renderStrokesToPng(strokes: [
+        [const Offset(5, 5), const Offset(25, 25)]
+      ]);
+      final localSigPath = await mediaService.savePendingImageFile(
+        prefix: 'fail_retry_sig',
+        bytes: sigBytes,
+        extension: 'png',
+      );
+
+      final idempKey = await syncService.queueProofConfirmation(
+        workspaceId: 'ws-1',
+        taskId: 'task-sig-fail',
+        userId: 'user-worker-1',
+        proofType: 'SIGNATURE',
+        fileKey: 'pending_sig_key',
+        localFilePath: localSigPath,
+        isBinaryUploaded: false,
+        signerName: 'Amit Patel',
+      );
+
+      // Simulate network socket failure during binary PUT
+      mediaService.shouldFailUpload = true;
+
+      // Process outbox (throws during uploadBinaryBytes)
+      try {
+        await syncService.processOutbox();
+      } catch (_) {}
+
+      // Verify backend was NEVER falsely confirmed without binary upload
+      expect(mockClient.confirmProofCalled, isFalse);
+
+      // Verify mutation is marked FAILED and local binary is preserved
+      final failedMutation = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).getSingle();
+      expect(failedMutation.status, equals('FAILED'));
+      expect(failedMutation.lastError, contains('Network connection failed during binary upload'));
+      expect(await File(localSigPath).exists(), isTrue, reason: 'Signature PNG must NOT be deleted on network failure');
+
+      // Network recovers
+      mediaService.shouldFailUpload = false;
+      await syncService.processOutbox();
+
+      // Verify confirmed on recovery
+      expect(mockClient.confirmProofCalled, isTrue);
+      expect(mockClient.lastSignerName, equals('Amit Patel'));
+      expect(await File(localSigPath).exists(), isFalse);
+
+      final remaining = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).get();
+      expect(remaining.isEmpty, isTrue);
+    });
+
+    test('16. Server Confirmation Rejection: Preserves local signature binary and marks mutation FAILED when backend rejects proof confirmation', () async {
+      final sigBytes = await SignatureRasterizer.renderStrokesToPng(strokes: [
+        [const Offset(10, 20), const Offset(40, 50)]
+      ]);
+      final localSigPath = await mediaService.savePendingImageFile(
+        prefix: 'reject_sig',
+        bytes: sigBytes,
+        extension: 'png',
+      );
+
+      final idempKey = await syncService.queueProofConfirmation(
+        workspaceId: 'ws-1',
+        taskId: 'task-sig-rej',
+        userId: 'user-worker-1',
+        proofType: 'SIGNATURE',
+        fileKey: 'pending_sig_key',
+        localFilePath: localSigPath,
+        isBinaryUploaded: false,
+        signerName: 'Rajesh Kumar',
+      );
+
+      final rejectionClient = _MockRejectionApiClient(rejectConfirmProof: true);
+      final rejectionMediaService = _TestMediaUploadService(client: rejectionClient, baseDirectory: Directory.systemTemp);
+      final rejectingSync = SyncService(
+        db: testDb,
+        client: rejectionClient,
+        mediaService: rejectionMediaService,
+        autoProcessOutbox: false,
+      );
+
+      try {
+        await rejectingSync.processOutbox();
+      } catch (_) {}
+
+      // Verify mutation is marked FAILED
+      final failedMutation = await (testDb.select(testDb.outboxMutations)..where((m) => m.idempotencyKey.equals(idempKey))).getSingle();
+      expect(failedMutation.status, equals('FAILED'));
+      expect(failedMutation.lastError, contains('Storage object not found or invalid signature bytes'));
+
+      // Verify local file is preserved for auditing / retry
+      expect(await File(localSigPath).exists(), isTrue);
+
+      // Cleanup test file
+      await File(localSigPath).delete();
     });
   });
 }

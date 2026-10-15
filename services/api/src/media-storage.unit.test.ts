@@ -854,6 +854,114 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
 
       assert.strictEqual(res.statusCode, 403);
     });
+
+    test('15. Direct PUT upload of customer signature PNG binary succeeds with 200', async () => {
+      const sigKey = `${workspaceAId}/proofs/task-1/signature_test.png`;
+      const uploadUrl = await localDriver.getUploadUrl(sigKey, {
+        contentType: 'image/png',
+        expiresInSeconds: 600,
+      });
+
+      const parsedUrl = new URL(uploadUrl);
+      const pngPayload = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x01]);
+
+      const res = await fastifyApp.inject({
+        method: 'PUT',
+        url: parsedUrl.pathname + parsedUrl.search,
+        headers: { 'content-type': 'image/png' },
+        payload: pngPayload,
+      });
+
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(res.json().success, true);
+      assert.strictEqual(res.json().fileKey, sigKey);
+    });
+
+    test('16. Direct PUT upload with image/jpeg header but corrupted non-JPEG payload returns 400', async () => {
+      const corruptKey = `${workspaceAId}/proofs/task-1/corrupt.jpg`;
+      const uploadUrl = await localDriver.getUploadUrl(corruptKey, {
+        contentType: 'image/jpeg',
+        expiresInSeconds: 600,
+      });
+
+      const parsedUrl = new URL(uploadUrl);
+      // Arbitrary payload without JPEG magic bytes
+      const fakePayload = Buffer.from(new Array(128).fill(0x41));
+
+      const res = await fastifyApp.inject({
+        method: 'PUT',
+        url: parsedUrl.pathname + parsedUrl.search,
+        headers: { 'content-type': 'image/jpeg' },
+        payload: fakePayload,
+      });
+
+      assert.strictEqual(res.statusCode, 400);
+      assert.ok(res.json().message.includes('does not match declared image/jpeg format'));
+    });
+
+    test('17. Direct PUT upload with image/png header but non-PNG payload returns 400', async () => {
+      const corruptKey = `${workspaceAId}/proofs/task-1/corrupt.png`;
+      const uploadUrl = await localDriver.getUploadUrl(corruptKey, {
+        contentType: 'image/png',
+        expiresInSeconds: 600,
+      });
+
+      const parsedUrl = new URL(uploadUrl);
+      const fakePayload = Buffer.from([0xff, 0xd8, 0xff, 0xe0]); // JPEG bytes sent as PNG
+
+      const res = await fastifyApp.inject({
+        method: 'PUT',
+        url: parsedUrl.pathname + parsedUrl.search,
+        headers: { 'content-type': 'image/png' },
+        payload: fakePayload,
+      });
+
+      assert.strictEqual(res.statusCode, 400);
+      assert.ok(res.json().message.includes('does not match declared image/png format'));
+    });
+
+    test('18. Confirm customer signature proof records signer name and returns viewing URL', async () => {
+      const sigKey = `${workspaceAId}/proofs/task-1/sig_confirmed.png`;
+      const pngPayload = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x10, 0x20]);
+      await localDriver.putObject(sigKey, pngPayload, 'image/png');
+
+      const confirmed = await mediaService.confirmUpload(workspaceAId, employeeAId, {
+        taskId: 'task-1',
+        proofType: 'SIGNATURE',
+        fileKey: sigKey,
+        mimeType: 'image/png',
+        fileSizeBytes: pngPayload.length,
+        signerName: 'Alice Customer',
+        signerPhone: '+1-555-0199',
+        notes: 'Signed on glass by customer',
+      });
+
+      assert.ok(confirmed);
+      assert.strictEqual(confirmed.proofType, 'SIGNATURE');
+      assert.strictEqual(confirmed.signerName, 'Alice Customer');
+      assert.strictEqual(confirmed.signerPhone, '+1-555-0199');
+      assert.strictEqual(confirmed.mimeType, 'image/png');
+      assert.ok(confirmed.fileUrl);
+    });
+
+    test('19. Confirm proof fails if storage object was never uploaded (400 STORAGE_OBJECT_NOT_FOUND)', async () => {
+      const nonExistentKey = `${workspaceAId}/proofs/task-1/never_uploaded.png`;
+
+      await assert.rejects(
+        () =>
+          mediaService.confirmUpload(workspaceAId, employeeAId, {
+            taskId: 'task-1',
+            proofType: 'SIGNATURE',
+            fileKey: nonExistentKey,
+            mimeType: 'image/png',
+            signerName: 'Fake Customer',
+          }),
+        (err: any) =>
+          err.statusCode === 400 &&
+          err.code === 'STORAGE_OBJECT_NOT_FOUND' &&
+          err.message.includes('does not exist in storage'),
+      );
+    });
   });
 
   describe('6. AttendanceService Selfie Ownership & Integrity Invariants', () => {

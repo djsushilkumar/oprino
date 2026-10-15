@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:oprino_mobile/core/utils/signature_rasterizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,8 +46,10 @@ class _TestMediaUploadService extends MediaUploadService {
   Future<String> savePendingImageFile({
     required String prefix,
     required List<int> bytes,
+    String? extension,
   }) async {
-    return '/tmp/$prefix.jpg';
+    final ext = extension ?? 'jpg';
+    return '/tmp/$prefix.$ext';
   }
 }
 
@@ -166,6 +170,7 @@ void main() {
   testWidgets('1. CustomerSignatureSheet validates required signer name and canvas strokes', (WidgetTester tester) async {
     String? capturedName;
     String? capturedPhone;
+    Uint8List? capturedPngBytes;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -173,12 +178,14 @@ void main() {
           body: CustomerSignatureSheet(
             taskId: 't-1',
             onConfirm: ({
+              Uint8List? signaturePngBytes,
               required String signerName,
               String? signerPhone,
               required List<List<Offset>> strokes,
             }) {
               capturedName = signerName;
               capturedPhone = signerPhone;
+              capturedPngBytes = signaturePngBytes;
             },
           ),
         ),
@@ -219,10 +226,15 @@ void main() {
     await tester.ensureVisible(confirmFinder);
     await tester.pumpAndSettle();
     await tester.tap(confirmFinder);
-    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await Future.delayed(const Duration(milliseconds: 150));
+    });
+    await tester.pump();
 
     expect(capturedName, equals('John Customer'));
     expect(capturedPhone, isNull);
+    expect(capturedPngBytes, isNotNull);
+    expect(capturedPngBytes!.take(4), equals([0x89, 0x50, 0x4E, 0x47]));
   });
 
   testWidgets('2. PhotoProofSheet displays watermark banner and confirms geotagged proof', (WidgetTester tester) async {
@@ -230,6 +242,13 @@ void main() {
     double? confirmedLat;
 
     final testMediaService = _TestMediaUploadService(client: testClient);
+
+    Uint8List? testBytes;
+    await tester.runAsync(() async {
+      testBytes = await SignatureRasterizer.renderStrokesToPng(strokes: [
+        [const Offset(10, 10), const Offset(50, 50)]
+      ]);
+    });
 
     await tester.pumpWidget(
       ProviderScope(
@@ -243,7 +262,7 @@ void main() {
               currentLatitude: 37.77492,
               currentLongitude: -122.41941,
               accuracy: 3.5,
-              initialBytes: MediaUploadService.createSyntheticJpeg(),
+              initialBytes: testBytes,
               onConfirm: ({
                 required String fileKey,
                 String? localFilePath,
@@ -273,8 +292,17 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Compressor pressure verified.');
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm & Save Geotagged Proof'));
+    final confirmBtn = find.text('Confirm & Save Geotagged Proof');
+    await tester.ensureVisible(confirmBtn);
     await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await tester.tap(confirmBtn);
+      for (int i = 0; i < 60; i++) {
+        if (confirmedNotes != null) break;
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+    });
+    await tester.pump();
 
     expect(confirmedNotes, equals('Compressor pressure verified.'));
     expect(confirmedLat, equals(37.77492));

@@ -1,5 +1,7 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/oprino_theme.dart';
+import '../../../../core/utils/signature_rasterizer.dart';
 
 class CustomerSignatureSheet extends StatefulWidget {
   final String taskId;
@@ -8,6 +10,7 @@ class CustomerSignatureSheet extends StatefulWidget {
     required String signerName,
     String? signerPhone,
     required List<List<Offset>> strokes,
+    Uint8List? signaturePngBytes,
   }) onConfirm;
 
   const CustomerSignatureSheet({
@@ -43,7 +46,7 @@ class _CustomerSignatureSheetState extends State<CustomerSignatureSheet> {
     });
   }
 
-  void _submit() {
+  void _submit() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       setState(() => _error = 'Please enter customer signer name.');
@@ -54,12 +57,25 @@ class _CustomerSignatureSheetState extends State<CustomerSignatureSheet> {
       return;
     }
 
-    widget.onConfirm(
-      signerName: name,
-      signerPhone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
-      strokes: _strokes,
-    );
-    Navigator.of(context).pop();
+    try {
+      final pngBytes = await SignatureRasterizer.renderStrokesToPng(
+        strokes: _strokes,
+        width: 400,
+        height: 200,
+      );
+
+      widget.onConfirm(
+        signerName: name,
+        signerPhone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+        strokes: _strokes,
+        signaturePngBytes: pngBytes,
+      );
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _error = 'Failed to rasterize signature: ${e.toString()}');
+      }
+    }
   }
 
   @override

@@ -1,9 +1,12 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/oprino_theme.dart';
 import '../../../../core/sync/sync_service.dart';
 import '../../../../core/database/database.dart';
 import '../../../../core/location/location_service.dart';
+import '../../../../core/network/media_upload_service.dart';
+import '../../../../core/utils/signature_rasterizer.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
 import 'widgets/customer_signature_sheet.dart';
 import 'widgets/photo_proof_sheet.dart';
@@ -169,29 +172,94 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           required String signerName,
           String? signerPhone,
           required List<List<Offset>> strokes,
+          Uint8List? signaturePngBytes,
         }) async {
           final sync = ref.read(syncServiceProvider);
-          final timestamp = DateTime.now().millisecondsSinceEpoch;
-          final fileKey = '$workspaceId/proofs/${widget.taskId}/signature_$timestamp.png';
+          final mediaService = ref.read(mediaUploadServiceProvider);
+          final now = DateTime.now();
 
-          await sync.queueProofConfirmation(
-            workspaceId: workspaceId,
-            taskId: widget.taskId,
-            userId: userId,
-            proofType: 'SIGNATURE',
-            fileKey: fileKey,
-            signerName: signerName,
-            signerPhone: signerPhone,
-            notes: 'Digital signature on glass captured via mobile client',
-          );
+          // Ensure valid PNG bytes exist
+          final pngBytes = signaturePngBytes ??
+              await SignatureRasterizer.renderStrokesToPng(strokes: strokes);
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Customer signature captured successfully!'),
-                backgroundColor: Color(0xFF059669),
-              ),
+          try {
+            // 1. Try online direct binary upload to R2/S3
+            final uploadMeta = await mediaService.requestTaskProofUploadUrl(
+              taskId: widget.taskId,
+              visitId: null,
+              proofType: 'SIGNATURE',
+              fileName: 'signature_${widget.taskId}.png',
+              mimeType: 'image/png',
+              fileSizeBytes: pngBytes.length,
             );
+
+            await mediaService.uploadBinaryBytes(
+              uploadUrl: uploadMeta.uploadUrl,
+              bytes: pngBytes,
+              contentType: 'image/png',
+            );
+
+            await sync.queueProofConfirmation(
+              workspaceId: workspaceId,
+              taskId: widget.taskId,
+              userId: userId,
+              proofType: 'SIGNATURE',
+              fileKey: uploadMeta.fileKey,
+              localFilePath: null,
+              isBinaryUploaded: true,
+              signerName: signerName,
+              signerPhone: signerPhone,
+              notes: 'Digital signature on glass captured via mobile client',
+            );
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Customer signature captured and uploaded successfully!'),
+                  backgroundColor: Color(0xFF059669),
+                ),
+              );
+            }
+          } catch (_) {
+            // 2. Offline Resilience: save signature PNG to local private storage & queue confirmation for outbox sync
+            try {
+              final localPath = await mediaService.savePendingImageFile(
+                prefix: 'sig_${widget.taskId}',
+                bytes: pngBytes,
+                extension: 'png',
+              );
+
+              await sync.queueProofConfirmation(
+                workspaceId: workspaceId,
+                taskId: widget.taskId,
+                userId: userId,
+                proofType: 'SIGNATURE',
+                fileKey: 'pending_sig_${now.millisecondsSinceEpoch}.png',
+                localFilePath: localPath,
+                isBinaryUploaded: false,
+                signerName: signerName,
+                signerPhone: signerPhone,
+                notes: 'Digital signature on glass captured offline',
+              );
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Customer signature saved locally (offline mode). Will sync automatically when online.'),
+                    backgroundColor: Color(0xFF2563EB),
+                  ),
+                );
+              }
+            } catch (saveErr) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to save signature: ${saveErr.toString()}'),
+                    backgroundColor: const Color(0xFFDC2626),
+                  ),
+                );
+              }
+            }
           }
         },
       ),

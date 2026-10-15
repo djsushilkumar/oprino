@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/network/media_upload_service.dart';
+import '../../../../core/utils/media_validator.dart';
+import '../../../../core/utils/watermark_service.dart';
 import '../../../../core/theme/oprino_theme.dart';
 
 class PhotoProofSheet extends ConsumerStatefulWidget {
@@ -144,22 +146,12 @@ class _PhotoProofSheetState extends ConsumerState<PhotoProofSheet> {
       }
 
       final bytes = await photo.readAsBytes();
-      if (bytes.isEmpty) {
+      final validation = await MediaValidator.validateImageBytes(bytes);
+      if (!validation.isValid) {
         if (mounted) {
           setState(() {
             _isCapturing = false;
-            _uploadError = 'Captured photo was empty. Please retake worksite proof.';
-          });
-        }
-        return;
-      }
-
-      final isJpeg = bytes.length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xD8;
-      if (!isJpeg && bytes.length < 100) {
-        if (mounted) {
-          setState(() {
-            _isCapturing = false;
-            _uploadError = 'Corrupted or invalid image captured. Please retake photo.';
+            _uploadError = validation.error ?? 'Corrupted or invalid image captured. Please retake photo.';
           });
         }
         return;
@@ -219,20 +211,40 @@ class _PhotoProofSheetState extends ConsumerState<PhotoProofSheet> {
     final realBytes = _capturedBytes!;
     final now = _capturedTimestamp ?? DateTime.now();
 
+    // Burn permanent bitmap watermark directly onto raster pixels before upload (Priority 3)
+    Uint8List uploadBytes = realBytes;
+    String mimeType = 'image/jpeg';
+    String fileName = 'proof_${widget.taskId}.jpg';
+    try {
+      final gpsText = (_latitude != null && _longitude != null)
+          ? '${_latitude!.toStringAsFixed(5)}, ${_longitude!.toStringAsFixed(5)}${_accuracy != null ? " (±${_accuracy!.toStringAsFixed(1)}m)" : ""}'
+          : null;
+      uploadBytes = await WatermarkService.burnWatermark(
+        imageBytes: realBytes,
+        timestampText: now.toUtc().toIso8601String(),
+        gpsCoordinatesText: gpsText,
+        taskIdText: widget.taskId,
+      );
+      mimeType = 'image/png';
+      fileName = 'proof_${widget.taskId}.png';
+    } catch (_) {
+      uploadBytes = realBytes;
+    }
+
     try {
       // 1. Try online direct binary upload to Cloudflare R2 / S3
       final uploadMeta = await mediaService.requestTaskProofUploadUrl(
         taskId: widget.taskId,
         visitId: widget.visitId,
         proofType: 'PHOTO',
-        fileName: 'proof_${widget.taskId}.jpg',
-        mimeType: 'image/jpeg',
-        fileSizeBytes: realBytes.length,
+        fileName: fileName,
+        mimeType: mimeType,
+        fileSizeBytes: uploadBytes.length,
       );
       await mediaService.uploadBinaryBytes(
         uploadUrl: uploadMeta.uploadUrl,
-        bytes: realBytes,
-        contentType: 'image/jpeg',
+        bytes: uploadBytes,
+        contentType: mimeType,
       );
 
       if (!mounted) return;
@@ -251,11 +263,12 @@ class _PhotoProofSheetState extends ConsumerState<PhotoProofSheet> {
         Navigator.of(context).pop();
       }
     } catch (_) {
-      // 2. Offline Resilience: Save real image locally and queue confirmation for outbox sync
+      // 2. Offline Resilience: Save real watermarked image locally and queue confirmation for outbox sync
       try {
         final localPath = await mediaService.savePendingImageFile(
           prefix: 'task_${widget.taskId}',
-          bytes: realBytes,
+          bytes: uploadBytes,
+          extension: mimeType == 'image/png' ? 'png' : 'jpg',
         );
 
         if (!mounted) return;

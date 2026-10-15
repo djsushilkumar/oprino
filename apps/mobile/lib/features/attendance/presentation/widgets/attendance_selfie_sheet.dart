@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/network/media_upload_service.dart';
+import '../../../../core/utils/media_validator.dart';
 import '../../../../core/theme/oprino_theme.dart';
 
 class AttendanceSelfieSheet extends ConsumerStatefulWidget {
@@ -108,13 +109,13 @@ class _AttendanceSelfieSheetState extends ConsumerState<AttendanceSelfieSheet> {
         return;
       }
 
-      // Validate JPEG header (SOI marker 0xFF, 0xD8) or valid image binary
-      final isJpeg = bytes.length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xD8;
-      if (!isJpeg && bytes.length < 100) {
+      // Deep validation of image binary, supported format, and legible dimensions
+      final validation = await MediaValidator.validateImageBytes(bytes);
+      if (!validation.isValid) {
         if (mounted) {
           setState(() {
             _isCapturing = false;
-            _uploadError = 'Corrupted or invalid image captured. Please retake photo.';
+            _uploadError = validation.error ?? 'Corrupted or invalid image captured. Please retake photo.';
           });
         }
         return;

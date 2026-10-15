@@ -383,6 +383,57 @@ export const mediaRoutes: FastifyPluginAsync<MediaRoutesOptions> = async (app, o
       });
     }
 
+    // Verify binary magic bytes match the declared Content-Type (Priority 2)
+    const isJpeg =
+      dataBuffer.length >= 3 &&
+      dataBuffer[0] === 0xff &&
+      dataBuffer[1] === 0xd8 &&
+      dataBuffer[2] === 0xff;
+    const isPng =
+      dataBuffer.length >= 8 &&
+      dataBuffer[0] === 0x89 &&
+      dataBuffer[1] === 0x50 &&
+      dataBuffer[2] === 0x4e &&
+      dataBuffer[3] === 0x47 &&
+      dataBuffer[4] === 0x0d &&
+      dataBuffer[5] === 0x0a &&
+      dataBuffer[6] === 0x1a &&
+      dataBuffer[7] === 0x0a;
+    const isWebp =
+      dataBuffer.length >= 12 &&
+      dataBuffer[0] === 0x52 &&
+      dataBuffer[1] === 0x49 &&
+      dataBuffer[2] === 0x46 &&
+      dataBuffer[3] === 0x46 &&
+      dataBuffer[8] === 0x57 &&
+      dataBuffer[9] === 0x45 &&
+      dataBuffer[10] === 0x42 &&
+      dataBuffer[11] === 0x50;
+
+    if (headerContentType === 'image/jpeg' && !isJpeg) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Uploaded binary is corrupted or does not match declared image/jpeg format',
+      });
+    }
+
+    if (headerContentType === 'image/png' && !isPng) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Uploaded binary is corrupted or does not match declared image/png format',
+      });
+    }
+
+    if (headerContentType === 'image/webp' && !isWebp) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Uploaded binary is corrupted or does not match declared image/webp format',
+      });
+    }
+
     await storageDriver.putObject(fileKey, dataBuffer, headerContentType);
 
     return reply.status(200).send({
