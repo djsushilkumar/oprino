@@ -2,7 +2,7 @@
 
 **Target Audience:** Engineering & Product Team  
 **Cost Target:** **$0.00 / Month (100% Free Tier Services)**  
-**Governing Architecture:** [`docs/architecture/ENVIRONMENT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/ENVIRONMENT-STRATEGY.md)  
+**Governing Architecture:** [`docs/architecture/ENVIRONMENT-STRATEGY.md`](../architecture/ENVIRONMENT-STRATEGY.md)\
 **Date:** October 2026  
 
 ---
@@ -81,7 +81,7 @@ flowchart TD
 
 1. Log into [render.com](https://render.com) and link your GitHub account.
 2. Click **New +** -> **Blueprint**, and select your GitHub repository `djsushilkumar/oprino`.
-   - Render will automatically read [`render.yaml`](file:///workspace/oprino/render.yaml) from the repository root.
+   - Render will automatically read [`render.yaml`](../../render.yaml) from the repository root.
 3. Alternatively, click **New Web Service**:
    - Repository: `djsushilkumar/oprino`
    - Environment: **Docker**
