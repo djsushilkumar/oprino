@@ -61,6 +61,8 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
                   fileUrl: vals.fileUrl,
                   fileSizeBytes: vals.fileSizeBytes,
                   mimeType: vals.mimeType,
+                  signerName: vals.signerName,
+                  signerPhone: vals.signerPhone,
                   createdAt: new Date(),
                 },
               ],
