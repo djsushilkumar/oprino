@@ -6,11 +6,25 @@ All documentation is version-controlled and categorized by operational domain.
 
 ---
 
+## 0. प्रोजेक्ट ओनर गाइड्स (Owner Guides — सरल हिंदी)
+
+अगर आप प्रोजेक्ट के मालिक या गैर-तकनीकी स्टेकहोल्डर हैं, तो इन तीन सरल हिंदी गाइड्स से शुरुआत करें:
+* 📖 **[प्रोजेक्ट ओनर स्टार्ट गाइड](OWNER-START-HERE-HI.md)** — Oprino क्या है, यह क्या काम करता है, और इसे अपने कंप्यूटर पर कैसे चलाएं।
+* 📊 **[प्रोजेक्ट वर्तमान स्थिति रिपोर्ट](PROJECT-STATUS-HI.md)** — क्या 100% काम कर रहा है, क्या अधूरा है, और लॉन्च से पहले क्या जरूरी है।
+* ⚙️ **[सम्पूर्ण सिस्टम एवं कार्यप्रणाली गाइड](COMPLETE-SYSTEM-GUIDE-HI.md)** — पूरे सिस्टम की कार्यप्रणाली, सभी वर्कफ़्लो आरेख और सरल शब्दकोश।
+
+---
+
 ## 1. Primary Entry Points & Authoritative Specifications
 
 | Domain | Authoritative Document | Purpose & Description |
 |---|---|---|
-| **Current Status** | [`docs/audits/PROJECT-STATUS.md`](audits/PROJECT-STATUS.md) | Plain-language executive status: what is built, working, incomplete, and next. |
+| **System Overview** | [`docs/architecture/SYSTEM-OVERVIEW.md`](architecture/SYSTEM-OVERVIEW.md) | High-level system architecture, component tiering, and core invariants. |
+| **Repository Map** | [`docs/architecture/REPOSITORY-MAP.md`](architecture/REPOSITORY-MAP.md) | Exhaustive directory tree, module entry points, and monorepo boundaries. |
+| **Bug Register** | [`docs/audits/BUG-REGISTER.md`](audits/BUG-REGISTER.md) | Verified defects, severity rankings, root causes, and regression tests. |
+| **Feature Matrix** | [`docs/audits/FEATURE-VERIFICATION-MATRIX.md`](audits/FEATURE-VERIFICATION-MATRIX.md) | Source-level feature verification: Working, Blocked, Out of Scope. |
+| **Current Release Gates** | [`V1-COMMERCIAL-LAUNCH-CHECKLIST.md`](releases/V1-COMMERCIAL-LAUNCH-CHECKLIST.md) | Release checklist: outstanding storage, signing, physical GPS, and owner acceptance gates. |
+| **Release Candidate** | [`V1-RELEASE-CANDIDATE-REPORT.md`](releases/V1-RELEASE-CANDIDATE-REPORT.md) | Stabilized V1 candidate, recorded verification evidence, and rollout prerequisites. |
 | **Product Baseline** | [`docs/product/OPRINO-MASTER-PRD.md`](product/OPRINO-MASTER-PRD.md) | Controlling 30-section product specification, business rules, and non-goals. |
 | **V1 Scope Boundaries** | [`docs/product/V1-SCOPE.md`](product/V1-SCOPE.md) | Non-negotiable MUST, SHOULD, LATER, and OUT-OF-SCOPE classifications. |
 | **System Architecture** | [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](architecture/OPRINO-TECHNICAL-ARCHITECTURE.md) | Master C4 technical architecture document with Mermaid diagrams across all tiers. |
@@ -94,7 +108,7 @@ Archival milestone completion reports:
 
 ## 3. Contributing Guidelines for Documentation
 
-1. **Relative Markdown Links Only:** Never commit absolute local URI paths (such as `file:///workspace/oprino/` or Windows drive letters like `C:\` or `D:\`). Always use portable relative Markdown links (such as `../product/V1-SCOPE.md` or `./PROJECT-STATUS.md`).
+1. **Relative Markdown Links Only:** Never commit absolute local URI paths (such as `file:///...` or Windows drive letters like `C:\` or `D:\`). Always use portable relative Markdown links (such as `../product/V1-SCOPE.md` or `./PROJECT-STATUS.md`).
 2. **Preserve Invariant Principles:** Off-duty location tracking must NEVER occur; multi-tenant isolation must remain strictly enforced.
 3. **Do Not Silently Alter Historical ADRs:** Superseded architecture decisions must be marked with a clear supersession note linking to the newer ADR, rather than modifying historical text.
 4. **Evidence-Based Claims:** When declaring a feature or gate "Complete" or "Verified", link directly to test files, CI run IDs, or source code.
