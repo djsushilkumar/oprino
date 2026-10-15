@@ -73,6 +73,8 @@ jobs:
       - name: Test
         run: pnpm turbo test
         env:
+          NODE_ENV: test
+          APP_ENV: test
           DATABASE_URL: postgresql://oprino_admin:oprino_dev_password@localhost:5432/oprino_db
           REDIS_URL: redis://localhost:6379
           BETTER_AUTH_SECRET: oprino_dev_secret_must_be_at_least_32_characters_long_for_security
