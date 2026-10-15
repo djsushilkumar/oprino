@@ -58,6 +58,25 @@ android {
         }
     }
 
+    gradle.taskGraph.whenReady {
+        val isReleaseBuild = allTasks.any {
+            it.name.contains("assembleRelease", ignoreCase = true) ||
+            it.name.contains("bundleRelease", ignoreCase = true) ||
+            it.name.contains("packageRelease", ignoreCase = true)
+        }
+        if (isReleaseBuild) {
+            val keyStoreFilePath = keystoreProperties.getProperty("storeFile")
+                ?: System.getenv("OPRINO_KEYSTORE_PATH")
+            if (keyStoreFilePath == null || !file(keyStoreFilePath).exists()) {
+                throw GradleException(
+                    "❌ SECURITY GATE VIOLATION: Production release build requires legitimate release signing credentials. " +
+                    "Neither key.properties (storeFile) nor OPRINO_KEYSTORE_PATH was configured or the file does not exist. " +
+                    "Silent debug signing or producing unsigned production artifacts is strictly prohibited."
+                )
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true

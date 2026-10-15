@@ -48,6 +48,11 @@ if (fs.existsSync(dartClientPath)) {
     content.includes("if (baseUrl.trim().isEmpty)"),
     'api_client.dart lacks fail-closed validation against empty baseUrl.'
   );
+  assertCheck(
+    'Dart API Client normalizes baseUrl and strips redundant /v1',
+    content.includes("normalizeBaseUrl(baseUrl)") && content.includes("static String normalizeBaseUrl"),
+    'api_client.dart lacks normalizeBaseUrl helper to prevent /v1/v1/ route concatenation.'
+  );
 } else {
   assertCheck('Dart API Client exists', false, `File not found at ${dartClientPath}`);
 }
@@ -74,7 +79,7 @@ if (fs.existsSync(openApiPath)) {
   );
 }
 
-// 4. Check Mobile Release Workflow
+// 4. Check Mobile Release Workflow & Gradle Signing
 const mobileReleasePath = path.resolve(rootDir, '.github/workflows/mobile-release.yml');
 if (fs.existsSync(mobileReleasePath)) {
   const content = fs.readFileSync(mobileReleasePath, 'utf-8');
@@ -87,6 +92,16 @@ if (fs.existsSync(mobileReleasePath)) {
     'Mobile Release Workflow enforces production release keystore secrets',
     content.includes('OPRINO_RELEASE_KEYSTORE_BASE64') && !content.includes('androiddebugkey'),
     'mobile-release.yml generates debug keystore instead of requiring production signing secrets.'
+  );
+}
+
+const buildGradlePath = path.resolve(rootDir, 'apps/mobile/android/app/build.gradle.kts');
+if (fs.existsSync(buildGradlePath)) {
+  const content = fs.readFileSync(buildGradlePath, 'utf-8');
+  assertCheck(
+    'Android Gradle configuration enforces release signing credentials gate',
+    content.includes('Production release build requires legitimate release signing credentials'),
+    'build.gradle.kts lacks taskGraph fail-closed check for release signing credentials.'
   );
 }
 
@@ -103,6 +118,11 @@ if (fs.existsSync(appConfigPath)) {
     'AppConfig enforces release mode fail-closed gate',
     content.includes('kReleaseMode') && content.includes('Release mode requires explicit --dart-define=ENVIRONMENT=PRODUCTION'),
     'app_config.dart lacks release mode fail-closed guard.'
+  );
+  assertCheck(
+    'AppConfig normalizes API URL and strips trailing /v1',
+    content.includes('static String normalizeApiUrl') && content.includes("normalizeApiUrl(rawBaseUrl)"),
+    'app_config.dart lacks normalizeApiUrl to prevent double /v1/v1/ concatenation.'
   );
 }
 
@@ -124,6 +144,11 @@ if (fs.existsSync(webApiLibPath)) {
     'Web api.ts rejects insecure API URL in production',
     content.includes('Security gate violation: Insecure production API URL'),
     'api.ts does not guard against insecure API URLs in production.'
+  );
+  assertCheck(
+    'Web api.ts normalizes API base URL and builds URLs preventing /v1/v1/ duplication',
+    content.includes('export function normalizeApiBaseUrl') && content.includes('export function buildApiUrl'),
+    'api.ts does not provide normalizeApiBaseUrl and buildApiUrl helpers.'
   );
 }
 

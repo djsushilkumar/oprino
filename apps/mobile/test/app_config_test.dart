@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oprino_mobile/core/config/app_config.dart';
+import 'package:oprino_api/oprino_api.dart';
 
 void main() {
   group('AppConfig Endpoint Hardening & Fail-Fast Gates', () {
@@ -196,6 +197,38 @@ void main() {
             contains('Unsupported or unverified environment'),
           )),
         );
+      });
+
+      test('AppConfig.normalizeApiUrl strips trailing /v1 and trailing slashes', () {
+        expect(
+          AppConfig.normalizeApiUrl('https://oprino-api.onrender.com/v1'),
+          equals('https://oprino-api.onrender.com'),
+        );
+        expect(
+          AppConfig.normalizeApiUrl('https://oprino-api.onrender.com///'),
+          equals('https://oprino-api.onrender.com'),
+        );
+        expect(
+          AppConfig.normalizeApiUrl('https://oprino-api.onrender.com/v1///'),
+          equals('https://oprino-api.onrender.com'),
+        );
+      });
+
+      test('AppConfig.resolve strips /v1 in production to prevent /v1/v1/ duplication', () {
+        final config = AppConfig.resolve(
+          rawEnv: 'PRODUCTION',
+          customUrl: 'https://oprino-api.onrender.com/v1',
+        );
+        expect(config.apiBaseUrl, equals('https://oprino-api.onrender.com'));
+      });
+
+      test('OprinoApiClient normalizes baseUrl and strips /v1', () {
+        expect(
+          OprinoApiClient.normalizeBaseUrl('https://oprino-api.onrender.com/v1'),
+          equals('https://oprino-api.onrender.com'),
+        );
+        final client = OprinoApiClient(baseUrl: 'https://oprino-api.onrender.com/v1');
+        expect(client.dio.options.baseUrl, equals('https://oprino-api.onrender.com'));
       });
     });
   });

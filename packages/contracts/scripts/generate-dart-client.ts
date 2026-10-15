@@ -2231,12 +2231,23 @@ import 'model/sync_models.dart';
 class OprinoApiClient {
   final Dio dio;
 
+  static String normalizeBaseUrl(String url) {
+    var trimmed = url.trim();
+    while (trimmed.endsWith('/')) {
+      trimmed = trimmed.substring(0, trimmed.length - 1);
+    }
+    if (trimmed.endsWith('/v1')) {
+      trimmed = trimmed.substring(0, trimmed.length - 3);
+    }
+    return trimmed;
+  }
+
   OprinoApiClient({
     Dio? dio,
     required String baseUrl,
   }) : dio = dio ??
             Dio(BaseOptions(
-              baseUrl: baseUrl,
+              baseUrl: normalizeBaseUrl(baseUrl),
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 10),
               headers: {
