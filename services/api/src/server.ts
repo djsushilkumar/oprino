@@ -130,16 +130,20 @@ export function buildServer(options?: {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
-  const allowedOrigins = [
+  const allowedOrigins: (string | RegExp)[] = [
     env.API_PUBLIC_URL,
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001',
     'https://oprino.vercel.app',
     /\.vercel\.app$/,
     'oprino://app',
   ];
+  if (env.NODE_ENV !== 'production' && env.APP_ENV !== 'production') {
+    allowedOrigins.push(
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3001',
+    );
+  }
   if (env.CORS_ORIGINS) {
     const extraOrigins = env.CORS_ORIGINS.split(',')
       .map((o) => o.trim())

@@ -1,6 +1,7 @@
 enum EnvironmentType {
   localPilotDebug,
   cloudStagingDebug,
+  production,
 }
 
 class AppConfig {
@@ -18,13 +19,13 @@ class AppConfig {
 
   /// Factory constructor that strictly resolves and validates build configuration.
   /// 
-  /// Supports two explicitly separated configurations:
+  /// Supports explicitly separated configurations:
   /// 1. LOCAL_PILOT_DEBUG: http://localhost:3001 (or http://10.0.2.2:3001 for emulator)
   ///    Intended strictly for USB-connected Android testing via adb reverse.
   /// 2. CLOUD_STAGING_DEBUG: Verified HTTPS staging API only.
+  /// 3. PRODUCTION: Verified HTTPS production API only (https://oprino-api.onrender.com).
   ///
   /// Fails fast on missing, unsupported, or contradictory build configurations.
-  /// Never silently falls back to live production Render/Neon databases.
   factory AppConfig.fromEnvironment() {
     const rawEnv = String.fromEnvironment('ENVIRONMENT', defaultValue: 'LOCAL_PILOT_DEBUG');
     const customUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
@@ -79,11 +80,29 @@ class AppConfig {
       );
     }
 
-    // Fail-closed security gate: Reject unapproved, production, or unknown environments
+    if (normalizedEnv == 'PRODUCTION' || normalizedEnv == 'PROD') {
+      final baseUrl = customUrl.isNotEmpty ? customUrl : 'https://oprino-api.onrender.com';
+      final uri = Uri.tryParse(baseUrl);
+
+      if (uri == null || !uri.isScheme('https')) {
+        throw ArgumentError(
+          'Contradictory configuration: PRODUCTION requires a secure HTTPS endpoint, '
+          'but received "$baseUrl"',
+        );
+      }
+
+      return AppConfig(
+        environment: EnvironmentType.production,
+        environmentName: 'PRODUCTION',
+        apiBaseUrl: baseUrl,
+        isCleartextAllowed: false,
+      );
+    }
+
+    // Fail-closed security gate: Reject unapproved or unknown environments
     throw ArgumentError(
       'Unsupported or unverified environment: "$rawEnv". '
-      'Allowed pilot configurations are: LOCAL_PILOT_DEBUG, CLOUD_STAGING_DEBUG. '
-      'Direct production deployment is prohibited in pilot builds.',
+      'Allowed configurations are: LOCAL_PILOT_DEBUG, CLOUD_STAGING_DEBUG, PRODUCTION.',
     );
   }
 
@@ -105,6 +124,13 @@ class AppConfig {
     environment: EnvironmentType.cloudStagingDebug,
     environmentName: 'CLOUD_STAGING_DEBUG',
     apiBaseUrl: 'https://staging-api.oprino.com',
+    isCleartextAllowed: false,
+  );
+
+  static const AppConfig production = AppConfig(
+    environment: EnvironmentType.production,
+    environmentName: 'PRODUCTION',
+    apiBaseUrl: 'https://oprino-api.onrender.com',
     isCleartextAllowed: false,
   );
 }

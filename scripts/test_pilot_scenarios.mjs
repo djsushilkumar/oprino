@@ -41,7 +41,9 @@ async function request(reqPath, options = {}) {
         let data = raw;
         try {
           data = JSON.parse(raw);
-        } catch {}
+        } catch (_ignored) {
+          // Keep raw string payload
+        }
         resolve({ status: res.statusCode, headers: res.headers, body: data });
       });
     });

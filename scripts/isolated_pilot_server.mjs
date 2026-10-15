@@ -138,17 +138,17 @@ const server = http.createServer((req, res) => {
     return sendJson(res, 200, { success: true, message: 'Pilot test state reset' });
   }
 
-  // 2. Auth Sign-in
-  if (req.method === 'POST' && pathname === '/v1/auth/sign-in/email') {
+  // 2. Auth Sign-in & Sign-up
+  if (req.method === 'POST' && (pathname === '/v1/auth/sign-in/email' || pathname === '/v1/auth/signin' || pathname === '/v1/auth/signup')) {
     let raw = '';
     req.on('data', (c) => (raw += c));
     req.on('end', () => {
       try {
         const body = JSON.parse(raw);
         const email = (body.email || '').toLowerCase().trim();
-        const role = email.includes('manager') ? 'Manager' : 'Employee';
-        const userId = email.includes('manager') ? 'usr-manager-1' : 'usr-employee-1';
-        const name = email.includes('manager') ? 'Maria Santos (Manager)' : 'Alex Johnson (Field Tech)';
+        const role = email.includes('admin') || email.includes('owner') ? 'Admin' : email.includes('manager') ? 'Manager' : 'Employee';
+        const userId = role === 'Admin' ? 'usr-admin-1' : role === 'Manager' ? 'usr-manager-1' : 'usr-employee-1';
+        const name = body.name || (role === 'Admin' ? 'Sarah Admin (Company Owner)' : role === 'Manager' ? 'Maria Santos (Manager)' : 'Alex Johnson (Field Tech)');
 
         const token = `pilot_${role.toLowerCase()}_token_${Date.now()}`;
         return sendJson(res, 200, {
@@ -159,6 +159,7 @@ const server = http.createServer((req, res) => {
             name,
             emailVerified: true,
           },
+          activeWorkspaceId: 'ws-pilot-1',
         });
       } catch {
         return sendJson(res, 400, { error: 'Invalid JSON payload' });
@@ -169,14 +170,17 @@ const server = http.createServer((req, res) => {
 
   // 3. Me Context (ADR-006 & RBAC)
   if (req.method === 'GET' && pathname === '/v1/me') {
-    const roleName = isManager ? 'Manager' : 'Employee';
-    const userId = isManager ? 'usr-manager-1' : 'usr-employee-1';
-    const email = isManager ? 'manager@acme.com' : 'field.lead@acme.com';
-    const name = isManager ? 'Maria Santos (Manager)' : 'Alex Johnson (Field Tech)';
+    const isOwner = authHeader.includes('admin') || authHeader.includes('owner');
+    const roleName = isOwner ? 'Admin' : isManager ? 'Manager' : 'Employee';
+    const userId = isOwner ? 'usr-admin-1' : isManager ? 'usr-manager-1' : 'usr-employee-1';
+    const email = isOwner ? 'admin@acme.com' : isManager ? 'manager@acme.com' : 'field.lead@acme.com';
+    const name = isOwner ? 'Sarah Admin (Company Owner)' : isManager ? 'Maria Santos (Manager)' : 'Alex Johnson (Field Tech)';
 
-    const permissions = isManager
-      ? ['workspace.read', 'members.read', 'attendance.read', 'attendance.write', 'tasks.read', 'tasks.write', 'tasks.verify', 'media.read', 'devices.read', 'devices.revoke']
-      : ['workspace.read', 'attendance.read', 'attendance.write', 'tasks.read', 'tasks.write', 'visits.read', 'visits.write', 'media.upload', 'media.read'];
+    const permissions = isOwner
+      ? ['workspace.read', 'workspace.manage', 'members.read', 'members.manage', 'attendance.read', 'attendance.write', 'attendance.manage', 'attendance.self_punch', 'tasks.read', 'tasks.write', 'tasks.verify', 'tasks.manage', 'visits.read', 'visits.write', 'visits.manage', 'media.upload', 'media.read', 'devices.read', 'devices.revoke', 'reports.read', 'location.read', 'location.record']
+      : isManager
+        ? ['workspace.read', 'members.read', 'attendance.read', 'attendance.write', 'attendance.manage', 'attendance.self_punch', 'tasks.read', 'tasks.write', 'tasks.verify', 'media.read', 'devices.read', 'devices.revoke', 'reports.read', 'location.read', 'location.record', 'visits.read', 'visits.write']
+        : ['workspace.read', 'attendance.read', 'attendance.write', 'attendance.self_punch', 'tasks.read', 'tasks.write', 'visits.read', 'visits.write', 'media.upload', 'media.read', 'location.record'];
 
     return sendJson(res, 200, {
       user: { id: userId, email, name, emailVerified: true },
@@ -200,6 +204,8 @@ const server = http.createServer((req, res) => {
 
   // 4. Workspaces List
   if (req.method === 'GET' && pathname === '/v1/workspaces') {
+    const isOwner = authHeader.includes('admin') || authHeader.includes('owner');
+    const roleName = isOwner ? 'Admin' : isManager ? 'Manager' : 'Employee';
     return sendJson(res, 200, {
       workspaces: [
         {
@@ -208,9 +214,165 @@ const server = http.createServer((req, res) => {
           slug: 'apex-field-services',
           status: 'ACTIVE',
           membershipStatus: 'active',
-          roleName: isManager ? 'Manager' : 'Employee',
+          roleName,
         },
       ],
+    });
+  }
+
+  // 4b. Workspace Members List
+  if (req.method === 'GET' && pathname === '/v1/workspaces/members') {
+    return sendJson(res, 200, {
+      members: [
+        { id: 'usr-admin-1', name: 'Sarah Admin (Owner)', email: 'admin@acme.com', roleName: 'Admin', roleId: 'role-admin', status: 'ACTIVE', membershipId: 'mem-admin-1' },
+        { id: 'usr-manager-1', name: 'Maria Santos (Manager)', email: 'manager@acme.com', roleName: 'Manager', roleId: 'role-manager', status: 'ACTIVE', membershipId: 'mem-manager-1' },
+        { id: 'usr-employee-1', name: 'Alex Johnson (Field Tech)', email: 'alex@acme.com', roleName: 'Employee', roleId: 'role-employee', status: 'ACTIVE', membershipId: 'mem-employee-1' },
+      ],
+    });
+  }
+
+  // 4c. Workspace Invitations List
+  if (req.method === 'GET' && pathname === '/v1/workspaces/invitations') {
+    return sendJson(res, 200, {
+      invitations: [
+        {
+          id: 'inv-pilot-1',
+          email: 'vikram.tech@acme.com',
+          name: 'Vikram Singh',
+          roleId: 'role-employee',
+          roleName: 'Employee',
+          status: 'PENDING',
+          expiresAt: new Date(Date.now() + 86400000 * 5).toISOString(),
+          createdAt: new Date().toISOString(),
+          activationUrl: 'http://localhost:3000/auth/activate?token=act_token_vikram_singh_420',
+        },
+      ],
+    });
+  }
+
+  // 4d. Workspace Settings
+  if (pathname === '/v1/workspaces/settings') {
+    return sendJson(res, 200, {
+      settings: {
+        workspaceId: 'ws-pilot-1',
+        locationRetentionDays: 30,
+        attendancePolicy: 'SIMPLE',
+      },
+    });
+  }
+
+  // 4e. Telemetry Live Workers
+  if (req.method === 'GET' && pathname === '/v1/telemetry/live') {
+    return sendJson(res, 200, {
+      workers: [
+        {
+          userId: 'usr-employee-1',
+          userName: 'Alex Johnson (Field Tech)',
+          status: 'ON_DUTY',
+          latitude: 28.6139,
+          longitude: 77.2090,
+          accuracy: 5.2,
+          speed: 1.5,
+          batteryLevel: 0.94,
+          recordedAt: new Date().toISOString(),
+        },
+      ],
+    });
+  }
+
+  // 4f. Team Attendance Overview
+  if (req.method === 'GET' && (pathname === '/v1/attendance/history' || pathname === '/v1/attendance/team')) {
+    return sendJson(res, 200, {
+      sessions: [
+        {
+          id: 'sess-today-1',
+          userId: 'usr-employee-1',
+          userName: 'Alex Johnson (Field Tech)',
+          status: 'ON_DUTY',
+          punchInTime: new Date(Date.now() - 3600000 * 2).toISOString(),
+          punchOutTime: null,
+          punchInLatitude: 28.6139,
+          punchInLongitude: 77.2090,
+          punchInAccuracy: 4.8,
+          selfieMediaKey: 'ws-pilot-1/selfies/selfie-alex-1.jpg',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    });
+  }
+
+  // 4g. Reports
+  if (pathname === '/v1/reports/attendance') {
+    return sendJson(res, 200, {
+      startDate: '2026-10-01',
+      endDate: '2026-10-31',
+      totalEmployees: 2,
+      totalCompanyHours: 84.5,
+      items: [
+        {
+          userId: 'usr-employee-1',
+          userName: 'Alex Technician',
+          userEmail: 'alex@acme.com',
+          presentDays: 10,
+          totalMinutes: 2520,
+          totalHours: 42.0,
+          lateDays: 0,
+          totalLateMinutes: 0,
+        },
+        {
+          userId: 'usr-mgr-1',
+          userName: 'Marcus Dispatcher',
+          userEmail: 'manager@acme.com',
+          presentDays: 10,
+          totalMinutes: 2550,
+          totalHours: 42.5,
+          lateDays: 1,
+          totalLateMinutes: 12,
+        },
+      ],
+    });
+  }
+
+  if (pathname === '/v1/reports/tasks') {
+    return sendJson(res, 200, {
+      totalTasks: 15,
+      completedTasks: 13,
+      verifiedTasks: 12,
+      rejectedTasks: 1,
+      overdueTasks: 1,
+      onTimeRate: 93.3,
+      statusDistribution: {
+        ASSIGNED: 1,
+        IN_PROGRESS: 1,
+        COMPLETED: 1,
+        VERIFIED: 12,
+      },
+    });
+  }
+
+  if (pathname === '/v1/reports/visits') {
+    return sendJson(res, 200, {
+      totalVisits: 10,
+      completedVisits: 9,
+      plannedVisits: 1,
+      totalDurationMinutes: 480,
+      averageDurationMinutes: 48.0,
+    });
+  }
+
+  if (pathname.startsWith('/v1/reports/')) {
+    return sendJson(res, 200, {
+      summary: {
+        totalShifts: 142,
+        onTimePunches: 138,
+        totalHours: 1120.5,
+        totalTasks: 85,
+        completedTasks: 81,
+        verifiedTasks: 79,
+        totalVisits: 64,
+        completedVisits: 62,
+      },
+      records: [],
     });
   }
 
@@ -282,7 +444,7 @@ const server = http.createServer((req, res) => {
   // 9. Binary Media Storage Upload (PUT /v1/media/storage/upload/*)
   if (req.method === 'PUT' && pathname.startsWith('/v1/media/storage/upload/')) {
     const relativeKey = pathname.replace('/v1/media/storage/upload/', '');
-    const targetFilePath = path.join(STORAGE_DIR, relativeKey.replace(/[\/\\]/g, '_'));
+    const targetFilePath = path.join(STORAGE_DIR, relativeKey.replace(/[/\\]/g, '_'));
     const writeStream = fs.createWriteStream(targetFilePath);
     req.pipe(writeStream);
     writeStream.on('finish', () => {
@@ -299,7 +461,7 @@ const server = http.createServer((req, res) => {
   // 10. Binary Media Download (GET /v1/media/storage/download/*)
   if (req.method === 'GET' && pathname.startsWith('/v1/media/storage/download/')) {
     const relativeKey = pathname.replace('/v1/media/storage/download/', '');
-    const targetFilePath = path.join(STORAGE_DIR, relativeKey.replace(/[\/\\]/g, '_'));
+    const targetFilePath = path.join(STORAGE_DIR, relativeKey.replace(/[/\\]/g, '_'));
     if (fs.existsSync(targetFilePath)) {
       res.writeHead(200, { 'Content-Type': 'image/jpeg' });
       return fs.createReadStream(targetFilePath).pipe(res);

@@ -61,7 +61,6 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
           statusCode: 500,
           error: 'Internal Server Error',
           message: err.message || 'Failed to ingest locations',
-          stack: err.stack,
         });
       }
     },
@@ -92,7 +91,6 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
           statusCode: 500,
           error: 'Internal Server Error',
           message: err.message || 'Failed to get live workers',
-          stack: err.stack,
         });
       }
     },
@@ -137,7 +135,6 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
           statusCode: 500,
           error: 'Internal Server Error',
           message: err.message || 'Failed to get location history',
-          stack: err.stack,
         });
       }
     },

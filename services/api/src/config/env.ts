@@ -70,6 +70,14 @@ export function validateEnv(customEnv?: Record<string, unknown>): Env {
         `Insecure ${envName} Authentication Secret: Default development BETTER_AUTH_SECRET is strictly forbidden in ${envName.toLowerCase()}.`,
       );
     }
+
+    // Security Invariant: Reject default development database credentials in production-like environments
+    if (result.data.DATABASE_URL.includes('oprino_dev_password@localhost:5432')) {
+      const envName = result.data.APP_ENV === 'staging' ? 'Staging' : 'Production';
+      throw new Error(
+        `Insecure ${envName} Database Configuration: Default development DATABASE_URL is strictly forbidden in ${envName.toLowerCase()}.`,
+      );
+    }
   }
 
   return result.data;

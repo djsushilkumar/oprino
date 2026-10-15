@@ -31,5 +31,12 @@ void main() {
       expect(config.apiBaseUrl, startsWith('https://'));
       expect(config.isCleartextAllowed, isFalse);
     });
+
+    test('5. Named constant production requires HTTPS and prohibits cleartext traffic', () {
+      const config = AppConfig.production;
+      expect(config.environment, EnvironmentType.production);
+      expect(config.apiBaseUrl, startsWith('https://'));
+      expect(config.isCleartextAllowed, isFalse);
+    });
   });
 }
