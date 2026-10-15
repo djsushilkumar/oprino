@@ -12,9 +12,9 @@
 
 | Gate # | Gate Title | Verification Standard | Current Status | Required Sign-Off Role | Evidence Document |
 | :---: | :--- | :--- | :---: | :---: | :--- |
-| **Gate 1** | Architecture & Requirement Coverage | 100% of V1 MUST requirements mapped and accounted for | **VERIFIED** | Technical Product Owner | [`V1-FEATURE-COVERAGE.md`](file:///workspace/oprino/docs/audits/V1-FEATURE-COVERAGE.md) |
-| **Gate 2** | Security & Data Integrity | Zero unresolved P0/P1 security vulnerabilities | **VERIFIED** | Principal Security Auditor | [`SECURITY-FINDINGS.md`](file:///workspace/oprino/docs/audits/SECURITY-FINDINGS.md) |
-| **Gate 3** | V1 Functional Workflows | Core closed loop (Dispatch -> Punch -> Task -> Proof -> Verify -> Punch Out) | **VERIFIED** | QA Automation Lead | [`TEST-EVIDENCE.md`](file:///workspace/oprino/docs/audits/TEST-EVIDENCE.md) |
+| **Gate 1** | Architecture & Requirement Coverage | 100% of V1 MUST requirements mapped and accounted for | **VERIFIED** | Technical Product Owner | [`V1-FEATURE-COVERAGE.md`](./V1-FEATURE-COVERAGE.md) |
+| **Gate 2** | Security & Data Integrity | Zero unresolved P0/P1 security vulnerabilities | **VERIFIED** | Principal Security Auditor | [`SECURITY-FINDINGS.md`](./SECURITY-FINDINGS.md) |
+| **Gate 3** | V1 Functional Workflows | Core closed loop (Dispatch -> Punch -> Task -> Proof -> Verify -> Punch Out) | **VERIFIED** | QA Automation Lead | [`TEST-EVIDENCE.md`](./TEST-EVIDENCE.md) |
 | **Gate 4** | Multi-Tenant Isolation | 5-stage tenant verification & PostgreSQL RLS default-deny | **VERIFIED** | Principal Architect | Negative RLS Test Suite (12/12 pass) |
 | **Gate 5** | Offline Sync & Duty Privacy | Inviolable duty boundary & Drift SQLite offline outbox | **VERIFIED** | Senior Flutter Engineer | `LocationService` & `SyncService` suites |
 | **Gate 6** | Web & Mobile UI/UX Quality | Brand token compliance, responsive design, keyboard/touch | **VERIFIED** | UI/UX Lead | Next.js build (17 routes), 0 lint errors |

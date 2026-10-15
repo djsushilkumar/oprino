@@ -77,16 +77,16 @@ The repository currently contains the authoritative **Oprino Brand Kit (v1.3)** 
 
 | Category | File / Path | Purpose & Status |
 |---|---|---|
-| **Root Index** | [`/workspace/oprino/README.md`](file:///workspace/oprino/README.md) | Central entry point linking all brand assets and documentation. |
-| **Guidelines** | [`Oprino-Brand-Guidelines.pdf`](file:///workspace/oprino/Oprino-Brand-Kit/04-Guidelines/Oprino-Brand-Guidelines.pdf) | Formal 17-page specification of identity, spacing, colors, and typography. |
-| **Guidelines (MD)** | [`Oprino-Brand-Guidelines.md`](file:///workspace/oprino/Oprino-Brand-Kit/04-Guidelines/Oprino-Brand-Guidelines.md) | Version-controlled markdown source of brand specifications. |
-| **Brand Board** | [`Oprino-Brand-Board.png`](file:///workspace/oprino/Oprino-Brand-Kit/04-Guidelines/Oprino-Brand-Board.png) | Unified visual overview of colors, contrast, typography, and logos. |
-| **Tokens (CSS)** | [`Oprino-tokens.css`](file:///workspace/oprino/Oprino-Brand-Kit/05-Design-Tokens/Oprino-tokens.css) | Core CSS variables: palette, spacing, radii, typography clamps. |
-| **Tokens (JSON)** | [`Oprino-tokens.json`](file:///workspace/oprino/Oprino-Brand-Kit/05-Design-Tokens/Oprino-tokens.json) | Structured token system for ingestion into web styling, mobile themes, etc. |
-| **Vector Master** | [`Oprino-icon-vector-master.svg`](file:///workspace/oprino/Oprino-Brand-Kit/07-Source/Oprino-icon-vector-master.svg) | Canonical geometric vector definition of the location-pin/check symbol. |
-| **Favicon Suite** | [`02-Digital/Favicons/`](file:///workspace/oprino/Oprino-Brand-Kit/02-Digital/Favicons/) | Ready-to-serve modern browser favicons and webmanifest. |
-| **Fonts** | [`06-Fonts/`](file:///workspace/oprino/Oprino-Brand-Kit/06-Fonts/) | TrueType and Variable font binaries under SIL Open Font License. |
-| **Checksums** | [`CHECKSUMS.json`](file:///workspace/oprino/Oprino-Brand-Kit/CHECKSUMS.json) | SHA-256 verification table (all 123 files verified 100% intact). |
+| **Root Index** | [`/workspace/oprino/README.md`](../../README.md) | Central entry point linking all brand assets and documentation. |
+| **Guidelines** | [`Oprino-Brand-Guidelines.pdf`](../../Oprino-Brand-Kit/04-Guidelines/Oprino-Brand-Guidelines.pdf) | Formal 17-page specification of identity, spacing, colors, and typography. |
+| **Guidelines (MD)** | [`Oprino-Brand-Guidelines.md`](../../Oprino-Brand-Kit/04-Guidelines/Oprino-Brand-Guidelines.md) | Version-controlled markdown source of brand specifications. |
+| **Brand Board** | [`Oprino-Brand-Board.png`](../../Oprino-Brand-Kit/04-Guidelines/Oprino-Brand-Board.png) | Unified visual overview of colors, contrast, typography, and logos. |
+| **Tokens (CSS)** | [`Oprino-tokens.css`](../../Oprino-Brand-Kit/05-Design-Tokens/Oprino-tokens.css) | Core CSS variables: palette, spacing, radii, typography clamps. |
+| **Tokens (JSON)** | [`Oprino-tokens.json`](../../Oprino-Brand-Kit/05-Design-Tokens/Oprino-tokens.json) | Structured token system for ingestion into web styling, mobile themes, etc. |
+| **Vector Master** | [`Oprino-icon-vector-master.svg`](../../Oprino-Brand-Kit/07-Source/Oprino-icon-vector-master.svg) | Canonical geometric vector definition of the location-pin/check symbol. |
+| **Favicon Suite** | [`02-Digital/Favicons/`](../../Oprino-Brand-Kit/02-Digital/Favicons) | Ready-to-serve modern browser favicons and webmanifest. |
+| **Fonts** | [`06-Fonts/`](../../Oprino-Brand-Kit/06-Fonts) | TrueType and Variable font binaries under SIL Open Font License. |
+| **Checksums** | [`CHECKSUMS.json`](../../Oprino-Brand-Kit/CHECKSUMS.json) | SHA-256 verification table (all 123 files verified 100% intact). |
 
 ---
 

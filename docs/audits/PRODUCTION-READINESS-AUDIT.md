@@ -5,8 +5,8 @@
 **Date:** October 12, 2026  
 **Auditor Roles:** Principal Software Architect, Senior Full-Stack Engineer, Flutter Engineer, Application Security Engineer, Database Engineer, QA Automation Lead  
 **Repository:** [https://github.com/djsushilkumar/oprino](https://github.com/djsushilkumar/oprino)  
-**Controlling PRD:** [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)  
-**Controlling Scope:** [`docs/product/V1-SCOPE.md`](file:///workspace/oprino/docs/product/V1-SCOPE.md)  
+**Controlling PRD:** [`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md)\
+**Controlling Scope:** [`docs/product/V1-SCOPE.md`](../product/V1-SCOPE.md)\
 **Active Release Branch:** `feat/v1-blockers-remediation`  
 **Base Commit SHA:** `8fc880cfc479ed46256d36048e869afa54960b75`  
 **Target Release:** Oprino V1 Commercial Production Release  
@@ -42,8 +42,8 @@ All 6 release blockers identified during initial audit have been resolved at sou
 
 | Release Gate | Gate Description | Target Verification | Audit Status | Evidence Reference |
 | :--- | :--- | :--- | :---: | :--- |
-| **Gate 1** | Architecture & Requirement Coverage | All V1 MUST requirements mapped and accounted for | **VERIFIED (100%)** | [`docs/audits/V1-FEATURE-COVERAGE.md`](file:///workspace/oprino/docs/audits/V1-FEATURE-COVERAGE.md) |
-| **Gate 2** | Security & Data-Integrity Defects | Zero unresolved P0/P1 security vulnerabilities | **VERIFIED (0 OPEN)** | [`docs/audits/SECURITY-FINDINGS.md`](file:///workspace/oprino/docs/audits/SECURITY-FINDINGS.md) |
+| **Gate 1** | Architecture & Requirement Coverage | All V1 MUST requirements mapped and accounted for | **VERIFIED (100%)** | [`docs/audits/V1-FEATURE-COVERAGE.md`](./V1-FEATURE-COVERAGE.md) |
+| **Gate 2** | Security & Data-Integrity Defects | Zero unresolved P0/P1 security vulnerabilities | **VERIFIED (0 OPEN)** | [`docs/audits/SECURITY-FINDINGS.md`](./SECURITY-FINDINGS.md) |
 | **Gate 3** | Required V1 Functional Workflows | Core loop (Dispatch -> Punch -> Task -> Proof -> Verify -> Punch Out) | **VERIFIED** | API Integration Suite (122/122 pass) |
 | **Gate 4** | Multi-Tenant Isolation | 5-stage tenant verification & PostgreSQL RLS default-deny | **VERIFIED** | Negative RLS Isolation Tests pass (0 row bleed) |
 | **Gate 5** | Offline Sync & Duty Privacy | Inviolable duty boundary & Drift SQLite offline outbox | **VERIFIED** | `LocationService` & `SyncService` suites |

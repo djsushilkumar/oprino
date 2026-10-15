@@ -27,6 +27,8 @@ main (8db713b)
                           └── feat/v1-android-pilot-readiness (PR #5: 91d3c0a)
                                 │
                                 └── feat/v1-android-pilot-kit (PR #6: 805c789)
+                                      │
+                                      └── release/v1-stabilization (PR #7: d35b8f3 + local fixes)
 ```
 
 ---
@@ -174,6 +176,20 @@ main (8db713b)
 - **CI Status:** PASSED (All jobs including APK build succeed).
 - **Database Migrations:** None.
 - **Classification:** Category B + C (Deployment Readiness & Security Gates).
+
+---
+
+### Branch 9: `release/v1-stabilization` (Draft PR #7)
+- **Head SHA:** `d35b8f3f6a2d329f71d5b30907c2c7f99e636f8f` (+ local stabilization fixes)
+- **Base / Merge-Base:** `main` (`8db713b38a2acf4f4baa12d137b31e47f698c131`)
+- **Commits Ahead of Base:** Consolidated release branch containing all 21 commits from PRs #1 through #6 plus stabilization commits (`7745139`, `77d874c`, `6765d0b`, `c30a340`, `48aea89`, `72155da`, `d35b8f3`, and Windows build fix).
+- **PR:** #7 (Target: `main`, Draft status preserved)
+- **Files Modified:** 85 files (+5,480 / -680 lines across monorepo).
+- **Purpose:** Consolidated release candidate branch. Hardens production security, enforces worker RLS isolation, sanitizes API 500 error responses, eliminates synthetic mobile photo stubs, fixes Windows cross-drive Gradle build issue, and integrates documentation audit.
+- **Test Coverage:** 182 API tests passing, 60 Flutter unit & widget tests passing, 11 pilot scenarios passing, 5 security gates passing, full Next.js 17-route static generation passing, and Android assembleDebug passing.
+- **CI Status:** PASSED.
+- **Database Migrations:** Includes additive migration `0005_v1_blockers_remediation.sql`.
+- **Classification:** Category A + B + C (Unified V1 Stabilization Release Candidate).
 
 ---
 

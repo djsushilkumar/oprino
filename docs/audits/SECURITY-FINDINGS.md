@@ -4,9 +4,9 @@
 **Version:** 2.0 (Post-Remediation Hardened)  
 **Date:** October 12, 2026  
 **Auditor Roles:** Principal Security Architect & Lead Security Auditor  
-**Threat Model Authority:** [`docs/architecture/THREAT-MODEL.md`](file:///workspace/oprino/docs/architecture/THREAT-MODEL.md)  
-**Security Architecture:** [`docs/architecture/SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md)  
-**Privacy Architecture:** [`docs/architecture/PRIVACY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/PRIVACY-ARCHITECTURE.md)  
+**Threat Model Authority:** [`docs/architecture/THREAT-MODEL.md`](../architecture/THREAT-MODEL.md)\
+**Security Architecture:** [`docs/architecture/SECURITY-ARCHITECTURE.md`](../architecture/SECURITY-ARCHITECTURE.md)\
+**Privacy Architecture:** [`docs/architecture/PRIVACY-ARCHITECTURE.md`](../architecture/PRIVACY-ARCHITECTURE.md)\
 
 ---
 
