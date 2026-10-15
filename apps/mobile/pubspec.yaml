@@ -32,6 +32,9 @@ dependencies:
   # Real Device Hardware Location & Foreground Service
   geolocator: ^13.0.2
 
+  # Real Device Hardware Camera Capture
+  image_picker: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

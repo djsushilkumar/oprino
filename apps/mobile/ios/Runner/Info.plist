@@ -30,6 +30,10 @@
 	<string>Oprino requires location access during authorized duty hours to verify field operations and attendance.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Oprino records GPS coordinates only while clocked in on active duty to support field route tracking.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Oprino requires camera access to capture employee attendance verification selfies and worksite photo proofs.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Oprino requires access to save and select task verification photos.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

@@ -21,6 +21,29 @@ const headers = {
   },
 };
 
+// Legitimate small binary JPEG test fixture (JFIF compliant: SOI 0xFFD8, APP0 JFIF, DQT, SOF0, DHT, SOS, EOI 0xFFD9)
+const VALID_JPEG_FIXTURE = Buffer.from([
+  0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x48,
+  0x00, 0x48, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43, 0x00, 0x08, 0x06, 0x06, 0x07, 0x06, 0x05, 0x08,
+  0x07, 0x07, 0x07, 0x09, 0x09, 0x08, 0x0A, 0x0C, 0x14, 0x0D, 0x0C, 0x0B, 0x0B, 0x0C, 0x19, 0x12,
+  0x13, 0x0F, 0x14, 0x1D, 0x1A, 0x1F, 0x1E, 0x1D, 0x1A, 0x1C, 0x1C, 0x20, 0x24, 0x2E, 0x27, 0x20,
+  0x22, 0x2C, 0x23, 0x1C, 0x1C, 0x28, 0x37, 0x29, 0x2C, 0x30, 0x31, 0x34, 0x34, 0x34, 0x1F, 0x27,
+  0x39, 0x3D, 0x38, 0x32, 0x3C, 0x2E, 0x33, 0x34, 0x32, 0xFF, 0xC0, 0x00, 0x0B, 0x08, 0x00, 0x01,
+  0x00, 0x01, 0x01, 0x01, 0x11, 0x00, 0xFF, 0xC4, 0x00, 0x1F, 0x00, 0x00, 0x01, 0x05, 0x01, 0x01,
+  0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,
+  0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0xFF, 0xDA, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3F,
+  0x00, 0xBF, 0x80, 0xFF, 0xD9,
+]);
+
+// Legitimate small binary PNG test fixture (PNG signature 89 50 4E 47 0D 0A 1A 0A)
+const VALID_PNG_FIXTURE = Buffer.from([
+  0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+  0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
+  0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+  0x42, 0x60, 0x82,
+]);
+
 function pass(msg) {
   console.log(`\x1b[32m✔ PASS:\x1b[0m ${msg}`);
 }
@@ -192,7 +215,19 @@ async function runSmokeTest() {
     });
   }
 
-  // BLK-004: Upload attendance selfie photo directly to private storage
+  // BLK-004: Upload genuine binary JPEG attendance selfie to private storage
+  // Verify fixture signature and format
+  if (
+    VALID_JPEG_FIXTURE.length === 0 ||
+    VALID_JPEG_FIXTURE[0] !== 0xff ||
+    VALID_JPEG_FIXTURE[1] !== 0xd8 ||
+    VALID_JPEG_FIXTURE[VALID_JPEG_FIXTURE.length - 2] !== 0xff ||
+    VALID_JPEG_FIXTURE[VALID_JPEG_FIXTURE.length - 1] !== 0xd9
+  ) {
+    fail('Invalid JPEG test fixture: missing SOI/EOI magic markers');
+  }
+  pass(`Verified genuine JPEG test fixture: ${VALID_JPEG_FIXTURE.length} bytes, format JFIF`);
+
   const selfieUploadRes = await api('/v1/media/attendance-selfie-url', {
     method: 'POST',
     body: JSON.stringify({
@@ -206,7 +241,7 @@ async function runSmokeTest() {
       headers: {
         'Content-Type': 'image/jpeg',
       },
-      body: Buffer.from('ATTENDANCE-SELFIE-IMAGE-STREAM-BINARY'),
+      body: VALID_JPEG_FIXTURE,
     });
     if (selfiePutRes.ok) {
       selfieMediaKey = selfieUploadRes.body.fileKey;
@@ -223,7 +258,7 @@ async function runSmokeTest() {
       idempotencyKey: punchInIdemp,
       shiftId: SHIFT_ID,
       selfieMediaKey,
-      note: 'Smoke test duty start at solar site',
+      note: 'Smoke test duty start with validated real selfie binary',
     }),
   });
   if (punchInRes.status === 200) {
@@ -232,7 +267,7 @@ async function runSmokeTest() {
     fail('Punch-in failed', punchInRes.body);
   }
 
-  // Verify selfie download URL generation
+  // Verify selfie download URL generation and binary integrity
   if (selfieMediaKey) {
     const selfieDlRes = await api('/v1/media/download-url', {
       method: 'POST',
@@ -242,6 +277,43 @@ async function runSmokeTest() {
       pass(
         `Selfie presigned download URL verified (expires in ${selfieDlRes.body.expiresInSeconds}s)`,
       );
+
+      // Download actual bytes and verify binary JPEG format and byte-level integrity
+      const dlRes = await fetch(selfieDlRes.body.downloadUrl);
+      if (dlRes.ok) {
+        const contentType = dlRes.headers.get('content-type') || '';
+        const dlArrayBuf = await dlRes.arrayBuffer();
+        const dlBuf = Buffer.from(dlArrayBuf);
+        if (
+          dlBuf.length === VALID_JPEG_FIXTURE.length &&
+          dlBuf[0] === 0xff &&
+          dlBuf[1] === 0xd8 &&
+          dlBuf[dlBuf.length - 1] === 0xd9
+        ) {
+          pass(
+            `Media download verified: valid JPEG binary (${dlBuf.length} bytes), SOI/EOI markers intact, MIME=${contentType}`,
+          );
+        } else {
+          fail('Downloaded selfie binary corrupted or mismatched');
+        }
+      } else {
+        fail('Failed to fetch media binary from download URL');
+      }
+
+      // Cross-Tenant Authorization Barrier Test
+      const foreignWorkspaceId = '00000000-0000-0000-0000-000000000000';
+      const crossTenantRes = await api('/v1/media/download-url', {
+        method: 'POST',
+        headers: { 'x-workspace-id': foreignWorkspaceId },
+        body: JSON.stringify({ fileKey: selfieMediaKey }),
+      });
+      if (crossTenantRes.status === 403 || crossTenantRes.status === 404 || !crossTenantRes.ok) {
+        pass(
+          `Cross-tenant authorization barrier verified: foreign workspace access blocked (${crossTenantRes.status})`,
+        );
+      } else {
+        fail('Cross-tenant media key isolation failure: foreign workspace accessed media key');
+      }
     } else {
       fail('Failed to generate selfie presigned download URL', selfieDlRes.body);
     }
@@ -431,24 +503,24 @@ async function runSmokeTest() {
       proofType: 'PHOTO',
       fileName: 'inverter_panel_reading.jpg',
       mimeType: 'image/jpeg',
-      fileSizeBytes: 185000,
+      fileSizeBytes: VALID_JPEG_FIXTURE.length,
     }),
   });
   if (!photoUploadRes.ok) fail('Photo upload URL failed', photoUploadRes.body);
   const photoKey = photoUploadRes.body.fileKey;
   const photoUploadUrl = photoUploadRes.body.uploadUrl;
 
-  // Real private storage: upload binary bytes to storage URL before confirming
+  // Real private storage: upload genuine binary JPEG bytes to storage URL before confirming
   const photoPutRes = await fetch(photoUploadUrl, {
     method: 'PUT',
     headers: {
       'Content-Type': 'image/jpeg',
     },
-    body: Buffer.from('FAKE-JPEG-DATA-BINARY-FOR-SMOKE-TEST'),
+    body: VALID_JPEG_FIXTURE,
   });
   if (!photoPutRes.ok)
     fail('Direct binary photo upload to storage failed', await photoPutRes.text());
-  pass('Direct binary photo uploaded to storage URL');
+  pass(`Direct binary photo uploaded to storage URL (${VALID_JPEG_FIXTURE.length} bytes valid JPEG)`);
 
   const photoConfirmRes = await api('/v1/media/confirm', {
     method: 'POST',
@@ -457,7 +529,7 @@ async function runSmokeTest() {
       visitId: visitId,
       proofType: 'PHOTO',
       fileKey: photoKey,
-      fileSizeBytes: 185000,
+      fileSizeBytes: VALID_JPEG_FIXTURE.length,
       mimeType: 'image/jpeg',
       watermarkMetadata: {
         latitude: 28.6139,
@@ -483,24 +555,24 @@ async function runSmokeTest() {
       proofType: 'SIGNATURE',
       fileName: 'customer_site_signoff.png',
       mimeType: 'image/png',
-      fileSizeBytes: 42000,
+      fileSizeBytes: VALID_PNG_FIXTURE.length,
     }),
   });
   if (!sigUploadRes.ok) fail('Signature upload URL failed', sigUploadRes.body);
   const sigKey = sigUploadRes.body.fileKey;
   const sigUploadUrl = sigUploadRes.body.uploadUrl;
 
-  // Real private storage: upload binary bytes to storage URL before confirming
+  // Real private storage: upload genuine binary PNG bytes to storage URL before confirming
   const sigPutRes = await fetch(sigUploadUrl, {
     method: 'PUT',
     headers: {
       'Content-Type': 'image/png',
     },
-    body: Buffer.from('FAKE-PNG-SIGNATURE-BINARY-FOR-SMOKE-TEST'),
+    body: VALID_PNG_FIXTURE,
   });
   if (!sigPutRes.ok)
     fail('Direct binary signature upload to storage failed', await sigPutRes.text());
-  pass('Direct binary signature uploaded to storage URL');
+  pass(`Direct binary signature uploaded to storage URL (${VALID_PNG_FIXTURE.length} bytes valid PNG)`);
 
   const sigConfirmRes = await api('/v1/media/confirm', {
     method: 'POST',

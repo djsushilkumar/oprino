@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/oprino_theme.dart';
 import '../../../../core/sync/sync_service.dart';
 import '../../../../core/database/database.dart';
+import '../../../../core/location/location_service.dart';
 import '../../auth/presentation/auth_state_notifier.dart';
 import 'widgets/customer_signature_sheet.dart';
 import 'widgets/photo_proof_sheet.dart';
@@ -197,21 +198,29 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     );
   }
 
-  void _openPhotoSheet(String workspaceId, String userId) {
+  void _openPhotoSheet(String workspaceId, String userId) async {
+    final locationAdapter = ref.read(locationHardwareAdapterProvider);
+    final currentLoc = await locationAdapter.getCurrentPosition();
+
+    if (!mounted) return;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => PhotoProofSheet(
         taskId: widget.taskId,
+        currentLatitude: currentLoc?.latitude,
+        currentLongitude: currentLoc?.longitude,
+        accuracy: currentLoc?.accuracy,
         onConfirm: ({
           required String fileKey,
           String? localFilePath,
           required bool isBinaryUploaded,
           required String notes,
-          required double latitude,
-          required double longitude,
-          required double accuracy,
+          double? latitude,
+          double? longitude,
+          double? accuracy,
           required DateTime timestamp,
         }) async {
           final sync = ref.read(syncServiceProvider);
@@ -225,19 +234,24 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             localFilePath: localFilePath,
             isBinaryUploaded: isBinaryUploaded,
             watermarkMetadata: {
-              'latitude': latitude,
-              'longitude': longitude,
-              'accuracy': accuracy,
+              if (latitude != null) 'latitude': latitude,
+              if (longitude != null) 'longitude': longitude,
+              if (accuracy != null) 'accuracy': accuracy,
               'timestamp': timestamp.toIso8601String(),
+              'geotagged': latitude != null && longitude != null,
             },
             notes: notes.isNotEmpty ? notes : null,
           );
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Geotagged photo proof recorded successfully!'),
-                backgroundColor: Color(0xFF059669),
+              SnackBar(
+                content: Text(
+                  latitude != null
+                      ? 'Geotagged photo proof recorded successfully!'
+                      : 'Photo proof recorded successfully (un-geotagged)!',
+                ),
+                backgroundColor: const Color(0xFF059669),
               ),
             );
           }

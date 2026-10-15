@@ -243,14 +243,15 @@ void main() {
               currentLatitude: 37.77492,
               currentLongitude: -122.41941,
               accuracy: 3.5,
+              initialBytes: MediaUploadService.createSyntheticJpeg(),
               onConfirm: ({
                 required String fileKey,
                 String? localFilePath,
                 required bool isBinaryUploaded,
                 required String notes,
-                required double latitude,
-                required double longitude,
-                required double accuracy,
+                double? latitude,
+                double? longitude,
+                double? accuracy,
                 required DateTime timestamp,
               }) {
                 confirmedNotes = notes;
