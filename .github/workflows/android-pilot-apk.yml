@@ -6,6 +6,7 @@ on:
       - 'feat/v1-android-pilot-**'
       - 'feat/v1-android-pilot-kit'
       - 'feat/v1-android-pilot-readiness'
+      - 'release/**'
       - main
     paths:
       - 'apps/mobile/**'
@@ -16,6 +17,7 @@ on:
     branches:
       - main
       - 'feat/**'
+      - 'release/**'
     paths:
       - 'apps/mobile/**'
       - 'packages/tokens/**'

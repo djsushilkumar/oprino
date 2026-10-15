@@ -145,9 +145,17 @@ export function buildServer(options?: {
     );
   }
   if (env.CORS_ORIGINS) {
+    const isProdOrStaging = env.NODE_ENV === 'production' || env.APP_ENV === 'production' || env.APP_ENV === 'staging';
     const extraOrigins = env.CORS_ORIGINS.split(',')
       .map((o) => o.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((o) => {
+        if (isProdOrStaging && o === '*') {
+          app.log.warn('⚠️ Wildcard CORS origin "*" ignored in production/staging environment for credential security.');
+          return false;
+        }
+        return true;
+      });
     allowedOrigins.push(...extraOrigins);
   }
 
