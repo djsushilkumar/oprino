@@ -17,7 +17,7 @@ import 'package:oprino_mobile/core/utils/signature_rasterizer.dart';
 import 'package:oprino_mobile/core/utils/media_validator.dart';
 
 class _MockApiClient extends OprinoApiClient {
-  _MockApiClient() : super(dio: Dio());
+  _MockApiClient() : super(dio: Dio(), baseUrl: 'https://staging-api.oprino.com');
 
   bool punchInCalled = false;
   String? lastPunchInSelfieKey;

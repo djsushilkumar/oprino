@@ -1798,6 +1798,14 @@ export function generateOpenApiDocument(): Record<string, any> {
     },
     servers: [
       {
+        url: 'https://oprino-api.onrender.com',
+        description: 'Production API Gateway (Render Cloud)',
+      },
+      {
+        url: 'https://staging-api.oprino.com',
+        description: 'Cloud Staging API Gateway',
+      },
+      {
         url: 'http://localhost:3000',
         description: 'Local Development Server',
       },

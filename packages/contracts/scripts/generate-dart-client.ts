@@ -2233,7 +2233,7 @@ class OprinoApiClient {
 
   OprinoApiClient({
     Dio? dio,
-    String baseUrl = 'http://10.0.2.2:3000',
+    required String baseUrl,
   }) : dio = dio ??
             Dio(BaseOptions(
               baseUrl: baseUrl,
@@ -2243,7 +2243,11 @@ class OprinoApiClient {
                 'Origin': 'oprino://app',
                 'Accept': 'application/json',
               },
-            ));
+            )) {
+    if (baseUrl.trim().isEmpty) {
+      throw ArgumentError('baseUrl must not be empty');
+    }
+  }
 
   // --- System ---
 

@@ -99,10 +99,13 @@ export interface WorkspaceMember {
   status: string;
 }
 export function getApiBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+  const url = process.env.NEXT_PUBLIC_API_URL || 'https://oprino-api.onrender.com';
+  if (process.env.NODE_ENV === 'production') {
+    if (url.startsWith('http://') || url.includes('localhost') || url.includes('127.0.0.1')) {
+      throw new Error(`Security gate violation: Insecure production API URL "${url}". Production builds must use HTTPS.`);
+    }
   }
-  return 'https://oprino-api.onrender.com';
+  return url;
 }
 
 const TOKEN_KEY = 'oprino_web_auth_token';

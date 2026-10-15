@@ -7,7 +7,12 @@ export const versionRoutes: FastifyPluginAsync = async (app) => {
       name: 'oprino-api',
       version: '0.1.0',
       environment: process.env.NODE_ENV || 'development',
-      gitCommit: '5fc3468',
+      gitCommit:
+        process.env.RENDER_GIT_COMMIT ||
+        process.env.COMMIT_SHA ||
+        process.env.GIT_COMMIT ||
+        process.env.VERCEL_GIT_COMMIT_SHA ||
+        'unknown',
       architecture: {
         framework: 'Fastify + TypeScript',
         database: 'PostgreSQL 18 + PostGIS 3.6',

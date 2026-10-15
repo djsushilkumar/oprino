@@ -132,6 +132,61 @@ void main() {
         );
       });
 
+      test('Rejects localhost loopback in PRODUCTION even over HTTPS', () {
+        expect(
+          () => AppConfig.resolve(rawEnv: 'PRODUCTION', customUrl: 'https://localhost:3001'),
+          throwsA(isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('PRODUCTION endpoint cannot target local loopback or private networks'),
+          )),
+        );
+      });
+
+      test('Rejects 127.0.0.1 in PRODUCTION even over HTTPS', () {
+        expect(
+          () => AppConfig.resolve(rawEnv: 'PRODUCTION', customUrl: 'https://127.0.0.1:3001'),
+          throwsA(isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('PRODUCTION endpoint cannot target local loopback or private networks'),
+          )),
+        );
+      });
+
+      test('Rejects 10.0.2.2 emulator alias in PRODUCTION even over HTTPS', () {
+        expect(
+          () => AppConfig.resolve(rawEnv: 'PRODUCTION', customUrl: 'https://10.0.2.2:3001'),
+          throwsA(isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('PRODUCTION endpoint cannot target local loopback or private networks'),
+          )),
+        );
+      });
+
+      test('Rejects 192.168.x.x private LAN IP in PRODUCTION even over HTTPS', () {
+        expect(
+          () => AppConfig.resolve(rawEnv: 'PRODUCTION', customUrl: 'https://192.168.1.150:3001'),
+          throwsA(isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('PRODUCTION endpoint cannot target local loopback or private networks'),
+          )),
+        );
+      });
+
+      test('Release mode strictly fails closed when ENVIRONMENT is unconfigured', () {
+        expect(
+          () => AppConfig.fromEnvironment(isReleaseModeOverride: true),
+          throwsA(isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            contains('Release mode requires explicit --dart-define=ENVIRONMENT=PRODUCTION'),
+          )),
+        );
+      });
+
       test('Rejects unknown/unapproved environment names', () {
         expect(
           () => AppConfig.resolve(rawEnv: 'HACKED_ENV'),

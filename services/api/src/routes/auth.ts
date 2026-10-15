@@ -21,7 +21,11 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
 
   // Mount Better Auth Native Handler for /api/auth/* routes (Cookies, OAuth, session introspection)
   app.all('/api/auth/*', async (req, reply) => {
-    const url = new URL(req.url, `http://${req.headers.host || 'localhost:3000'}`);
+    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
+    const host =
+      req.headers.host ||
+      (process.env.NODE_ENV === 'production' ? 'oprino-api.onrender.com' : 'localhost:3001');
+    const url = new URL(req.url, `${proto}://${host}`);
     const headers = new Headers();
 
     for (const [key, value] of Object.entries(req.headers)) {

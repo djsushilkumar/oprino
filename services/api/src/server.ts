@@ -194,7 +194,12 @@ export function buildServer(options?: {
 
   // Auth & Identity Routes
   app.register(authRoutes, { auth, db: dbClient.db, workspaceService });
-  app.register(workspaceRoutes, { workspaceService, authMiddleware, auth });
+  app.register(workspaceRoutes, {
+    workspaceService,
+    authMiddleware,
+    auth,
+    appPublicUrl: env.APP_PUBLIC_URL,
+  });
   app.register(meRoutes, { db: dbClient.db, authMiddleware });
   app.register(deviceRoutes, { deviceService, authMiddleware });
 

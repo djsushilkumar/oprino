@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 enum EnvironmentType {
   localPilotDebug,
   cloudStagingDebug,
@@ -108,6 +110,14 @@ class AppConfig {
         );
       }
 
+      final host = uri.host.toLowerCase();
+      if (isAuthorizedLocalHost(host)) {
+        throw ArgumentError(
+          'Security barrier violation: PRODUCTION endpoint cannot target local loopback or private networks, '
+          'but received "$host" in "$baseUrl"',
+        );
+      }
+
       return AppConfig(
         environment: EnvironmentType.production,
         environmentName: 'PRODUCTION',
@@ -123,7 +133,26 @@ class AppConfig {
     );
   }
 
-  factory AppConfig.fromEnvironment() {
+  factory AppConfig.fromEnvironment({bool? isReleaseModeOverride}) {
+    final effectiveReleaseMode = isReleaseModeOverride ?? kReleaseMode;
+
+    if (effectiveReleaseMode) {
+      const rawReleaseEnv = String.fromEnvironment('ENVIRONMENT', defaultValue: '');
+      if (rawReleaseEnv.isEmpty) {
+        throw StateError(
+          'Security gate violation: Release mode requires explicit --dart-define=ENVIRONMENT=PRODUCTION. '
+          'Silent fallback to development configuration is strictly forbidden in production builds.',
+        );
+      }
+      final normalized = rawReleaseEnv.toUpperCase().replaceAll('-', '_');
+      if (normalized != 'PRODUCTION' && normalized != 'PROD') {
+        throw StateError(
+          'Security gate violation: Release mode cannot target "$rawReleaseEnv". '
+          'Production distribution builds must specify ENVIRONMENT=PRODUCTION.',
+        );
+      }
+    }
+
     const rawEnv = String.fromEnvironment('ENVIRONMENT', defaultValue: 'LOCAL_PILOT_DEBUG');
     const customUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
     const isEmulator = bool.fromEnvironment('EMULATOR', defaultValue: false);

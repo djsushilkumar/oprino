@@ -52,21 +52,49 @@ jobs:
           cd apps/mobile
           flutter pub get
 
-      - name: Provision Android Signing Keystore
+      - name: Validate & Provision Production Release Signing Credentials
         run: |
-          mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          cat <<EOF > apps/mobile/android/key.properties
-          storeFile=/home/runner/.android/debug.keystore
-          storePassword=android
-          keyAlias=androiddebugkey
-          keyPassword=android
-          EOF
+          echo "=================================================================="
+          echo "       OPRINO PRODUCTION RELEASE SIGNING CREDENTIALS GATE         "
+          echo "=================================================================="
+          if [ -z "${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 }}" ] || [ -z "${{ secrets.OPRINO_RELEASE_KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.OPRINO_RELEASE_KEY_ALIAS }}" ] || [ -z "${{ secrets.OPRINO_RELEASE_KEY_PASSWORD }}" ]; then
+            echo "❌ CRITICAL SECURITY GATE VIOLATION: Production release signing secrets are unconfigured or incomplete."
+            echo "Required GitHub repository secrets:"
+            echo "  - OPRINO_RELEASE_KEYSTORE_BASE64"
+            echo "  - OPRINO_RELEASE_KEYSTORE_PASSWORD"
+            echo "  - OPRINO_RELEASE_KEY_ALIAS"
+            echo "  - OPRINO_RELEASE_KEY_PASSWORD"
+            echo "Generating debug keystore for production distribution artifacts is strictly forbidden."
+            exit 1
+          fi
 
-      - name: Build Unified Release APK
+          mkdir -p ~/.android
+          echo "${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > ~/.android/oprino-release.jks
+
+          cat <<EOF > apps/mobile/android/key.properties
+          storeFile=/home/runner/.android/oprino-release.jks
+          storePassword=${{ secrets.OPRINO_RELEASE_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.OPRINO_RELEASE_KEY_ALIAS }}
+          keyPassword=${{ secrets.OPRINO_RELEASE_KEY_PASSWORD }}
+          EOF
+          echo "✓ Production release keystore provisioned safely."
+
+      - name: Pre-Build Production Environment Validation
+        run: |
+          node scripts/verify-production-build-defines.mjs \
+            --environment=PRODUCTION \
+            --api-url="${{ vars.PRODUCTION_API_URL || 'https://oprino-api.onrender.com' }}"
+
+      - name: Build Unified Production Release APK
         run: |
           cd apps/mobile
-          flutter build apk --release --no-tree-shake-icons
+          flutter build apk --release --no-tree-shake-icons \
+            --dart-define=ENVIRONMENT=PRODUCTION \
+            --dart-define=API_BASE_URL="${{ vars.PRODUCTION_API_URL || 'https://oprino-api.onrender.com' }}"
+
+      - name: Verify Production Release Artifacts
+        run: |
+          node scripts/verify-production-artifacts.mjs
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
