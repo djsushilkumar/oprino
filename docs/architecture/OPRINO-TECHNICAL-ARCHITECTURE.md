@@ -4,8 +4,8 @@
 **Date:** October 2026 (Reconciled)  
 **System Architecture Version:** 1.1  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- ADR Register ([`docs/architecture/ADR/README.md`](file:///workspace/oprino/docs/architecture/ADR/README.md))
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- ADR Register ([`docs/architecture/ADR/README.md`](./ADR/README.md))
 
 ---
 
@@ -170,7 +170,7 @@ The database architecture is strictly separated into four logical schemas/tables
 1. Worker executes actions offline (accept task, complete checklist, customer signature on glass).
 2. Actions write immediately to local encrypted SQLite `outbox_mutations` using client-generated UUIDv4s.
 3. Upon network reconnection, client replays mutations to `POST /v1/sync/mutations`.
-4. Server reconciles each mutation against the **Conflict Resolution Matrix** ([`SYNC-CONFLICT-MATRIX.md`](file:///workspace/oprino/docs/architecture/SYNC-CONFLICT-MATRIX.md)).
+4. Server reconciles each mutation against the **Conflict Resolution Matrix** ([`SYNC-CONFLICT-MATRIX.md`](./SYNC-CONFLICT-MATRIX.md)).
 5. Decoupled Media Queue requests pre-signed R2 PUT URLs and streams watermarked photos in the background.
 
 ---

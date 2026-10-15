@@ -3,7 +3,7 @@
 **Status:** Updated & Recommended for Phase 01A  
 **Date:** October 2026 (Reconciled)  
 **Deciders:** Lead Systems Architect, Database Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
 
 ---
 
@@ -107,7 +107,7 @@ Retention enforcement extends beyond primary tables:
 - **Primary Tables:** Expired daily partitions are dropped via the security definer maintenance procedure.
 - **Indexes:** Automatically dropped alongside their parent daily partition table.
 - **Replicas:** Streaming physical replication immediately applies the partition drop to read replicas.
-- **Backups & PITR:** Documented in [`RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md). Physical WAL backups expire on a rolling 35-day backup retention cycle.
+- **Backups & PITR:** Documented in [`RETENTION-ARCHITECTURE.md`](./RETENTION-ARCHITECTURE.md). Physical WAL backups expire on a rolling 35-day backup retention cycle.
 - **Derived Operational Data:** Total daily duty travel mileage (for expense claims) is calculated and stored in a separate table (`daily_travel_summaries`). This derived data is governed by a distinct **3-year operational retention policy**, completely independent of the 30-day raw GPS coordinate purge.
 
 ---

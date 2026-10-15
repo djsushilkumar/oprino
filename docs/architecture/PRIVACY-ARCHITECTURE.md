@@ -3,10 +3,10 @@
 **Status:** Updated & Recommended for Phase 01A  
 **Date:** October 2026 (Reconciled)  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
 - Phase 00 Stakeholder Sign-Off (Frozen Policy Decisions)
-- [`docs/architecture/LOCATION-PIPELINE.md`](file:///workspace/oprino/docs/architecture/LOCATION-PIPELINE.md)
-- [`ADR-008: Background Location Tracking`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md)
+- [`docs/architecture/LOCATION-PIPELINE.md`](./LOCATION-PIPELINE.md)
+- [`ADR-008: Background Location Tracking`](./ADR-008-background-location.md)
 
 ---
 

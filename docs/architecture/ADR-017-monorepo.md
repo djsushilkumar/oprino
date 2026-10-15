@@ -3,7 +3,7 @@
 **Status:** APPROVED (Updated for Polyglot Flutter + TypeScript Workspace)  
 **Date:** October 2026 (Revised & Re-Architected)  
 **Deciders:** Lead Systems Architect, DevOps, Frontend & Mobile Leads  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))  
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))\
 **Underlying Architecture:** **Turborepo + pnpm Workspaces (TypeScript) & Standalone Dart/Pub Workspace (Flutter)**
 
 ---

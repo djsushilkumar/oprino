@@ -3,8 +3,8 @@
 **Status:** APPROVED (Updated for Flutter Baseline)  
 **Date:** October 2026 (Revised & Re-Architected)  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- ADR Register ([`docs/architecture/ADR/README.md`](file:///workspace/oprino/docs/architecture/ADR/README.md))
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- ADR Register ([`docs/architecture/ADR/README.md`](./ADR/README.md))
 
 ---
 

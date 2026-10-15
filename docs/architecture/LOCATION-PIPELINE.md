@@ -3,10 +3,10 @@
 **Status:** Updated & Recommended for Phase 01A  
 **Date:** October 2026 (Reconciled)  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`ADR-008: Mobile Background Location Tracking Architecture`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md)
-- [`ADR-004: Database Engine & Geospatial Data Architecture`](file:///workspace/oprino/docs/architecture/ADR-004-database-geospatial.md)
-- [`ADR-010: Real-Time Operational Architecture & Live Map Pipeline`](file:///workspace/oprino/docs/architecture/ADR-010-realtime.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`ADR-008: Mobile Background Location Tracking Architecture`](./ADR-008-background-location.md)
+- [`ADR-004: Database Engine & Geospatial Data Architecture`](./ADR-004-database-geospatial.md)
+- [`ADR-010: Real-Time Operational Architecture & Live Map Pipeline`](./ADR-010-realtime.md)
 
 ---
 

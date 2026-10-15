@@ -3,9 +3,9 @@
 **Status:** Updated & Recommended for Phase 01A  
 **Date:** October 2026 (Reconciled)  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`ADR-005: Multi-Tenancy Architecture & Tenant Isolation`](file:///workspace/oprino/docs/architecture/ADR-005-multitenancy.md)
-- [`ADR-015: Domain Events & Transactional Outbox Architecture`](file:///workspace/oprino/docs/architecture/ADR-015-domain-events.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`ADR-005: Multi-Tenancy Architecture & Tenant Isolation`](./ADR-005-multitenancy.md)
+- [`ADR-015: Domain Events & Transactional Outbox Architecture`](./ADR-015-domain-events.md)
 
 ---
 
@@ -72,7 +72,7 @@ CREATE INDEX idx_audit_workspace_actor ON audit.system_audit_logs(workspace_id, 
 
 ## 4. Ingestion Architecture: Transactional Outbox Integration
 
-Per [`ADR-015`](file:///workspace/oprino/docs/architecture/ADR-015-domain-events.md), audit log generation is driven by the **Durable Transactional Outbox**:
+Per [`ADR-015`](./ADR-015-domain-events.md), audit log generation is driven by the **Durable Transactional Outbox**:
 
 ```mermaid
 flowchart LR

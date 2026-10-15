@@ -4,7 +4,7 @@
 **Phase:** Phase 01C (Production Monorepo Scaffolding & Stabilization)  
 **Date:** October 2026  
 **Status:** **SCAFFOLDING & STABILIZATION COMPLETE — VERIFIED**  
-**Controlling Architecture:** [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md) (ADR-001 through ADR-020)
+**Controlling Architecture:** [`docs/architecture/OPRINO-TECHNICAL-ARCHITECTURE.md`](./OPRINO-TECHNICAL-ARCHITECTURE.md) (ADR-001 through ADR-020)
 
 ---
 

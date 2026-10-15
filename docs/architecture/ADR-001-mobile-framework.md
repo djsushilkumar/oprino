@@ -3,7 +3,7 @@
 **Status:** SUPERSEDED (React Native / Expo Decision Superseded by Stakeholder Directive) → **APPROVED (Flutter Stable + Dart Baseline)**  
 **Date:** October 2026 (Revised & Re-Architected)  
 **Deciders:** Stakeholder Technical Committee, Lead Systems Architect, Mobile Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))  
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))\
 **Superseded Architecture:** React Native 0.76+ via Expo Prebuild (New Architecture / Bridgeless Mode)  
 **Selected Architecture:** **Flutter Stable (Production Release at Phase 01C Scaffolding; Reference Baseline: Flutter 3.47 / Stable Dart Toolchain)**
 
@@ -21,7 +21,7 @@ Following the Phase 01A architecture review, a stakeholder directive mandated th
 
 ## 2. Superseded Decision Record (Historical)
 
-*The initial Phase 01A draft evaluated React Native (Expo Prebuild) as Alternative A and Flutter as Alternative B. The React Native recommendation was selected primarily for monorepo language homogeneity (sharing TypeScript/Zod schemas with Fastify). That decision is hereby marked **SUPERSEDED** by stakeholder directive. The contract sharing model is transitioned to OpenAPI 3.1 code-generation (see [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md) and [`ADR-018`](file:///workspace/oprino/docs/architecture/ADR-018-api-style.md)).*
+*The initial Phase 01A draft evaluated React Native (Expo Prebuild) as Alternative A and Flutter as Alternative B. The React Native recommendation was selected primarily for monorepo language homogeneity (sharing TypeScript/Zod schemas with Fastify). That decision is hereby marked **SUPERSEDED** by stakeholder directive. The contract sharing model is transitioned to OpenAPI 3.1 code-generation (see [`docs/architecture/CONTRACT-STRATEGY.md`](./CONTRACT-STRATEGY.md) and [`ADR-018`](./ADR-018-api-style.md)).*
 
 ---
 
@@ -73,7 +73,7 @@ To ensure enterprise-grade stability, predictable performance on budget frontlin
 - **OS Navigation Handoff:** Direct deep-link launching (`url_launcher`) to Google Maps (`google.navigation:q=`) on Android and Apple Maps (`http://maps.apple.com/?daddr=`) on iOS for turn-by-turn routing at zero API cost.
 
 ### 3.11 Modern Offline Embedded Persistence
-- **Engine Selection:** **Drift + SQLite** (`package:drift` + `package:sqlite3` with bundled native SQLite). Provides compile-time verified type-safe SQL, relational foreign keys, step-by-step schema migrations with verification tests, and background database execution via `NativeDatabase.createInBackground(...)` (see [`ADR-009`](file:///workspace/oprino/docs/architecture/ADR-009-offline-sync.md)).
+- **Engine Selection:** **Drift + SQLite** (`package:drift` + `package:sqlite3` with bundled native SQLite). Provides compile-time verified type-safe SQL, relational foreign keys, step-by-step schema migrations with verification tests, and background database execution via `NativeDatabase.createInBackground(...)` (see [`ADR-009`](./ADR-009-offline-sync.md)).
 
 ### 3.12 Secure Platform Storage
 - **Hardware-Backed Storage:** `flutter_secure_storage` protects sensitive credentials and installation tokens using:
@@ -104,7 +104,7 @@ To ensure enterprise-grade stability, predictable performance on budget frontlin
 1. **Unrivaled Cross-Platform UI Consistency & Impeller Speed:** Flutter renders directly to native Vulkan/Metal canvas via Impeller, ensuring that complex operational surfaces (live attendance cards, task agendas, signature pads) render with rock-solid 60/120 FPS performance across fragmented budget Android devices without JavaScript bridge overhead.
 2. **First-Class Offline Relational Architecture:** The modern Drift architecture (`package:drift` + `package:sqlite3` with bundled native SQLite) provides a compile-time type-safe relational database engine with isolate-safe background execution (`NativeDatabase.createInBackground`).
 3. **Enterprise Background Location Support:** Transistor Software officially maintains `flutter_background_geolocation`, providing identical battle-tested native background services, stationary motion geofences, and OEM battery-killer survivability in Flutter as in React Native.
-4. **Unified Role-Aware Architecture:** A single Flutter codebase compiles into the unified `com.oprino.app` store binary, dynamically presenting Employee, Manager, and Owner surfaces via role-driven state management (see [`ADR-020`](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md)).
+4. **Unified Role-Aware Architecture:** A single Flutter codebase compiles into the unified `com.oprino.app` store binary, dynamically presenting Employee, Manager, and Owner surfaces via role-driven state management (see [`ADR-020`](./ADR-020-mobile-packaging.md)).
 5. **Decoupled Cross-Language Contract Safety:** Rather than relying on monorepo TypeScript imports, Oprino establishes OpenAPI 3.1 as the formal contract boundary between Fastify and Flutter, auto-generating a strongly-typed Dart client via `openapi-generator-cli` (`dart-dio`).
 
 ---
@@ -121,8 +121,8 @@ To ensure enterprise-grade stability, predictable performance on budget frontlin
 ---
 
 ## 6. References
-- Controlling PRD: [`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md)
-- Packaging Strategy: [`docs/architecture/ADR-020-mobile-packaging.md`](file:///workspace/oprino/docs/architecture/ADR-020-mobile-packaging.md)
-- Background Geolocation: [`docs/architecture/ADR-008-background-location.md`](file:///workspace/oprino/docs/architecture/ADR-008-background-location.md)
-- Local Offline Storage: [`docs/architecture/ADR-009-offline-sync.md`](file:///workspace/oprino/docs/architecture/ADR-009-offline-sync.md)
-- Cross-Language Contract Strategy: [`docs/architecture/CONTRACT-STRATEGY.md`](file:///workspace/oprino/docs/architecture/CONTRACT-STRATEGY.md)
+- Controlling PRD: [`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md)
+- Packaging Strategy: [`docs/architecture/ADR-020-mobile-packaging.md`](./ADR-020-mobile-packaging.md)
+- Background Geolocation: [`docs/architecture/ADR-008-background-location.md`](./ADR-008-background-location.md)
+- Local Offline Storage: [`docs/architecture/ADR-009-offline-sync.md`](./ADR-009-offline-sync.md)
+- Cross-Language Contract Strategy: [`docs/architecture/CONTRACT-STRATEGY.md`](./CONTRACT-STRATEGY.md)

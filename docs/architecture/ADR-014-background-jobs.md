@@ -3,7 +3,7 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Deciders:** Lead Systems Architect, Backend Engineering  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
 
 ---
 
@@ -131,7 +131,7 @@ flowchart TD
 
 1. **Daily Location Partition Maintenance (02:00 UTC):**
    - Creates future 1-day or 7-day partitions for `employee_locations`.
-   - Identifies partitions older than the workspace's retention policy (default: 30 days per frozen policy; or 7/90/180 days) and executes the security-definer procedure `telemetry.prune_expired_partitions()` ([`ADR-004`](file:///workspace/oprino/docs/architecture/ADR-004-database-geospatial.md), [`RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md)).
+   - Identifies partitions older than the workspace's retention policy (default: 30 days per frozen policy; or 7/90/180 days) and executes the security-definer procedure `telemetry.prune_expired_partitions()` ([`ADR-004`](./ADR-004-database-geospatial.md), [`RETENTION-ARCHITECTURE.md`](./RETENTION-ARCHITECTURE.md)).
 2. **Auto-Punchout Engine (Every 15 minutes):**
    - Queries open attendance records where `shift_end_time + max_overtime_buffer < NOW()`.
    - Automatically punches out abandoned shifts with `punch_out_reason = 'AUTO_SYSTEM_SHIFT_LIMIT'`.

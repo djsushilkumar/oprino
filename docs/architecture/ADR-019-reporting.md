@@ -3,7 +3,7 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Deciders:** Lead Systems Architect, Backend Engineering, Product  
-**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
+**Controlling Document:** Phase 00 Approved Product Baseline ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
 
 ---
 
@@ -58,7 +58,7 @@ Technical challenges:
 ### Rationale:
 1. **Right-Sized for SMB Economics:** A 200-employee company generates ~5,000 attendance records, ~3,000 tasks, and ~600 visits per month. PostgreSQL 18 (or 17) handles queries across this dataset in < 15ms when properly indexed. Adding a columnar OLAP database would add needless operational failure points.
 2. **Memory-Safe Streaming:** By piping PostgreSQL query cursors directly into `fast-csv` and writing directly to the HTTP response stream (or S3 multipart upload), memory consumption remains flat at ~15MB regardless of dataset size.
-3. **Preserving Mileage Under 3-Year Operational Policy:** Raw GPS coordinates are dropped after 30 days per Phase 00 privacy policy. A nightly BullMQ worker computes total daily duty mileage and stores it in `daily_travel_summaries (workspace_id, employee_id, date, total_km, approved_by)`. This ensures business conveyance reporting remains accessible under the 3-year operational retention policy ([`RETENTION-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/RETENTION-ARCHITECTURE.md)) while respecting privacy limits.
+3. **Preserving Mileage Under 3-Year Operational Policy:** Raw GPS coordinates are dropped after 30 days per Phase 00 privacy policy. A nightly BullMQ worker computes total daily duty mileage and stores it in `daily_travel_summaries (workspace_id, employee_id, date, total_km, approved_by)`. This ensures business conveyance reporting remains accessible under the 3-year operational retention policy ([`RETENTION-ARCHITECTURE.md`](./RETENTION-ARCHITECTURE.md)) while respecting privacy limits.
 
 ---
 

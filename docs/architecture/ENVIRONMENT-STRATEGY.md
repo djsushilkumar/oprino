@@ -3,9 +3,9 @@
 **Status:** Proposed / Recommended for Phase 01A  
 **Date:** October 2026  
 **Controlling Documents:** 
-- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](file:///workspace/oprino/docs/product/OPRINO-MASTER-PRD.md))
-- [`ADR-017: Monorepo Architecture`](file:///workspace/oprino/docs/architecture/ADR-017-monorepo.md)
-- [`docs/architecture/SECURITY-ARCHITECTURE.md`](file:///workspace/oprino/docs/architecture/SECURITY-ARCHITECTURE.md)
+- Phase 00 Approved PRD ([`docs/product/OPRINO-MASTER-PRD.md`](../product/OPRINO-MASTER-PRD.md))
+- [`ADR-017: Monorepo Architecture`](./ADR-017-monorepo.md)
+- [`docs/architecture/SECURITY-ARCHITECTURE.md`](./SECURITY-ARCHITECTURE.md)
 
 ---
 
