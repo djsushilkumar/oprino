@@ -30,6 +30,8 @@ function createGeoJsonCircle(centerLng: number, centerLat: number, radiusMeters:
   return coords;
 }
 
+import { escapeHtml } from '../../lib/html-utils.js';
+
 export default function LiveMapPage() {
   const router = useRouter();
   const [context, setContext] = useState<MeResponse | null>(null);
@@ -64,6 +66,8 @@ export default function LiveMapPage() {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreGL.Map | null>(null);
   const markersRef = useRef<Map<string, MapLibreGL.Marker>>(new Map());
+  const latestWorkersRef = useRef<Map<string, LiveWorkerLocation>>(new Map());
+  const hasInitiallyFittedRef = useRef<boolean>(false);
   const historyMarkerRef = useRef<MapLibreGL.Marker | null>(null);
   const sseRef = useRef<EventSource | null>(null);
 
@@ -362,6 +366,7 @@ export default function LiveMapPage() {
       if (!activeUserIds.has(userId)) {
         marker.remove();
         markersRef.current.delete(userId);
+        latestWorkersRef.current.delete(userId);
       }
     });
 
@@ -384,6 +389,7 @@ export default function LiveMapPage() {
 
         hasValidCoords = true;
         bounds.extend([worker.longitude, worker.latitude]);
+        latestWorkersRef.current.set(worker.userId, worker);
 
         const isSelected = selectedWorker?.userId === worker.userId;
         const now = Date.now();
@@ -399,9 +405,10 @@ export default function LiveMapPage() {
           el.style.cursor = 'pointer';
 
           el.addEventListener('click', () => {
-            setSelectedWorker(worker);
+            const currentWorker = latestWorkersRef.current.get(worker.userId) || worker;
+            setSelectedWorker(currentWorker);
             currentMap.flyTo({
-              center: [worker.longitude, worker.latitude],
+              center: [currentWorker.longitude, currentWorker.latitude],
               zoom: 15,
               speed: 1.2,
             });
@@ -418,11 +425,14 @@ export default function LiveMapPage() {
 
         if (!marker) return;
 
-        // Update DOM element content
+        // Update DOM element content safely (neutralizing DOM XSS)
         const el = marker.getElement();
         const initial = worker.userName ? worker.userName[0].toUpperCase() : 'T';
         const color = isSelected ? '#38BDF8' : isStale ? '#F59E0B' : '#6366F1';
         const speedText = worker.speed && worker.speed > 0.5 ? `${(worker.speed * 3.6).toFixed(0)} km/h` : '';
+        const safeInitial = escapeHtml(initial);
+        const safeUserName = escapeHtml(worker.userName);
+        const safeSpeedText = speedText ? escapeHtml(speedText) : '';
 
         el.innerHTML = `
           <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto;">
@@ -450,7 +460,7 @@ export default function LiveMapPage() {
                 font-size: 13px;
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
               ">
-                ${initial}
+                ${safeInitial}
               </div>
             </div>
             <div style="
@@ -465,14 +475,15 @@ export default function LiveMapPage() {
               white-space: nowrap;
               box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             ">
-              ${worker.userName} ${speedText ? `• ${speedText}` : ''}
+              ${safeUserName} ${safeSpeedText ? `• ${safeSpeedText}` : ''}
             </div>
           </div>
         `;
       });
 
-      // Fit bounds if we have workers and not currently zoomed on a single worker
-      if (hasValidCoords && !selectedWorker && workers.length > 0) {
+      // Fit bounds only on initial render or when manually triggered to prevent continuous viewport snapping
+      if (!hasInitiallyFittedRef.current && hasValidCoords && !selectedWorker && workers.length > 0) {
+        hasInitiallyFittedRef.current = true;
         currentMap.fitBounds(bounds, {
           padding: 60,
           maxZoom: 14,
