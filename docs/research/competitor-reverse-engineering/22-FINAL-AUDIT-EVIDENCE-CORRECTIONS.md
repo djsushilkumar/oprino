@@ -27,7 +27,7 @@ An adversarial source-code and runtime verification was conducted to eliminate e
 ## 2. Evidence Correction 1: Deployment Revision & Commit SHA
 
 ### 2.1 The Code Dissection
-In [`services/api/src/routes/version.ts`](file:///d:/oprino/oprino/services/api/src/routes/version.ts#L5-L21):
+In [`services/api/src/routes/version.ts`](../../../services/api/src/routes/version.ts#L5-L21):
 ```typescript
 export const versionRoutes: FastifyPluginAsync = async (app) => {
   app.get('/v1/version', async (_req, reply) => {
@@ -61,7 +61,7 @@ export const versionRoutes: FastifyPluginAsync = async (app) => {
 ## 3. Evidence Correction 2: Mobile Network Timeouts
 
 ### 3.1 The Code Dissection
-In [`generated/dart-api/lib/src/api_client.dart:26–35`](file:///d:/oprino/oprino/generated/dart-api/lib/src/api_client.dart#L26-L35):
+In [`generated/dart-api/lib/src/api_client.dart:26–35`](../../../generated/dart-api/lib/src/api_client.dart#L26-L35):
 ```dart
   OprinoApiClient({
     Dio? dio,
@@ -78,7 +78,7 @@ In [`generated/dart-api/lib/src/api_client.dart:26–35`](file:///d:/oprino/opri
             ));
 ```
 
-And in [`apps/mobile/lib/core/network/media_upload_service.dart:24–28`](file:///d:/oprino/oprino/apps/mobile/lib/core/network/media_upload_service.dart#L24-L28):
+And in [`apps/mobile/lib/core/network/media_upload_service.dart:24–28`](../../../apps/mobile/lib/core/network/media_upload_service.dart#L24-L28):
 ```dart
   MediaUploadService({
     required this.client,
@@ -101,7 +101,7 @@ And in [`apps/mobile/lib/core/network/media_upload_service.dart:24–28`](file:/
 ## 4. Evidence Correction 3: Real Skipped Tests in Cloud Storage
 
 ### 4.1 The Code Dissection
-In [`services/api/src/cloud-storage.integration.test.ts:286–363`](file:///d:/oprino/oprino/services/api/src/cloud-storage.integration.test.ts#L286-L363), the actual four conditionally skipped tests are:
+In [`services/api/src/cloud-storage.integration.test.ts:286–363`](../../../services/api/src/cloud-storage.integration.test.ts#L286-L363), the actual four conditionally skipped tests are:
 
 ```typescript
 // Test 1 (Line 289)

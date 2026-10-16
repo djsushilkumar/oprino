@@ -22,7 +22,7 @@ This technical audit investigates the operational behaviors, networking protocol
 > [!IMPORTANT]
 > **Post-Audit Verification Addendum (October 2026):**  
 > 1. **Unolo GPS Intervals Corrected:** Unolo's official documentation ([unolo.com/help](https://unolo.com/help)) verifies that the default tracking interval is **5 minutes (300 seconds)**, fully configurable by company administrators. Prior claims of hardcoded 30s/300s dynamic throttling are withdrawn as unverified hypotheses.  
-> 2. **GPS Integrity vs. PostGIS:** PostGIS spatial calculations (`ST_DWithin`) verify geometric distance between coordinates, but **cannot authenticate whether device coordinates are genuine or spoofed**. Coordinate authenticity must be established prior to PostGIS evaluation via OS attestation, mock-location flags, and kinematic velocity checks. See [14-ARCHITECTURE-DECISION-REVIEW.md](file:///d:/oprino/oprino/docs/research/competitor-reverse-engineering/14-ARCHITECTURE-DECISION-REVIEW.md).
+> 2. **GPS Integrity vs. PostGIS:** PostGIS spatial calculations (`ST_DWithin`) verify geometric distance between coordinates, but **cannot authenticate whether device coordinates are genuine or spoofed**. Coordinate authenticity must be established prior to PostGIS evaluation via OS attestation, mock-location flags, and kinematic velocity checks. See [14-ARCHITECTURE-DECISION-REVIEW.md](./14-ARCHITECTURE-DECISION-REVIEW.md).
 
 ---
 

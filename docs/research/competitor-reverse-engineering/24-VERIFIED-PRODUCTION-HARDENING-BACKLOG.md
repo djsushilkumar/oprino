@@ -26,7 +26,7 @@ To prevent speculative feature bloat and preserve Oprino's locked V1 scope, all 
 
 #### [DEF-001] Live Map Continuous Viewport Snapping on Every Telemetry Update
 - **Severity / Risk Level:** HIGH (Severe UX Usability Defect)
-- **Exact Code Location:** [`apps/web/src/app/live-map/page.tsx:475–481`](file:///d:/oprino/oprino/apps/web/src/app/live-map/page.tsx#L475-L481)
+- **Exact Code Location:** [`apps/web/src/app/live-map/page.tsx:475–481`](../../../apps/web/src/app/live-map/page.tsx#L475-L481)
 - **Reproduction Steps:**
   1. Open live map (`/live-map`) with 3 active field technicians streaming telemetry.
   2. Manually pan and zoom into a specific street corner to inspect a technician's stop.
@@ -43,7 +43,7 @@ To prevent speculative feature bloat and preserve Oprino's locked V1 scope, all 
 
 #### [DEF-002] Live Map Stale Closure in Marker Click Listener
 - **Severity / Risk Level:** MEDIUM (Functional Telemetry Defect)
-- **Exact Code Location:** [`apps/web/src/app/live-map/page.tsx:396–414`](file:///d:/oprino/oprino/apps/web/src/app/live-map/page.tsx#L396-L414)
+- **Exact Code Location:** [`apps/web/src/app/live-map/page.tsx:396–414`](../../../apps/web/src/app/live-map/page.tsx#L396-L414)
 - **Reproduction Steps:**
   1. Mount marker for `userId: 'usr_01'` at 09:00 AM (`speed: 0 km/h`).
   2. Stream 10 location updates over SSE advancing worker position and speed to 45 km/h at 09:30 AM.
@@ -59,7 +59,7 @@ To prevent speculative feature bloat and preserve Oprino's locked V1 scope, all 
 
 #### [DEF-003] Hard-Coded Commit SHA in API Version Route
 - **Severity / Risk Level:** LOW (Deployment Traceability Defect)
-- **Exact Code Location:** [`services/api/src/routes/version.ts:10`](file:///d:/oprino/oprino/services/api/src/routes/version.ts#L10)
+- **Exact Code Location:** [`services/api/src/routes/version.ts:10`](../../../services/api/src/routes/version.ts#L10)
 - **Reproduction Steps:**
   1. Inspect `services/api/src/routes/version.ts`.
   2. Line 10 contains static string literal: `gitCommit: '5fc3468'`.
@@ -76,7 +76,7 @@ To prevent speculative feature bloat and preserve Oprino's locked V1 scope, all 
 
 #### [SEC-001] Potential DOM XSS via Unescaped `worker.userName` in `innerHTML`
 - **Severity / Risk Level:** HIGH (Security Risk)
-- **Exact Code Location:** [`apps/web/src/app/live-map/page.tsx:427–471`](file:///d:/oprino/oprino/apps/web/src/app/live-map/page.tsx#L427-L471)
+- **Exact Code Location:** [`apps/web/src/app/live-map/page.tsx:427–471`](../../../apps/web/src/app/live-map/page.tsx#L427-L471)
 - **Vulnerability Mechanism:** `el.innerHTML = ... <span>${worker.userName}</span> ...` interpolates raw strings into the DOM without sanitization. If an employee's display name contains script or image payload tags, it executes in the supervisor's browser.
 - **Acceptance Criteria:**
   - Replace `innerHTML` with safe DOM element creation (`document.createElement`) and assign text via `.textContent`, or sanitize through DOMPurify.

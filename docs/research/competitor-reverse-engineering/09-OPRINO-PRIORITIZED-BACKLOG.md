@@ -11,7 +11,7 @@
 > [!WARNING]
 > **Historical Archival Notice (Post-PR #7 Merge Audit):**  
 > This document reflects early planning hypotheses developed prior to codebase reconciliation. The foundational P0 and P1 items listed below (Duty-Hours Guard, Multi-Tenant RLS, Presigned R2 Uploads, Selfie Attendance, Drift SQLite Outbox, Split-Pane Live Map, and 30-Day Pruning) are **already 100% implemented, verified, and merged on `main`**.  
-> **Active Implementation Backlog:** Refer exclusively to [19-ZERO-DUPLICATE-IMPROVEMENT-BACKLOG.md](file:///d:/oprino/oprino/docs/research/competitor-reverse-engineering/19-ZERO-DUPLICATE-IMPROVEMENT-BACKLOG.md) for non-duplicate, verified incremental tasks.
+> **Active Implementation Backlog:** Refer exclusively to [19-ZERO-DUPLICATE-IMPROVEMENT-BACKLOG.md](./19-ZERO-DUPLICATE-IMPROVEMENT-BACKLOG.md) for non-duplicate, verified incremental tasks.
 
 ---
 

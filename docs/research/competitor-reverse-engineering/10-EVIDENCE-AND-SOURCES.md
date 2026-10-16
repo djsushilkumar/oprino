@@ -10,7 +10,7 @@
 
 > [!IMPORTANT]
 > **Post-Audit Verification Addendum (October 2026):**  
-> REA tools were invoked exclusively to inspect the local development USB environment and the authorized Oprino client APK on the OnePlus testbed. Neither TaskOPad nor Unolo APK binaries were decompiled, patched, or modified using REA. All competitor insights were derived from official public vendor documentation, Google Play developer console disclosures, pricing pages, and verified public reviews. See [12-EVIDENCE-VALIDATION-REPORT.md](file:///d:/oprino/oprino/docs/research/competitor-reverse-engineering/12-EVIDENCE-VALIDATION-REPORT.md).
+> REA tools were invoked exclusively to inspect the local development USB environment and the authorized Oprino client APK on the OnePlus testbed. Neither TaskOPad nor Unolo APK binaries were decompiled, patched, or modified using REA. All competitor insights were derived from official public vendor documentation, Google Play developer console disclosures, pricing pages, and verified public reviews. See [12-EVIDENCE-VALIDATION-REPORT.md](./12-EVIDENCE-VALIDATION-REPORT.md).
 
 ---
 

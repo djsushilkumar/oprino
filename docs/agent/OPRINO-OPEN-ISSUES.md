@@ -14,7 +14,7 @@ These 5 items are the verified gating prerequisites documented in [`docs/release
 ```mermaid
 graph TD
     B1[1. Cloudflare R2 Credentials] --> Gate[Commercial Launch Gate]
-    B2[2. Android Production Keystore] --> Gate
+    B2[2. Android Production Keystore & APK] --> Gate
     B3[3. Multi-OEM GPS Battery Benchmark] --> Gate
     B4[4. Custom Domain & SSL Routing] --> Gate
     B5[5. Owner Commercial Sign-Off] --> Gate
@@ -24,19 +24,29 @@ graph TD
 - **Severity:** P0 — Commercial Blocker
 - **Current State:** API runs with local filesystem fallback in development. In production on Render, mock storage is active; 4 live R2 contract tests in `services/api` are skipped because R2 credentials are not populated in the cloud environment.
 - **Resolution Steps:**
-  1. Create a production Cloudflare R2 bucket (`oprino-prod-proofs`).
+  1. Create a production Cloudflare R2 bucket (`oprino-production-media`, with staging as `oprino-staging-media`).
   2. Configure CORS rules allowing `PUT` requests from `https://oprino.vercel.app` and mobile clients.
-  3. Set `CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY`, and `CLOUDFLARE_R2_BUCKET_NAME` in Render environment variables.
-  4. Run automated integration test `services/api/test/proof-storage.live.test.ts` to verify live presigned upload and retrieval.
+  3. Set the canonical environment variables expected by `services/api/src/config/env.ts`:
+     - `S3_BUCKET_NAME=oprino-production-media`
+     - `S3_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com`
+     - `S3_ACCESS_KEY_ID=<cloudflare_r2_access_key>`
+     - `S3_SECRET_ACCESS_KEY=<cloudflare_r2_secret_key>`
+     - `S3_REGION=auto`
+  4. Run automated integration test `services/api/src/cloud-storage.integration.test.ts` to verify live presigned upload and retrieval.
 
-### Blocker 2: Android Production Keystore & Google Play Console Setup
+### Blocker 2: Android Production Release Signing Credentials & Workflow
 - **Severity:** P0 — Mobile Release Gate
-- **Current State:** Release APK built using debug signing key (`android/app/build.gradle.kts`). `key.properties.example` template is present. Google Play requires an AAB (Android App Bundle) signed with a dedicated release keystore.
+- **Current State:** The mobile app builds and installs cleanly on physical Android hardware. The CI workflow [`.github/workflows/mobile-release.yml`](../../.github/workflows/mobile-release.yml) is designed to build a signed production **APK** (`flutter build apk --release --no-tree-shake-icons`) and verify it via `apksigner`. Production distribution is gated pending keystore provisioning.
 - **Resolution Steps:**
   1. Generate production keystore via `keytool -genkey -v -keystore oprino-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias oprino`.
-  2. Base64-encode the keystore and populate GitHub Actions Secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
-  3. Execute `.github/workflows/mobile-release.yml` to generate the production AAB.
-  4. Create internal testing track on Google Play Console and upload signed AAB.
+  2. Base64-encode the keystore and populate the exact GitHub Actions Secrets and Variables expected by `.github/workflows/mobile-release.yml`:
+     - Secret: `OPRINO_RELEASE_KEYSTORE_BASE64` (or `OPRINO_KEYSTORE_BASE64`)
+     - Secret: `OPRINO_RELEASE_KEYSTORE_PASSWORD` (or `OPRINO_KEYSTORE_PASSWORD`)
+     - Secret: `OPRINO_RELEASE_KEY_ALIAS` (or `OPRINO_KEY_ALIAS`)
+     - Secret: `OPRINO_RELEASE_KEY_PASSWORD` (or `OPRINO_KEY_PASSWORD`)
+     - Secret/Var: `OPRINO_RELEASE_CERT_SHA256` (mandatory certificate SHA-256 fingerprint for fail-closed validation)
+     - Var: `PROD_API_URL` (defaults to `https://oprino-api.onrender.com`)
+  3. Execute `.github/workflows/mobile-release.yml` to generate the cryptographically verified release APK artifact (`oprino-mobile-release-apk`). If Google Play Store distribution is selected, configure a companion `flutter build appbundle` (AAB) job.
 
 ### Blocker 3: Multi-OEM Real-Device Background GPS & Battery Benchmark
 - **Severity:** P1 — Field Reliability Gate
@@ -59,7 +69,7 @@ graph TD
 - **Severity:** P0 — Governance Gate
 - **Current State:** Product architecture and V1 scope frozen. Terms of Service, Privacy Policy, and initial pricing tier definitions require final business owner sign-off.
 - **Resolution Steps:**
-  1. Review pricing model (`docs/business/PRICING-STRATEGY.md`): Free Starter (up to 5 workers) vs Pro Tier ($3/worker/mo or ₹199/worker/mo).
+  1. Review pricing model ([`docs/business/PRICING-STRATEGY.md`](../business/PRICING-STRATEGY.md)): Free Starter (up to 5 workers) vs Pro Tier ($3/worker/mo or ₹199/worker/mo).
   2. Finalize Privacy Policy certifying Duty-Hours-Only tracking and 30-day location retention.
   3. Obtain explicit stakeholder launch approval.
 
@@ -67,11 +77,12 @@ graph TD
 
 ## 2. Active Engineering Backlog Items
 
-These items are prioritized for post-launch stabilization (V1.1 / V1.5) and do not block V1 commercial launch:
+Per [`docs/product/V1-SCOPE.md`](../product/V1-SCOPE.md), push notifications are a frozen V1 **MUST** requirement. The engineering backlog below separates remaining V1 deliverables from post-V1 roadmap items:
 
 | Issue ID | Feature / Component | Priority | Status | Description |
 |---|---|---|---|---|
-| **ENG-01** | Push Notifications (FCM) | P2 | Planned (V1.5) | Integrate Firebase Cloud Messaging for mobile alerts when dispatch stops or emergency tasks are assigned. (Currently using In-App Badge Drawer + SSE). |
-| **ENG-02** | Geofence Auto-Punch Suggestion | P2 | Planned (V1.5) | Detect arrival at customer site and prompt the worker with a 1-tap check-in confirmation notification. |
+| **ENG-01** | Push Notifications (FCM / APNs) | P1 | V1 Required (In Progress) | Integrate Firebase Cloud Messaging for native mobile background push alerts when tasks are assigned or modified. (In-App Badge Drawer + SSE live stream are currently implemented and verified). |
+| **ENG-02** | Geofence Auto-Punch Confirmation | P2 | Planned (V1.5) | Detect arrival at customer site and prompt the worker with a 1-tap check-in confirmation notification. |
 | **ENG-03** | PDF Service Receipt Generator | P2 | Planned (V1.5) | Generate a branded PDF service report upon task completion including customer signature, checklist answers, and photos, delivered via email. |
-| **ENG-04** | Offline Map Tile Caching | P3 | Planned (V2.0) | Pre-cache regional OpenStreetMap raster tiles in mobile app SQLite database for zero-reception forest/basement operations. |
+| **ENG-04** | Conveyance Expense Claim Workflow | P2 | Planned (V1.5) | Structured manager reimbursement approval using GPS distance rollups and per-km vehicle rates. |
+| **ENG-05** | Offline Map Tile Caching | P3 | Planned (V2.0) | Pre-cache regional OpenStreetMap raster tiles in mobile app SQLite database for zero-reception forest/basement operations. |

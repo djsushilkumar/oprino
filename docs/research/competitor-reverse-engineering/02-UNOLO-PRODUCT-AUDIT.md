@@ -10,7 +10,7 @@
 
 > [!IMPORTANT]
 > **Post-Audit Verification Addendum (October 2026):**  
-> An adversarial audit verified that Unolo officially implements **Shift-Based Auto Tracking** ([unolo.com/locationtracking](https://unolo.com/locationtracking)). Location tracking strictly starts on attendance punch-in and ceases on attendance punch-out. Employee privacy complaints observed in public app reviews stem from Android OS `ACCESS_BACKGROUND_LOCATION` "Allow all the time" permission dialogs, failed auto-punchouts, and employer policy misconfiguration rather than an unconstrained 24/7 tracking architecture. Default update frequency is verified at **5 minutes (configurable)**. See [12-EVIDENCE-VALIDATION-REPORT.md](file:///d:/oprino/oprino/docs/research/competitor-reverse-engineering/12-EVIDENCE-VALIDATION-REPORT.md) for full evidence details.
+> An adversarial audit verified that Unolo officially implements **Shift-Based Auto Tracking** ([unolo.com/locationtracking](https://unolo.com/locationtracking)). Location tracking strictly starts on attendance punch-in and ceases on attendance punch-out. Employee privacy complaints observed in public app reviews stem from Android OS `ACCESS_BACKGROUND_LOCATION` "Allow all the time" permission dialogs, failed auto-punchouts, and employer policy misconfiguration rather than an unconstrained 24/7 tracking architecture. Default update frequency is verified at **5 minutes (configurable)**. See [12-EVIDENCE-VALIDATION-REPORT.md](./12-EVIDENCE-VALIDATION-REPORT.md) for full evidence details.
 
 ---
 

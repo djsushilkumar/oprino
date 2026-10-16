@@ -44,9 +44,35 @@ graph TD
 
 ## 3. Comprehensive Document Inventory & Classification
 
-All 117+ documents across the repository are categorized according to the 8 standard document lifecycle classifications:
+An exhaustive scan across all non-vendor directories identified **177 markdown documents** (156 within `docs/`, 3 in repo root, 2 in `apps/mobile/`, 5 in `Oprino-Brand-Kit/`, and 12 in `research/archived-spikes/`).
 
-### Class 1: AUTHORITATIVE (Frozen Approved Decisions & Invariant Specifications)
+### Repository Directory Breakdown:
+| Directory Path | File Count | Primary Contents |
+|---|---|---|
+| `docs/agent/` | 5 | Permanent AI Agent memory suite (`OPRINO-PROJECT-BRAIN.md`, `CURRENT-STATE.md`, etc.) |
+| `docs/architecture/` | 68 | Architecture specs and 22 formal ADRs (`ADR-001` through `ADR-021`) |
+| `docs/audits/` | 19 | Point-in-time security, structure, and feature audit milestone reports |
+| `docs/brand/` | 1 | Approved brand system and design tokens (`OPRINO-BRAND-SYSTEM.md`) |
+| `docs/business/` | 1 | Pricing strategy and SMB tier economics (`PRICING-STRATEGY.md`) |
+| `docs/deployment/` | 5 | Cloud provisioning guides, staging setup, and environment matrices |
+| `docs/development/` | 4 | Local development setup, env configuration, testing, and troubleshooting |
+| `docs/handoff/` | 1 | Historical Codex Cloud handoff specification (`CODEX-CLOUD-HANDOFF.md`) |
+| `docs/implementation/` | 6 | Phase 02A through Phase 05 milestone completion reports |
+| `docs/product/` | 9 | Master PRD, V1 Scope, Roadmap, Gap Analysis, App Surfaces, Roles Plan |
+| `docs/releases/` | 3 | V1 Commercial Launch Checklist, RC Report, and Rollback Plan |
+| `docs/research/` | 27 | Canonical index (`README.md`) + 26 competitor reverse-engineering reports (00–25) |
+| `docs/testing/` | 1 | Testing guide and methodology (`TESTING-GUIDE.md`) |
+| `docs/` Root Guides | 5 | System overview guides (`COMPLETE-SYSTEM-GUIDE-HI.md`, `DOCUMENTATION-ARCHITECTURE.md`, etc.) |
+| `Subtotal (docs/)` | **156** | |
+| Repository Root | 3 | `AGENTS.md`, `CONTRIBUTING.md`, `README.md` |
+| `apps/mobile/` | 2 | Mobile README and release notes |
+| `Oprino-Brand-Kit/` | 5 | Brand guidelines, Canva links, and Hindi onboarding guides |
+| `research/archived-spikes/` | 12 | Architecture spikes (`spike_c_auth`, `spike_d_openapi`, `spike_e_security`) |
+| **Grand Total** | **177** | |
+
+### Document Lifecycle Classifications:
+
+#### Class 1: AUTHORITATIVE (Frozen Approved Decisions & Invariant Specifications)
 - `AGENTS.md` — Supreme agent instructions and invariant rules.
 - `docs/product/OPRINO-MASTER-PRD.md` — Authoritative master product requirements document.
 - `docs/product/V1-SCOPE.md` — Authoritative frozen functional boundaries (MUST, SHOULD, LATER, OUT-OF-SCOPE).
@@ -58,7 +84,7 @@ All 117+ documents across the repository are categorized according to the 8 stan
 - `docs/brand/OPRINO-BRAND-SYSTEM.md` — Approved design tokens and visual standards.
 - `docs/releases/V1-COMMERCIAL-LAUNCH-CHECKLIST.md` — Authoritative commercial launch gate checklist.
 
-### Class 2: ACTIVE (Currently Maintained Operational Documentation)
+#### Class 2: ACTIVE (Currently Maintained Operational Documentation)
 - `docs/agent/OPRINO-PROJECT-BRAIN.md` — Persistent system brain.
 - `docs/agent/OPRINO-CURRENT-STATE.md` — Live verification dashboard and cloud state.
 - `docs/agent/OPRINO-DECISION-LOG.md` — Architecture decisions and competitor trade-offs.
@@ -82,14 +108,14 @@ All 117+ documents across the repository are categorized according to the 8 stan
 - `docs/releases/V1-ROLLBACK-PLAN.md` — Production rollback protocols.
 - `README.md` & `CONTRIBUTING.md` — Repository entry point and contribution guidelines.
 
-### Class 3: RESEARCH (External Competitor Deconstruction & Architectural Spikes)
+#### Class 3: RESEARCH (External Competitor Deconstruction & Architectural Spikes)
 - `docs/research/README.md` — Canonical research index.
 - `docs/research/competitor-reverse-engineering/00-RESEARCH-INDEX.md` through `25-PRODUCTION-ENVIRONMENT-VERIFICATION-REPORT.md` (26 documents) — TaskOPad & Unolo product audits, workflows, UI/UX, technical behavior, and empirical validation.
 - `research/archived-spikes/spike_c_auth/` — Mobile authentication spike.
 - `research/archived-spikes/spike_d_openapi/` — OpenAPI generation spike.
 - `research/archived-spikes/spike_e_security/` — Device identity spike.
 
-### Class 4: HISTORICAL (Past Milestone Verifications & Point-in-Time Audits)
+#### Class 4: HISTORICAL (Past Milestone Verifications & Point-in-Time Audits)
 - `docs/handoff/CODEX-CLOUD-HANDOFF.md` — Historical handoff document from October 15 milestone.
 - `docs/architecture/PHASE-01A-FREEZE-CHECKLIST.md` — Milestone signoff.
 - `docs/architecture/PHASE-01B-GATE-CHECKLIST.md` — Milestone signoff.
@@ -123,18 +149,18 @@ All 117+ documents across the repository are categorized according to the 8 stan
   - `TEST-EVIDENCE.md`
   - `V1-FEATURE-COVERAGE.md`
 
-### Class 5: DUPLICATE & OVERLAPPING (Content Preserved for Traceability, Canonical Pointer Established)
+#### Class 5: DUPLICATE & OVERLAPPING (Preserved for Traceability, Canonical Pointer Established)
 - Multiple historical audits in `docs/audits/` (such as `PROJECT-STATUS.md`, `CURRENT-DEPLOYMENT-STATUS.md`, and `BRANCH-INVENTORY.md`) describe earlier branches that have since been merged into `main`.
 - **Policy:** In accordance with the non-destructive documentation standard, these files are **retained** without deletion. Their status is marked as HISTORICAL, and incoming agents are instructed via `AGENTS.md` and `docs/agent/` to consult `docs/agent/OPRINO-CURRENT-STATE.md` as the single canonical source of truth for current deployment reality.
 
-### Class 6: SUPERSEDED
+#### Class 6: SUPERSEDED
 - Early speculative backlogs in `docs/research/competitor-reverse-engineering/08` and `09` are superseded by the verified implementation matrices in `16` and the deduplicated backlog in `docs/product/GAP-ANALYSIS-AND-ROADMAP.md`.
 
-### Class 7: INCOMPLETE
-- Live Cloudflare R2 presigned tests in `services/api/test/proof-storage.live.test.ts` (requires production credentials).
+#### Class 7: INCOMPLETE
+- Live Cloudflare R2 presigned tests in `services/api/src/cloud-storage.integration.test.ts` (mock storage active; live credentials pending).
 - Multi-OEM battery test reports (requires additional physical device testbed passes).
 
-### Class 8: MISSING
+#### Class 8: MISSING
 - None. All referenced architectural decisions (ADR-001 through ADR-021) and competitor research files (00 through 25) exist in the repository.
 
 ---

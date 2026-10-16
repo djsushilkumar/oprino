@@ -2,8 +2,9 @@
 
 **Document Status:** ACTIVE & EVIDENCE-BACKED  
 **Classification:** Operational Dashboard, Verification Status, Environment Reality  
-**Repository Branch:** `docs/research-and-roadmap-alignment` (branched from `fix/auth-device-security-remediation` @ `edffd4b`)  
-**Main Branch HEAD:** `edffd4b`  
+**Repository Branch:** `docs/research-and-roadmap-alignment` (Commit: `5f48523`)  
+**Parent Commit:** `edffd4b` (`fix/auth-device-security-remediation`)  
+**Remote `origin/main` HEAD:** `87883a0`  
 **Last Verified Date:** October 2026  
 
 ---
@@ -63,12 +64,13 @@ graph LR
 
 ## 3. Commercial Launch Gating Status
 
-While the software architecture is 100% compiled and verified against cloud databases, the commercial launch remains **GATED** subject to the [V1 Launch Checklist](../../docs/releases/V1-COMMERCIAL-LAUNCH-CHECKLIST.md):
+While the software architecture is 100% compiled and verified against cloud databases, the commercial launch remains **GATED** subject to the [V1 Launch Checklist](../releases/V1-COMMERCIAL-LAUNCH-CHECKLIST.md):
 
 | Launch Gate Requirement | Current Status | Blocker / Resolution Needed |
 |---|---|---|
-| **Production Cloudflare R2 Credentials** | GATED (Mock Storage Active) | Provide live `CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY`, and bucket name to enable live signed proof uploads. |
-| **Android Production Keystore & AAB** | GATED (Debug Keystore Active) | Generate production release `.jks` keystore and configure GitHub Secrets for automated Play Console deployment. |
+| **Production Cloudflare R2 Credentials** | GATED (Mock Storage Active) | Provide canonical env vars in Render: `S3_BUCKET_NAME=oprino-production-media`, `S3_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION=auto`. |
+| **Android Production Keystore & Signed APK** | GATED (Debug Keystore Active) | Populate GitHub Secrets in `.github/workflows/mobile-release.yml`: `OPRINO_RELEASE_KEYSTORE_BASE64`, `OPRINO_RELEASE_KEYSTORE_PASSWORD`, `OPRINO_RELEASE_KEY_ALIAS`, `OPRINO_RELEASE_KEY_PASSWORD`, and `OPRINO_RELEASE_CERT_SHA256` to compile signed production APK. |
+| **Native Background Push (FCM / APNs)** | GATED (In-App SSE Active) | In-App Badge Drawer and SSE stream are verified. Native background push alerts via Firebase Cloud Messaging are required for V1 mobile release per PRD. |
 | **Multi-OEM Background GPS Validation** | GATED (OnePlus Verified) | Perform real-world 8-hour shift field walks across Xiaomi HyperOS, Samsung OneUI, and Oppo ColorOS to benchmark battery drain (<3%/hr) and background keepalive. |
 | **Production Domain & SSL Wiring** | GATED (Vercel/Render Domains) | Map custom production domains (e.g., `app.oprino.com`, `api.oprino.com`) with Cloudflare DNS proxying. |
 | **Owner Commercial Sign-Off** | PENDING | Final stakeholder review of pricing plans, Terms of Service, and Privacy Policy. |
