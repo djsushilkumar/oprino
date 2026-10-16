@@ -52,7 +52,94 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
   });
 
-  it('2. Authorizes legitimate preview deployment matching strict oprino pattern with credentials', async () => {
+  it('2. Authorizes legitimate preview deployment matching verified team-scoped namespace with credentials', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'https://oprino-preview-deploy-123-djsushilkumar.vercel.app',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-preview-deploy-123-djsushilkumar.vercel.app');
+    assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
+  });
+
+  it('3. Authorizes legitimate preview deployment with team suffix and branch slug', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'https://oprino-git-feat-billing-djsushilkumar-7890.vercel.app',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-git-feat-billing-djsushilkumar-7890.vercel.app');
+    assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
+  });
+
+  it('4. Authorizes explicitly configured extra origin from CORS_ORIGINS with credentials', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'https://app.oprino.com',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://app.oprino.com');
+    assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
+  });
+
+  it('5. Negative test: Strictly rejects third-party domain imitating oprino-attacker prefix', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'https://oprino-attacker.vercel.app',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect third-party domain imitating oprino prefix');
+  });
+
+  it('6. Negative test: Strictly rejects third-party domain imitating oprino-evil prefix', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'https://oprino-evil.vercel.app',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect oprino-evil prefix');
+  });
+
+  it('7. Negative test: Strictly rejects third-party domain imitating oprino-fake-login prefix', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'https://oprino-fake-login.vercel.app',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect oprino-fake-login prefix');
+  });
+
+  it('8. Negative test: Strictly rejects unscoped Vercel deployment lacking verified team namespace', async () => {
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
@@ -63,11 +150,10 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-preview-deploy-123.vercel.app');
-    assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
+    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect unscoped preview domain');
   });
 
-  it('3. Strictly rejects arbitrary untrusted third-party Vercel domains (prevents credentialed theft)', async () => {
+  it('9. Negative test: Strictly rejects arbitrary third-party Vercel domains', async () => {
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
@@ -81,7 +167,7 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect untrusted Vercel origin');
   });
 
-  it('4. Strictly rejects cleartext HTTP even for legitimate domain', async () => {
+  it('10. Negative test: Strictly rejects cleartext HTTP even for legitimate domain', async () => {
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
@@ -95,12 +181,12 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect cleartext HTTP origin');
   });
 
-  it('5. Strictly rejects suffix injection attacks targeting Vercel regex', async () => {
+  it('11. Negative test: Strictly rejects suffix injection attacks targeting Vercel regex', async () => {
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
       headers: {
-        origin: 'https://evil-oprino.vercel.app.attacker.com',
+        origin: 'https://oprino-preview-djsushilkumar.vercel.app.attacker.com',
         'access-control-request-method': 'GET',
       },
     });

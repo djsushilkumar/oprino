@@ -130,12 +130,31 @@ export function buildServer(options?: {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
+  // Exact trusted production origins & mobile deep links
   const allowedOrigins: (string | RegExp)[] = [
-    env.API_PUBLIC_URL,
     'https://oprino.vercel.app',
-    /^https:\/\/oprino(?:-[a-zA-Z0-9_-]+)?\.vercel\.app$/,
     'oprino://app',
+    // Strictly scoped to verified Oprino team namespace on Vercel (e.g. oprino-*-djsushilkumar*.vercel.app)
+    // Third-party domains imitating the 'oprino-' prefix (e.g. oprino-attacker.vercel.app) are rejected.
+    /^https:\/\/oprino-[a-zA-Z0-9_-]+-djsushilkumar(?:-[a-zA-Z0-9]+)?\.vercel\.app$/,
   ];
+
+  if (env.APP_PUBLIC_URL) {
+    try {
+      allowedOrigins.push(new URL(env.APP_PUBLIC_URL).origin);
+    } catch {
+      allowedOrigins.push(env.APP_PUBLIC_URL);
+    }
+  }
+
+  if (env.API_PUBLIC_URL) {
+    try {
+      allowedOrigins.push(new URL(env.API_PUBLIC_URL).origin);
+    } catch {
+      allowedOrigins.push(env.API_PUBLIC_URL);
+    }
+  }
+
   if (env.NODE_ENV !== 'production' && env.APP_ENV !== 'production') {
     allowedOrigins.push(
       'http://localhost:3000',
@@ -144,6 +163,8 @@ export function buildServer(options?: {
       'http://127.0.0.1:3001',
     );
   }
+
+  // Explicitly controlled preview origins configured via CORS_ORIGINS
   if (env.CORS_ORIGINS) {
     const extraOrigins = env.CORS_ORIGINS.split(',')
       .map((o) => o.trim())

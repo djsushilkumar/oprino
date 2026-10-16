@@ -6,6 +6,7 @@ export const EnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   HOST: z.string().default('0.0.0.0'),
   API_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
+  APP_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
   BETTER_AUTH_SECRET: z
     .string()
     .min(16)
