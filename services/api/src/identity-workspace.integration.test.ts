@@ -37,6 +37,7 @@ describe('Oprino Identity, Workspace & Multi-Tenant API Integration Tests', () =
       await db.delete(schema.users).where(sql`id IN (${userAId}, ${userBId})`);
     }
     await app.close();
+    await dbClient.client.end();
   });
 
   test('1. Unauthenticated request to /v1/me returns 401', async () => {

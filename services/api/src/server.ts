@@ -254,6 +254,14 @@ export function buildServer(options?: {
     return reply.status(statusCode).send(responsePayload);
   });
 
+  // Deterministic resource teardown on server shutdown
+  app.addHook('onClose', async () => {
+    await pubsub.close();
+    if (!options?.dbClient) {
+      await dbClient.client.end({ timeout: 5 });
+    }
+  });
+
   return {
     app,
     env,

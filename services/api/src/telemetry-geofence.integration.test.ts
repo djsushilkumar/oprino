@@ -156,6 +156,7 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
   after(async () => {
     await app.close();
     await appDbClient.client.end();
+    await dbClient.client.end();
   });
 
   // -------------------------------------------------------------------------

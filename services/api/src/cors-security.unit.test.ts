@@ -1,5 +1,6 @@
-import { describe, it } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import type { FastifyInstance } from 'fastify';
 import { buildServer } from './server.js';
 
 describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
@@ -24,8 +25,19 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     client: { end: async () => {} } as any,
   };
 
+  let app: FastifyInstance;
+
+  before(async () => {
+    const server = buildServer({ env: baseTestEnv as any, dbClient: mockDbClient });
+    app = server.app;
+    await app.ready();
+  });
+
+  after(async () => {
+    await app.close();
+  });
+
   it('1. Authorizes legitimate production web origin with credentials', async () => {
-    const { app } = buildServer({ env: baseTestEnv as any, dbClient: mockDbClient });
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
@@ -41,7 +53,6 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
   });
 
   it('2. Authorizes legitimate preview deployment matching strict oprino pattern with credentials', async () => {
-    const { app } = buildServer({ env: baseTestEnv as any, dbClient: mockDbClient });
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
@@ -57,7 +68,6 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
   });
 
   it('3. Strictly rejects arbitrary untrusted third-party Vercel domains (prevents credentialed theft)', async () => {
-    const { app } = buildServer({ env: baseTestEnv as any, dbClient: mockDbClient });
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
@@ -72,7 +82,6 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
   });
 
   it('4. Strictly rejects cleartext HTTP even for legitimate domain', async () => {
-    const { app } = buildServer({ env: baseTestEnv as any, dbClient: mockDbClient });
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
@@ -87,7 +96,6 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
   });
 
   it('5. Strictly rejects suffix injection attacks targeting Vercel regex', async () => {
-    const { app } = buildServer({ env: baseTestEnv as any, dbClient: mockDbClient });
     const res = await app.inject({
       method: 'OPTIONS',
       url: '/health/live',
