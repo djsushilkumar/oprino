@@ -95,7 +95,7 @@ if (fs.existsSync(mobileReleasePath)) {
   );
   assertCheck(
     'Mobile Release Workflow uses env mapping for secrets without inline script interpolation',
-    content.includes('RELEASE_KEYSTORE_BASE64: ${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 }}') &&
+    content.includes('RELEASE_KEYSTORE_BASE64: ${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64') &&
       !content.includes('${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 }} | base64'),
     'mobile-release.yml interpolates secrets directly into inline bash scripts instead of mapping to env.'
   );
@@ -103,6 +103,16 @@ if (fs.existsSync(mobileReleasePath)) {
     'Mobile Release Workflow validates keystore and certificate integrity using keytool',
     content.includes('keytool -list -v'),
     'mobile-release.yml lacks fail-closed certificate integrity validation using keytool.'
+  );
+  assertCheck(
+    'Mobile Release Workflow validates release certificate SHA-256 fingerprint',
+    content.includes('ACTUAL_SHA256=') && content.includes('OPRINO_RELEASE_CERT_SHA256'),
+    'mobile-release.yml lacks release certificate SHA-256 fingerprint verification.'
+  );
+  assertCheck(
+    'Mobile Release Workflow verifies compiled APK cryptographic signature',
+    content.includes('apksigner verify') || content.includes('jarsigner -verify'),
+    'mobile-release.yml lacks compiled APK signature verification.'
   );
 }
 

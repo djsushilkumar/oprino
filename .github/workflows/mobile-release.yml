@@ -54,10 +54,11 @@ jobs:
 
       - name: Validate & Provision Production Release Signing Credentials
         env:
-          RELEASE_KEYSTORE_BASE64: ${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 }}
-          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.OPRINO_RELEASE_KEYSTORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.OPRINO_RELEASE_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.OPRINO_RELEASE_KEY_PASSWORD }}
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 || secrets.OPRINO_KEYSTORE_BASE64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.OPRINO_RELEASE_KEYSTORE_PASSWORD || secrets.OPRINO_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.OPRINO_RELEASE_KEY_ALIAS || secrets.OPRINO_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.OPRINO_RELEASE_KEY_PASSWORD || secrets.OPRINO_KEY_PASSWORD }}
+          EXPECTED_CERT_SHA256: ${{ vars.OPRINO_RELEASE_CERT_SHA256 || secrets.OPRINO_RELEASE_CERT_SHA256 }}
         run: |
           echo "=================================================================="
           echo "       OPRINO PRODUCTION RELEASE SIGNING CREDENTIALS GATE         "
@@ -65,10 +66,12 @@ jobs:
           if [ -z "$RELEASE_KEYSTORE_BASE64" ] || [ -z "$RELEASE_KEYSTORE_PASSWORD" ] || [ -z "$RELEASE_KEY_ALIAS" ] || [ -z "$RELEASE_KEY_PASSWORD" ]; then
             echo "❌ CRITICAL SECURITY GATE VIOLATION: Production release signing secrets are unconfigured or incomplete."
             echo "Required GitHub repository secrets:"
-            echo "  - OPRINO_RELEASE_KEYSTORE_BASE64"
-            echo "  - OPRINO_RELEASE_KEYSTORE_PASSWORD"
-            echo "  - OPRINO_RELEASE_KEY_ALIAS"
-            echo "  - OPRINO_RELEASE_KEY_PASSWORD"
+            echo "  - OPRINO_RELEASE_KEYSTORE_BASE64 (or OPRINO_KEYSTORE_BASE64)"
+            echo "  - OPRINO_RELEASE_KEYSTORE_PASSWORD (or OPRINO_KEYSTORE_PASSWORD)"
+            echo "  - OPRINO_RELEASE_KEY_ALIAS (or OPRINO_KEY_ALIAS)"
+            echo "  - OPRINO_RELEASE_KEY_PASSWORD (or OPRINO_KEY_PASSWORD)"
+            echo "Optional verification secret/variable:"
+            echo "  - OPRINO_RELEASE_CERT_SHA256"
             echo "Generating debug keystore for production distribution artifacts is strictly forbidden."
             exit 1
           fi
@@ -77,11 +80,30 @@ jobs:
           printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$HOME/.android/oprino-release.jks"
 
           echo "Validating release keystore and certificate integrity..."
-          keytool -list -v \
+          KEYTOOL_OUT=$(keytool -list -v \
             -keystore "$HOME/.android/oprino-release.jks" \
             -storepass "$RELEASE_KEYSTORE_PASSWORD" \
-            -alias "$RELEASE_KEY_ALIAS" > /dev/null
-          echo "✓ Keystore certificate validated successfully."
+            -alias "$RELEASE_KEY_ALIAS")
+
+          ACTUAL_SHA256=$(echo "$KEYTOOL_OUT" | grep -i "SHA256:" | head -n 1 | sed 's/.*SHA256:[[:space:]]*//I' | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ -z "$ACTUAL_SHA256" ]; then
+            echo "❌ Failed to extract SHA-256 certificate fingerprint from release keystore."
+            exit 1
+          fi
+          echo "✓ Keystore certificate validated. SHA-256 fingerprint: $ACTUAL_SHA256"
+
+          if [ -n "$EXPECTED_CERT_SHA256" ]; then
+            NORMALIZED_EXPECTED=$(echo "$EXPECTED_CERT_SHA256" | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+            if [ "$ACTUAL_SHA256" != "$NORMALIZED_EXPECTED" ]; then
+              echo "❌ CRITICAL SECURITY ERROR: Release certificate SHA-256 fingerprint mismatch!"
+              echo "Expected: $NORMALIZED_EXPECTED"
+              echo "Actual:   $ACTUAL_SHA256"
+              exit 1
+            fi
+            echo "✓ Release certificate SHA-256 fingerprint strictly matches expected repository fingerprint."
+          else
+            echo "ℹ Note: OPRINO_RELEASE_CERT_SHA256 is not configured; validated via keystore alias and password integrity."
+          fi
 
           cat <<EOF > apps/mobile/android/key.properties
           storeFile=$HOME/.android/oprino-release.jks
@@ -93,7 +115,7 @@ jobs:
 
       - name: Pre-Build Production Environment Validation
         env:
-          PROD_API_URL: ${{ vars.PRODUCTION_API_URL || 'https://oprino-api.onrender.com' }}
+          PROD_API_URL: ${{ vars.PROD_API_URL || vars.PRODUCTION_API_URL || 'https://oprino-api.onrender.com' }}
         run: |
           node scripts/verify-production-build-defines.mjs \
             --environment=PRODUCTION \
@@ -101,16 +123,37 @@ jobs:
 
       - name: Build Unified Production Release APK
         env:
-          PROD_API_URL: ${{ vars.PRODUCTION_API_URL || 'https://oprino-api.onrender.com' }}
+          PROD_API_URL: ${{ vars.PROD_API_URL || vars.PRODUCTION_API_URL || 'https://oprino-api.onrender.com' }}
         run: |
           cd apps/mobile
           flutter build apk --release --no-tree-shake-icons \
             --dart-define=ENVIRONMENT=PRODUCTION \
             --dart-define=API_BASE_URL="$PROD_API_URL"
 
-      - name: Verify Production Release Artifacts
+      - name: Verify Production Release Artifacts & APK Signature
         run: |
           node scripts/verify-production-artifacts.mjs
+
+          echo "=================================================================="
+          echo "       VERIFYING COMPILED APK CRYPTOGRAPHIC SIGNATURE            "
+          echo "=================================================================="
+          APK_PATH=$(find apps/mobile/build/app/outputs/flutter-apk -name "*release*.apk" 2>/dev/null | head -n 1)
+          if [ -z "$APK_PATH" ] || [ ! -f "$APK_PATH" ]; then
+            echo "❌ CRITICAL: Compiled release APK not found for signature verification."
+            exit 1
+          fi
+          echo "Verifying APK signature: $APK_PATH"
+
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$APKSIGNER" ] && [ -x "$APKSIGNER" ]; then
+            echo "Using apksigner: $APKSIGNER"
+            "$APKSIGNER" verify --verbose --print-certs "$APK_PATH"
+            echo "✓ APK signature schemes (v1/v2/v3) verified successfully with apksigner."
+          else
+            echo "Using jarsigner for APK verification..."
+            jarsigner -verify -verbose -certs "$APK_PATH"
+            echo "✓ APK signature verified successfully with jarsigner."
+          fi
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
