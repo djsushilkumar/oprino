@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/oprino_theme.dart';
 import '../../../core/network/api_client_provider.dart';
@@ -26,6 +27,19 @@ class _DeviceRevokedScreenState extends ConsumerState<DeviceRevokedScreen> {
     final id = await storage.getOrCreateInstallationId();
     if (mounted) {
       setState(() => _installationId = id);
+    }
+  }
+
+  void _copyInstallationId() {
+    if (_installationId != null) {
+      Clipboard.setData(ClipboardData(text: _installationId!));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Installation ID copied to clipboard'),
+          duration: Duration(seconds: 2),
+          backgroundColor: OprinoColors.navy,
+        ),
+      );
     }
   }
 
@@ -100,45 +114,88 @@ class _DeviceRevokedScreenState extends ConsumerState<DeviceRevokedScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: const Color(0xFFFECACA)),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        const Text(
-                          'Revoked Installation Identifier',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF991B1B),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Revoked Installation Identifier',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF991B1B),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _installationId ?? 'Loading...',
+                                style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                  color: OprinoColors.navy,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _installationId ?? 'Loading...',
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                            color: OprinoColors.navy,
-                          ),
+                        IconButton(
+                          onPressed: _copyInstallationId,
+                          icon: const Icon(Icons.copy, size: 18, color: Color(0xFF991B1B)),
+                          tooltip: 'Copy Installation ID',
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
 
-                  // Reset Installation Action Button
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      await ref.read(authStateProvider.notifier).resetRevokedInstallation();
-                    },
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text('Reset Installation & Return to Sign In'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFDC2626),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  const Text(
+                    'Provide this Installation Identifier to your workspace administrator to request reactivation or approval.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF991B1B),
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 28),
+
+                  // Action Buttons
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(authStateProvider.notifier).checkSession();
+                      },
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('Check Approval Status'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFDC2626),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        ref.read(authStateProvider.notifier).acknowledgeRevocationAndReturnToSignIn();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF991B1B),
+                        side: const BorderSide(color: Color(0xFFFCA5A5)),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Return to Sign In'),
                     ),
                   ),
                 ],

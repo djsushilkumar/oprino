@@ -27,12 +27,12 @@ global.localStorage = {
   length: 0,
 };
 
-describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
+describe('Web Owner Onboarding & Multi-Tenant Flow (HttpOnly Cookie Architecture)', () => {
   beforeEach(() => {
     global.localStorage.clear();
   });
 
-  it('1. signup: creates user account and stores session token', async () => {
+  it('1. signup: creates user account with credentials: include and eliminates localStorage token storage', async () => {
     const mockResponse = {
       token: 'mock-session-token-signup',
       user: {
@@ -48,6 +48,7 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
     global.fetch = mock.fn(async (url: string, init?: RequestInit) => {
       assert.match(url, /\/v1\/auth\/signup$/);
       assert.strictEqual(init?.method, 'POST');
+      assert.strictEqual(init?.credentials, 'include');
       const body = JSON.parse(init?.body as string);
       assert.strictEqual(body.email, 'founder@acme.com');
       assert.strictEqual(body.name, 'Acme Founder');
@@ -64,13 +65,13 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
       password: 'SecurePassword123!',
     });
 
-    assert.strictEqual(res.token, 'mock-session-token-signup');
     assert.strictEqual(res.user.email, 'founder@acme.com');
-    assert.strictEqual(getStoredToken(), 'mock-session-token-signup');
+    // Security Invariant: Plain-text session tokens must NOT be stored in localStorage
+    assert.strictEqual(getStoredToken(), null);
     assert.strictEqual(getStoredWorkspaceId(), null);
   });
 
-  it('2. signin: authenticates and records active workspace context', async () => {
+  it('2. signin: authenticates with credentials: include and records active workspace context', async () => {
     const mockResponse = {
       token: 'mock-session-token-signin',
       user: {
@@ -86,6 +87,7 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
     global.fetch = mock.fn(async (url: string, init?: RequestInit) => {
       assert.match(url, /\/v1\/auth\/signin$/);
       assert.strictEqual(init?.method, 'POST');
+      assert.strictEqual(init?.credentials, 'include');
       const body = JSON.parse(init?.body as string);
       assert.strictEqual(body.email, 'founder@acme.com');
 
@@ -100,13 +102,13 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
       password: 'SecurePassword123!',
     });
 
-    assert.strictEqual(res.token, 'mock-session-token-signin');
-    assert.strictEqual(getStoredToken(), 'mock-session-token-signin');
+    // Security Invariant: Zero token storage in browser storage
+    assert.strictEqual(getStoredToken(), null);
     assert.strictEqual(getStoredWorkspaceId(), '22222222-2222-4222-8222-222222222222');
   });
 
-  it('3. workspace creation: creates workspace and auto-activates context', async () => {
-    setStoredToken('mock-session-token');
+  it('3. workspace creation: creates workspace and auto-activates context with credentials: include', async () => {
+    setStoredWorkspaceId(null);
 
     const mockResponse = {
       id: '33333333-3333-4333-8333-333333333333',
@@ -121,10 +123,7 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
     global.fetch = mock.fn(async (url: string, init?: RequestInit) => {
       assert.match(url, /\/v1\/workspaces$/);
       assert.strictEqual(init?.method, 'POST');
-      assert.strictEqual(
-        (init?.headers as Record<string, string>)['Authorization'],
-        'Bearer mock-session-token',
-      );
+      assert.strictEqual(init?.credentials, 'include');
 
       const body = JSON.parse(init?.body as string);
       assert.strictEqual(body.name, 'Acme Core Operations');
@@ -145,8 +144,7 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
     assert.strictEqual(getStoredWorkspaceId(), '33333333-3333-4333-8333-333333333333');
   });
 
-  it('4. authenticated shell: retrieves current context with tenant isolation headers', async () => {
-    setStoredToken('mock-session-token');
+  it('4. authenticated shell: retrieves current context with tenant isolation headers and cookies', async () => {
     setStoredWorkspaceId('33333333-3333-4333-8333-333333333333');
 
     const mockMeResponse = {
@@ -187,8 +185,8 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
     global.fetch = mock.fn(async (url: string, init?: RequestInit) => {
       assert.match(url, /\/v1\/me$/);
       assert.strictEqual(init?.method, 'GET');
+      assert.strictEqual(init?.credentials, 'include');
       const headers = init?.headers as Record<string, string>;
-      assert.strictEqual(headers['Authorization'], 'Bearer mock-session-token');
       assert.strictEqual(headers['X-Workspace-Id'], '33333333-3333-4333-8333-333333333333');
 
       return new Response(JSON.stringify(mockMeResponse), {
@@ -204,7 +202,6 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
   });
 
   it('5. workspace switch: switches active workspace and updates storage', async () => {
-    setStoredToken('mock-session-token');
     const newWorkspaceId = '44444444-4444-4444-8444-444444444444';
 
     const mockSwitchResponse = {
@@ -217,6 +214,7 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
     global.fetch = mock.fn(async (url: string, init?: RequestInit) => {
       assert.match(url, /\/v1\/session\/workspace$/);
       assert.strictEqual(init?.method, 'POST');
+      assert.strictEqual(init?.credentials, 'include');
       const body = JSON.parse(init?.body as string);
       assert.strictEqual(body.workspaceId, newWorkspaceId);
 
@@ -231,13 +229,13 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
     assert.strictEqual(getStoredWorkspaceId(), newWorkspaceId);
   });
 
-  it('6. logout: revokes credentials and clears local storage', async () => {
-    setStoredToken('mock-session-token');
+  it('6. logout: revokes credentials on server and clears workspace state', async () => {
     setStoredWorkspaceId('44444444-4444-4444-8444-444444444444');
 
     global.fetch = mock.fn(async (url: string, init?: RequestInit) => {
       assert.match(url, /\/v1\/auth\/signout$/);
       assert.strictEqual(init?.method, 'POST');
+      assert.strictEqual(init?.credentials, 'include');
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -250,8 +248,6 @@ describe('Web Owner Onboarding & Multi-Tenant Flow', () => {
   });
 
   it('7. unauthorized access: throws 401 error on rejected session', async () => {
-    setStoredToken('expired-or-invalid-token');
-
     global.fetch = mock.fn(async () => {
       return new Response(
         JSON.stringify({ statusCode: 401, error: 'Unauthorized', message: 'Session expired' }),

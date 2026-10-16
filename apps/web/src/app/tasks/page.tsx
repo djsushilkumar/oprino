@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
 import { Icon } from '../../components/Icon';
-import { webApi, getStoredToken, type WorkspaceMember } from '../../lib/api';
+import { webApi, type WorkspaceMember } from '../../lib/api';
 import type {
   MeResponse,
   TaskResponse,
@@ -52,12 +52,6 @@ export default function TasksPage() {
   const [isSubmittingVerification, setIsSubmittingVerification] = useState(false);
 
   const loadData = useCallback(async () => {
-    const token = getStoredToken();
-    if (!token) {
-      router.push('/auth/signin');
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);

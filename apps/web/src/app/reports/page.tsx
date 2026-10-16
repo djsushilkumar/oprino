@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
 import { Icon } from '../../components/Icon';
-import { webApi, getStoredToken } from '../../lib/api';
+import { webApi } from '../../lib/api';
 import type {
   MeResponse,
   AttendanceReportResponse,
@@ -34,12 +34,6 @@ export default function ReportsPage() {
   const [visitReport, setVisitReport] = useState<VisitReportResponse | null>(null);
 
   const loadData = useCallback(async () => {
-    const token = getStoredToken();
-    if (!token) {
-      router.push('/auth/signin');
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);

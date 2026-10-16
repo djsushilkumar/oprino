@@ -150,40 +150,47 @@ class AuthInterceptor extends Interceptor {
 }
 ```
 
-### 4.4 Session Revocation, Logout & Installation Deactivation
-1. **Explicit User Logout:**
-   - Flutter calls `POST /api/auth/sign-out`. Better Auth invalidates the session in PostgreSQL and flushes the Redis session cache key.
-   - Flutter client deletes the token from `flutter_secure_storage` and resets in-memory application state to `unauthenticated`.
-2. **Remote Administrator Revocation:**
-   - When an Owner/Manager revokes an employee or deactivates an installation in the Web Dashboard:
-     - The corresponding record in `user_devices` is marked `is_trusted = FALSE`.
-     - The user's active session keys in Redis are flushed (`DEL session:{userId}:*`).
-   - On the mobile device's next API request, Fastify's 5-Stage Tenant Guard detects the revoked installation state and responds with:
+### 4.4 Zero-Trust Device State Machine & Revocation Architecture
+1. **Device State Machine (`pending | active | revoked`):**
+   - **Active:** Normal trusted operation. Sessions bound to `(userId, installationId)` are authorized to invoke protected endpoints.
+   - **Revoked:** The device installation is permanently de-authorized. All server-side sessions bound to this installation are immediately purged (`DELETE FROM sessions WHERE userId = :userId AND installationId = :installationId`).
+   - **Pending:** If an employee with a previously revoked device attempts to generate a new UUID or reinstall the app, the registration defaults to `pending`. Access is blocked until an administrator reviews and approves the device via `POST /v1/devices/approve`.
+
+2. **Explicit User Logout:**
+   - Flutter calls `POST /v1/auth/sign-out`. Better Auth invalidates the session in PostgreSQL and flushes the Redis session cache key.
+   - Flutter client deletes the token from `flutter_secure_storage` and resets in-memory application state to `unauthenticated`. The installation identifier is preserved.
+
+3. **Remote Administrator Revocation:**
+   - When an Owner/Manager revokes an employee or deactivates an installation in the Web Dashboard via `POST /v1/devices/revoke`:
+     - The corresponding record in `user_devices` is marked `status = 'revoked', is_trusted = FALSE, revoked_at = NOW()`.
+     - Active server-side sessions bound to this installation are dropped immediately.
+   - On the mobile device's next API request, Fastify's Stage 1B Tenant Guard detects the revoked installation state and responds with the standardized flat `ApiErrorSchema`:
      ```json
      {
-       "error": {
-         "code": "DEVICE_REVOKED",
-         "message": "This installation has been de-authorized by an administrator.",
-         "statusCode": 401
-       }
+       "statusCode": 401,
+       "error": "DEVICE_REVOKED",
+       "message": "This installation has been de-authorized by an administrator."
      }
      ```
-   - The Flutter `Dio` `ErrorInterceptor` catches HTTP 401 with code `DEVICE_REVOKED`, purges the session token from `flutter_secure_storage`, executes local domain cache clearance, and redirects the UI to an informative "Access Revoked" screen.
-3. **Session Expiry & Re-Authentication:**
-   - Session tokens have a 30-day sliding expiration window refreshed on active use. If inactive for > 30 days, the session expires naturally. On HTTP 401, the app prompts for re-authentication or biometric unlock via `local_auth`.
+   - The Flutter `Dio` `AuthInterceptor` catches HTTP 401 with code `DEVICE_REVOKED`, purges the session token, halts background GPS tracking immediately (`locationService.stopTracking()`), and transitions state to `AuthState.deviceRevoked`.
+   - **Revocation Invariant:** The client-side reset bypass is eliminated. The installation ID is preserved so the device remains securely identified as revoked. Re-admission requires administrative approval.
+
+4. **Session Expiry & Re-Authentication:**
+   - Session tokens have a 30-day sliding expiration window refreshed on active use (`updateAge: 86400`). If inactive for > 30 days, the session expires naturally. On HTTP 401, the app prompts for re-authentication.
 
 ### 4.5 Mobile vs. Web Authentication & CSRF Protection Architecture
 
 To maintain rigorous security across both web browsers and native mobile runtimes:
 
-1. **Web Dashboard Policy (Browser Cookies):**
+1. **Web Dashboard Policy (Same-Origin BFF Proxy & HttpOnly Cookies):**
    - The Next.js dashboard uses secure, `HttpOnly`, `SameSite=Lax`, `Secure` session cookies.
-   - Better Auth's native CSRF and origin validation remains fully enforced. Every state-changing browser request is verified against the authoritative server origin (`https://app.oprino.com`).
+   - **Same-Origin BFF Architecture:** Browser requests are proxied via Next.js `rewrites()` (`/api/backend/:path*` → `${API_URL}/:path*`). All browser requests target the same origin (`oprino.vercel.app`), ensuring cookies are included automatically via `credentials: 'include'` without cross-site cookie restrictions or `localStorage` token storage.
+   - Better Auth's native CSRF and origin validation remains fully enforced. Every state-changing browser request is verified against the authoritative server origin.
 
 2. **Mobile Client Policy (Bearer & Custom Scheme Origin Validation):**
-   - **Prohibition of Global CSRF Disabling:** Setting `advanced.disableCSRFCheck: true` globally is **strictly prohibited**. Disabling CSRF globally opens the web surface to cross-site request forgery attacks.
-   - **Mobile Origin Handling:** Native Dart/Dio requests operate over TLS using opaque Bearer session credentials. For endpoints requiring origin verification, the mobile client supplies the approved custom application scheme (`oprino://app`), which is explicitly whitelisted in Fastify's Better Auth `trustedOrigins` configuration.
-   - **Session Replay Immunity:** Because Bearer tokens are stored in platform-backed secure hardware storage (Android Keystore / iOS Keychain) and verified against PostgreSQL/Redis with transactional installation binding, token interception via web-based XSS or CSRF vectors is prevented.
+   - **Prohibition of Global CSRF Disabling:** Setting `advanced.disableCSRFCheck: true` globally is **strictly prohibited**.
+   - **Mobile Origin Handling:** Native Dart/Dio requests operate over TLS using opaque Bearer session credentials. Mobile requests supply the approved custom application scheme (`Origin: oprino://app`), whitelisted in Fastify's Better Auth `trustedOrigins` configuration.
+   - **Session Replay Immunity:** Because Bearer tokens are stored in platform-backed secure hardware storage (Android Keystore / iOS Keychain) and verified against PostgreSQL/Redis with transactional installation binding (`sessions.installation_id`), token interception via web-based XSS or CSRF vectors is completely prevented.
 
 ### 4.6 Deep Links, Password Reset & Email Verification
 1. **Universal Links & App Links:** Registered via `https://app.oprino.com/auth/*` backed by `assetlinks.json` and `apple-app-site-association`.

@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
 import { Icon } from '../../components/Icon';
-import { webApi, getStoredToken, getStoredWorkspaceId, getApiBaseUrl } from '../../lib/api';
+import { webApi, getStoredWorkspaceId, getApiBaseUrl } from '../../lib/api';
 import type {
   MeResponse,
   LiveWorkerLocation,
@@ -73,12 +73,6 @@ export default function LiveMapPage() {
 
   // Load Initial Data
   const loadInitialData = useCallback(async () => {
-    const token = getStoredToken();
-    if (!token) {
-      router.push('/auth/signin');
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
@@ -115,9 +109,8 @@ export default function LiveMapPage() {
   // Connect to SSE Stream via short-lived single-use streaming ticket
   // Strictly protects bearer token from leaking into query parameters or browser history
   const connectSseStream = useCallback(async () => {
-    const token = getStoredToken();
     const workspaceId = getStoredWorkspaceId();
-    if (!token || !workspaceId) return;
+    if (!workspaceId) return;
 
     try {
       if (sseRef.current) {

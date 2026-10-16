@@ -6,7 +6,6 @@ import { HeaderNav } from '../../components/HeaderNav';
 import { Icon } from '../../components/Icon';
 import {
   webApi,
-  getStoredToken,
   type WorkspaceMember,
 } from '../../lib/api';
 import type {
@@ -70,12 +69,6 @@ export default function TeamPage() {
   const [lifecycleError, setLifecycleError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
-    const token = getStoredToken();
-    if (!token) {
-      router.push('/auth/signin');
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);

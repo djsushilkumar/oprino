@@ -156,7 +156,12 @@ export function validateEnv(customEnv?: Record<string, unknown>): Env {
     if (result.data.CORS_ORIGINS) {
       const origins = result.data.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
       for (const origin of origins) {
-        if (origin === '*' || origin === 'oprino://app') continue;
+        if (origin === '*') {
+          throw new Error(
+            `Insecure ${envName} CORS Configuration: Wildcard origin "*" with credentials is strictly prohibited in ${envName.toLowerCase()}.`,
+          );
+        }
+        if (origin === 'oprino://app') continue;
         try {
           const parsedOrigin = new URL(origin);
           if (parsedOrigin.protocol !== 'https:') {

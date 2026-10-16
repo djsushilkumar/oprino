@@ -81,12 +81,15 @@ flowchart TD
 - **CORS & Headers:** Explicitly restricted to authorized dashboard domains (`app.oprino.com`). Employs strict CSP, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: strict-origin-when-cross-origin`.
 
 ### 3.2 Layer 2: Identity & Session Security (Audited Framework)
-Per [`ADR-006`](./ADR-006-authentication.md), authentication is handled via an established, audited framework (Better Auth / audited engine) with PostgreSQL storage:
+Per [`ADR-006`](./ADR-006-authentication.md), authentication is handled via an established, audited framework (Better Auth) with PostgreSQL storage:
 - **Credential Storage:** User passwords hashed using **Argon2id** (memory cost: 64MB, iterations: 3, parallelism: 4). Plaintext passwords are never logged, cached, or transmitted after hashing.
 - **Dual Surface Session Handling:**
-  - **Web Dashboard:** Secure, HttpOnly, SameSite=Lax, encrypted session cookies protecting against JavaScript XSS token theft.
-  - **Mobile Apps:** Secure opaque session tokens stored in platform-backed secure storage (Android Keystore / iOS Keychain) under namespaced keys.
-- **Installation Registration & Revocation:** Sessions are bound to Oprino-generated Installation IDs (`installation_id`). Deactivating an employee or revoking an installation flushes session records immediately from Redis and PostgreSQL.
+  - **Web Dashboard (Same-Origin BFF Proxy):** Secure, HttpOnly, SameSite=Lax session cookies proxied via Next.js `/api/backend/*` rewrites. Tokens are never exposed to browser `localStorage` or JavaScript scope, completely eliminating XSS token exfiltration risks.
+  - **Mobile Apps (Platform Hardware Keystore):** Secure opaque session tokens stored in platform-backed secure hardware storage (Android Keystore / iOS Keychain) under namespaced keys.
+- **Zero-Trust Device State Machine (`pending | active | revoked`):**
+  - Mobile sessions are strictly bound to `sessions.installation_id`. Mismatches or missing headers are rejected (`401 DEVICE_ID_REQUIRED` / `401 DEVICE_MISMATCH`).
+  - Remote revocation purges all server-side sessions bound to `(userId, installationId)` immediately and marks `user_devices.status = 'revoked'`.
+  - Anti-bypass invariant: Users with revoked devices attempting to register new UUIDs or reinstall are placed in `pending` state (`401 DEVICE_PENDING_APPROVAL`) requiring explicit administrative approval.
 
 ### 3.3 Layer 3 & 4: Zero-Trust 5-Stage Multi-Tenancy & Pooled RLS Safety
 Per [`ADR-005`](./ADR-005-multitenancy.md):

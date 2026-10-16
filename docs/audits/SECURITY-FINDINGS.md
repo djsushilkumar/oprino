@@ -20,12 +20,16 @@ The security review evaluated the application against the OWASP Top 10, multi-te
 - **Critical (P0):** 0
 - **High (P0 Blocker):** 0 (All remediated and verified)
   - `SEC-01`: Hardcoded Default Password Pattern in Web Team UI — **RESOLVED**
+  - `SEC-05`: Mobile Device Revocation Bypass via Client UUIDv4 Reset — **RESOLVED**
+  - `SEC-06`: Web Session Insecurity via LocalStorage Token Storage — **RESOLVED**
 - **Medium (P1):** 0 (All remediated and verified)
   - `SEC-02`: Member Invitation Without Password / Self-Activation — **RESOLVED**
   - `SEC-03`: Tenant Location Retention Configuration Missing — **RESOLVED**
   - `SEC-04`: Mock Media Upload Route Exposure & Tenant Barriers — **RESOLVED**
+  - `SEC-07`: Discrepancy & Type-Casting Bugs in Mobile API Error Contracts — **RESOLVED**
+  - `SEC-08`: Concurrency Race Condition on Workspace Invitation Token Redemption — **RESOLVED**
 - **Low (P2):** 1 (Non-blocking Next.js lint plugin config)
-- **Verified Hardening Controls:** 8 (All verified green in automated integration suites)
+- **Verified Hardening Controls:** 12 (All verified green in automated integration suites)
 
 ---
 
@@ -92,6 +96,64 @@ The security review evaluated the application against the OWASP Top 10, multi-te
   3. Added attendance selfie upload route `POST /v1/media/attendance-selfie-url` which validates the workspace prefix and returns isolated upload keys.
   4. Anti-replay verification prevents cross-session selfie reuse (`SELFIE_REPLAY_DETECTED`).
 - **Verification Evidence:** `services/api/src/v1-blockers.integration.test.ts` (suite BLK-004 passes).
+
+---
+
+### SEC-05: Mobile Device Revocation Bypass via Client UUIDv4 Reset
+- **Finding ID:** `SEC-05`
+- **Severity:** **HIGH (P0 Launch Blocker)**
+- **Status:** **RESOLVED**
+- **Component:** `apps/mobile/lib/core/storage/secure_storage_service.dart`, `apps/mobile/lib/features/auth/presentation/device_revoked_screen.dart`, `services/api/src/services/device.service.ts`
+- **CWE:** CWE-284: Improper Access Control / CWE-613: Insufficient Session Expiration
+- **Remediation Implemented:**
+  1. Purged `resetInstallationId()` from mobile `SecureStorageService` and removed the "Reset Installation" button from `DeviceRevokedScreen`.
+  2. Implemented Zero-Trust Device State Machine (`pending | active | revoked`) in `DeviceService`.
+  3. Added anti-bypass server invariant: if a user with a revoked device generates a new UUID or reinstalls the app, the registration defaults to `pending`, blocking API access until an administrator approves it.
+  4. Remote revocation immediately drops active server-side sessions bound to `(userId, installationId)` from the `sessions` table.
+  5. Implemented `POST /v1/devices/approve` and `GET /v1/workspaces/:workspaceId/devices` for administrative governance.
+- **Verification Evidence:** `services/api/src/device-governance.unit.test.ts` (12/12 unit tests pass).
+
+---
+
+### SEC-06: Web Session Insecurity via LocalStorage Token Storage
+- **Finding ID:** `SEC-06`
+- **Severity:** **HIGH (P0 Launch Blocker)**
+- **Status:** **RESOLVED**
+- **Component:** `apps/web/src/lib/api.ts`, `apps/web/next.config.mjs`, `apps/web/src/app/*.tsx`
+- **CWE:** CWE-922: Insecure Storage of Sensitive Information / CWE-79: Cross-Site Scripting (XSS)
+- **Remediation Implemented:**
+  1. Configured Next.js Same-Origin BFF Proxy via `rewrites()` in `next.config.mjs` (`/api/backend/:path*` -> `${apiUrl}/:path*`).
+  2. Eliminated `localStorage` token storage across all web pages and components; added `purgeLegacyToken()`.
+  3. All browser HTTP requests enforce `credentials: 'include'`, relying strictly on `HttpOnly`, `SameSite=Lax`, `Secure` session cookies.
+  4. Better Auth server configured with 30-day sliding window, daily update age, and secure production cookie flags.
+- **Verification Evidence:** `apps/web/src/web-auth-flows.test.ts` (17/17 tests pass).
+
+---
+
+### SEC-07: Discrepancy & Type-Casting Bugs in Mobile API Error Contracts
+- **Finding ID:** `SEC-07`
+- **Severity:** **MEDIUM (P1)**
+- **Status:** **RESOLVED**
+- **Component:** `services/api/src/middleware/auth.ts`, `apps/mobile/lib/core/network/auth_interceptor.dart`
+- **CWE:** CWE-703: Improper Check or Handling of Exceptional Conditions
+- **Remediation Implemented:**
+  1. Standardized backend authentication error responses to match OpenAPI `ApiErrorSchema` (`{ statusCode: 401, error: "CODE", message: "..." }`).
+  2. Mobile `AuthInterceptor` enhanced to safely extract error codes and messages from both flat and nested error structures without throwing Dart type-cast exceptions.
+  3. Protected mobile state against credential purging on transient network timeouts / offline errors.
+- **Verification Evidence:** `apps/mobile/test/auth_interceptor_test.dart` and `services/api/src/device-governance.unit.test.ts`.
+
+---
+
+### SEC-08: Concurrency Race Condition on Workspace Invitation Token Redemption
+- **Finding ID:** `SEC-08`
+- **Severity:** **MEDIUM (P1)**
+- **Status:** **RESOLVED**
+- **Component:** `services/api/src/services/workspace.service.ts`
+- **CWE:** CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')
+- **Remediation Implemented:**
+  1. Added explicit row-level locking (`.for('update')`) on invitation token queries inside database transactions.
+  2. Ensures atomic token acceptance and prevents concurrent replay attacks during simultaneous invitation acceptance.
+- **Verification Evidence:** `services/api/src/services/workspace.service.ts` verified with `pnpm typecheck` and `pnpm lint`.
 
 ---
 

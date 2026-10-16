@@ -90,13 +90,4 @@ class SecureStorageService {
     await clearAuthSession();
     await setInstallationRevoked(true);
   }
-
-  /// Resets the installation identifier by generating a fresh UUIDv4.
-  Future<String> resetInstallationId() async {
-    final newId = generateUuidV4();
-    await _storage.write(key: _installationKey, value: newId);
-    await setInstallationRevoked(false);
-    await clearAuthSession();
-    return newId;
-  }
 }

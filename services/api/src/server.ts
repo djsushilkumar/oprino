@@ -223,6 +223,7 @@ export function buildServer(options?: {
     auth,
     db: dbClient.db,
     workspaceService,
+    deviceService,
     betterAuthUrl: env.BETTER_AUTH_URL,
   });
   app.register(workspaceRoutes, {

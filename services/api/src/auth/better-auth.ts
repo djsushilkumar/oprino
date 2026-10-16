@@ -23,6 +23,20 @@ export function createAuth(env: Env, dbClient?: ReturnType<typeof createDatabase
       enabled: true,
       minPasswordLength: 8,
     },
+    session: {
+      expiresIn: 30 * 24 * 60 * 60, // 30-day sliding session
+      updateAge: 24 * 60 * 60, // Refreshed daily upon active usage
+      cookieCache: {
+        enabled: true,
+        maxAge: 5 * 60, // 5 minutes
+      },
+    },
+    advanced: {
+      useSecureCookies:
+        env.NODE_ENV === 'production' ||
+        env.APP_ENV === 'production' ||
+        env.APP_ENV === 'staging',
+    },
     databaseHooks: {
       user: {
         create: {

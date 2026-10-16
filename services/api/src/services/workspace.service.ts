@@ -673,6 +673,7 @@ export class WorkspaceService {
         .innerJoin(workspaces, eq(workspaceInvitations.workspaceId, workspaces.id))
         .innerJoin(roles, eq(workspaceInvitations.roleId, roles.id))
         .where(eq(workspaceInvitations.tokenHash, tokenHash))
+        .for('update')
         .limit(1);
 
       if (!row) {

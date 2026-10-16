@@ -79,16 +79,18 @@ void main() {
       expect(await storageService.getOrCreateInstallationId(), equals(installationId));
     });
 
-    test('6. Installation reset: creates fresh UUIDv4 and clears revoked flag', () async {
+    test('6. Device revocation persistence: installation ID preserved and cannot be cleared locally', () async {
       final initialId = await storageService.getOrCreateInstallationId();
       await storageService.handleDeviceRevocation();
       expect(await storageService.isInstallationRevoked(), isTrue);
 
-      final resetId = await storageService.resetInstallationId();
+      // Re-reading installation ID still returns original ID
+      expect(await storageService.getOrCreateInstallationId(), equals(initialId));
 
-      expect(resetId, isNot(equals(initialId)));
+      // Re-activating revocation flag requires explicit server approval callback
+      await storageService.setInstallationRevoked(false);
       expect(await storageService.isInstallationRevoked(), isFalse);
-      expect(await storageService.getOrCreateInstallationId(), equals(resetId));
+      expect(await storageService.getOrCreateInstallationId(), equals(initialId));
     });
   });
 }

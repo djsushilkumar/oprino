@@ -140,26 +140,34 @@ export function getApiBaseUrl(): string {
 }
 
 export function buildApiUrl(endpoint: string, baseUrl?: string): string {
-  const base = normalizeApiBaseUrl(baseUrl);
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  // In browser context without explicit baseUrl, use Next.js same-origin BFF proxy
+  if (typeof window !== 'undefined' && !baseUrl) {
+    return `/api/backend${cleanEndpoint}`;
+  }
+  const base = normalizeApiBaseUrl(baseUrl);
   return `${base}${cleanEndpoint}`;
 }
 
 const TOKEN_KEY = 'oprino_web_auth_token';
 const WORKSPACE_KEY = 'oprino_web_active_workspace_id';
 
-export function getStoredToken(): string | null {
-  if (typeof localStorage === 'undefined') return null;
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setStoredToken(token: string | null): void {
-  if (typeof localStorage === 'undefined') return;
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token);
-  } else {
+export function purgeLegacyToken(): void {
+  if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(TOKEN_KEY);
   }
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+export function getStoredToken(): string | null {
+  purgeLegacyToken();
+  return null;
+}
+
+export function setStoredToken(_token: string | null): void {
+  purgeLegacyToken();
 }
 
 export function getStoredWorkspaceId(): string | null {
@@ -181,7 +189,6 @@ async function request<T>(
   options: RequestInit = {},
   customWorkspaceId?: string | null,
 ): Promise<T> {
-  const token = getStoredToken();
   const activeWorkspaceId =
     customWorkspaceId !== undefined ? customWorkspaceId : getStoredWorkspaceId();
 
@@ -190,16 +197,14 @@ async function request<T>(
     ...((options.headers as Record<string, string>) || {}),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   if (activeWorkspaceId) {
     headers['X-Workspace-Id'] = activeWorkspaceId;
   }
+
   const fullUrl = buildApiUrl(endpoint);
   const res = await fetch(fullUrl, {
     ...options,
+    credentials: 'include',
     headers,
   });
 
@@ -226,9 +231,7 @@ export const webApi = {
       method: 'POST',
       body: JSON.stringify(body),
     });
-    if (res.token) {
-      setStoredToken(res.token);
-    }
+    purgeLegacyToken();
     if (res.activeWorkspaceId) {
       setStoredWorkspaceId(res.activeWorkspaceId);
     }
@@ -240,9 +243,7 @@ export const webApi = {
       method: 'POST',
       body: JSON.stringify(body),
     });
-    if (res.token) {
-      setStoredToken(res.token);
-    }
+    purgeLegacyToken();
     if (res.activeWorkspaceId) {
       setStoredWorkspaceId(res.activeWorkspaceId);
     }
@@ -253,7 +254,7 @@ export const webApi = {
     try {
       await request<{ success: boolean }>('/v1/auth/signout', { method: 'POST' });
     } finally {
-      setStoredToken(null);
+      purgeLegacyToken();
       setStoredWorkspaceId(null);
     }
   },
@@ -357,9 +358,7 @@ export const webApi = {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    if (res.token) {
-      setStoredToken(res.token);
-    }
+    purgeLegacyToken();
     if (res.activeWorkspaceId) {
       setStoredWorkspaceId(res.activeWorkspaceId);
     }

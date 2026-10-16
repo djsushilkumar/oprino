@@ -4,16 +4,19 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BrandLogo } from '../components/BrandLogo';
-import { getStoredToken } from '../lib/api';
+import { webApi } from '../lib/api';
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = getStoredToken();
-    if (token) {
-      router.push('/dashboard');
-    }
+    webApi.getMe().then((me) => {
+      if (me?.user) {
+        router.push('/dashboard');
+      }
+    }).catch(() => {
+      // Unauthenticated, stay on landing page
+    });
   }, [router]);
 
   return (

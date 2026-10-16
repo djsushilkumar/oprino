@@ -7,18 +7,20 @@ import {
   SignInRequestSchema,
   AcceptInvitationRequestSchema,
 } from '@oprino/contracts';
-import { workspaceMemberships } from '@oprino/database/schema';
+import type { DeviceService } from '../services/device.service.js';
+import * as schema from '@oprino/database/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
 export interface AuthRoutesOptions {
   auth: Auth;
   db: Database;
   workspaceService?: WorkspaceService;
+  deviceService?: DeviceService;
   betterAuthUrl?: string;
 }
 
 export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, options) => {
-  const { auth, db, workspaceService } = options;
+  const { auth, db, workspaceService, deviceService } = options;
   const canonicalBaseUrl =
     options.betterAuthUrl ||
     process.env.BETTER_AUTH_URL ||
@@ -95,16 +97,32 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
       }
 
     try {
-      const result = await auth.api.signUpEmail({
+      const authResponse = await auth.api.signUpEmail({
         body: {
           email: parsed.data.email,
           password: parsed.data.password,
           name: parsed.data.name,
         },
         headers: req.headers as Record<string, string>,
+        asResponse: true,
       });
 
-      // Forward cookies if set
+      const rawSetCookie = authResponse.headers.get('set-cookie');
+      if (rawSetCookie) {
+        reply.header('set-cookie', rawSetCookie);
+      }
+
+      const result = (await authResponse.json()) as any;
+
+      // Bind installationId to session if mobile request
+      const installationId = req.headers['x-installation-id'] as string | undefined;
+      if (installationId && result.token) {
+        await db
+          .update(schema.sessions)
+          .set({ installationId })
+          .where(eq(schema.sessions.token, result.token));
+      }
+
       return reply.status(200).send({
         token: (result as any).token || '',
         user: {
@@ -150,24 +168,73 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
       }
 
     try {
-      const result = await auth.api.signInEmail({
+      const authResponse = await auth.api.signInEmail({
         body: {
           email: parsed.data.email,
           password: parsed.data.password,
         },
         headers: req.headers as Record<string, string>,
+        asResponse: true,
       });
+
+      const rawSetCookie = authResponse.headers.get('set-cookie');
+      if (rawSetCookie) {
+        reply.header('set-cookie', rawSetCookie);
+      }
+
+      const result = (await authResponse.json()) as any;
+
+      // Stage 1B Enforcement on Sign-In: If installationId present, verify device governance
+      const installationId = req.headers['x-installation-id'] as string | undefined;
+      if (installationId && result.token) {
+        if (deviceService) {
+          const governance = await deviceService.getInstallationGovernance(
+            result.user.id,
+            installationId,
+          );
+          if (governance.status === 'revoked') {
+            // Invalidate session immediately
+            await db
+              .delete(schema.sessions)
+              .where(eq(schema.sessions.token, result.token));
+
+            return reply.status(401).send({
+              statusCode: 401,
+              error: 'DEVICE_REVOKED',
+              message: 'This installation has been de-authorized by an administrator.',
+            });
+          }
+
+          if (governance.status === 'pending' || !governance.isTrusted) {
+            await db
+              .delete(schema.sessions)
+              .where(eq(schema.sessions.token, result.token));
+
+            return reply.status(401).send({
+              statusCode: 401,
+              error: 'DEVICE_PENDING_APPROVAL',
+              message: 'This device installation is pending administrator approval.',
+            });
+          }
+        }
+
+        // Bind session to installationId
+        await db
+          .update(schema.sessions)
+          .set({ installationId })
+          .where(eq(schema.sessions.token, result.token));
+      }
 
       // Find user's active workspace
       const activeWorkspaceId = await db.transaction(async (tx) => {
         await tx.execute(sql`SELECT set_config('app.bypass_rls', 'on', true)`);
         const [firstActive] = await tx
-          .select({ workspaceId: workspaceMemberships.workspaceId })
-          .from(workspaceMemberships)
+          .select({ workspaceId: schema.workspaceMemberships.workspaceId })
+          .from(schema.workspaceMemberships)
           .where(
             and(
-              eq(workspaceMemberships.userId, result.user.id),
-              eq(workspaceMemberships.status, 'active'),
+              eq(schema.workspaceMemberships.userId, result.user.id),
+              eq(schema.workspaceMemberships.status, 'active'),
             ),
           )
           .limit(1);
@@ -200,13 +267,23 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
   // POST /v1/auth/signout
   app.post('/v1/auth/signout', async (req, reply) => {
     try {
-      await auth.api.signOut({
+      const response = await auth.api.signOut({
         headers: req.headers as Record<string, string>,
+        asResponse: true,
       });
+      const rawSetCookie = response.headers.get('set-cookie');
+      if (rawSetCookie) {
+        reply.header('set-cookie', rawSetCookie);
+      }
       return reply.status(200).send({ success: true });
     } catch (err: any) {
       req.log.error(err, 'Sign out error');
-      return reply.status(200).send({ success: true });
+      const status = err.statusCode || 500;
+      return reply.status(status).send({
+        statusCode: status,
+        error: 'SIGNOUT_FAILED',
+        message: err.message || 'Failed to invalidate server session',
+      });
     }
   });
 

@@ -1,8 +1,10 @@
 import 'dart:io' show Platform;
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oprino_api/oprino_api.dart';
 import '../../../core/network/api_client_provider.dart';
+import '../../../core/network/auth_interceptor.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/location/location_service.dart';
 
@@ -71,12 +73,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final OprinoApiClient client;
   final SecureStorageService storage;
   final LocationService? locationService;
+  final AuthInterceptor? interceptor;
 
   AuthNotifier({
     required this.client,
     required this.storage,
     this.locationService,
+    this.interceptor,
   }) : super(const AuthState.initial()) {
+    interceptor?.onRevocationDetected = handleRevocationDetected;
+    interceptor?.onSessionExpired = handleSessionExpired;
     checkSession();
   }
 
@@ -109,10 +115,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = const AuthState.deviceRevoked(
           reason: 'This device installation was revoked.',
         );
-      } else {
-        await storage.clearAuthSession();
-        state = const AuthState.unauthenticated();
+        return;
       }
+
+      // If network error (offline), do NOT purge stored credentials!
+      if (e is DioException &&
+          (e.type == DioExceptionType.connectionTimeout ||
+           e.type == DioExceptionType.sendTimeout ||
+           e.type == DioExceptionType.receiveTimeout ||
+           e.type == DioExceptionType.connectionError)) {
+        state = const AuthState.unauthenticated(
+          errorMessage: 'Offline mode: unable to reach Oprino cloud services.',
+        );
+        return;
+      }
+
+      await storage.clearAuthSession();
+      state = const AuthState.unauthenticated();
     }
   }
 
@@ -123,7 +142,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final isRevoked = await storage.isInstallationRevoked();
     if (isRevoked) {
       state = const AuthState.deviceRevoked(
-        reason: 'This installation is revoked. Reset the installation to continue.',
+        reason: 'This device installation is revoked. Contact your workspace administrator for assistance.',
       );
       return;
     }
@@ -132,6 +151,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       final authRes = await client.signIn(email: email, password: password);
+      await storage.setInstallationRevoked(false);
       await storage.saveSessionToken(authRes.token);
 
       if (authRes.activeWorkspaceId != null) {
@@ -224,20 +244,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
   }
 
-  /// Reset revoked device installation: generates new installation ID and restores normal state
-  Future<void> resetRevokedInstallation() async {
-    await storage.resetInstallationId();
+  void acknowledgeRevocationAndReturnToSignIn() {
     state = const AuthState.unauthenticated();
   }
+
 }
 
 final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final client = ref.watch(apiClientProvider);
   final storage = ref.watch(secureStorageProvider);
   final locationService = ref.watch(locationServiceProvider);
+  final interceptor = ref.watch(authInterceptorProvider);
   return AuthNotifier(
     client: client,
     storage: storage,
     locationService: locationService,
+    interceptor: interceptor,
   );
 });

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BrandLogo } from '../../../components/BrandLogo';
-import { webApi, getStoredToken } from '../../../lib/api';
+import { webApi } from '../../../lib/api';
 
 export default function WorkspaceOnboardingPage() {
   const router = useRouter();
@@ -14,10 +14,9 @@ export default function WorkspaceOnboardingPage() {
   const [isSlugManual, setIsSlugManual] = useState(false);
 
   useEffect(() => {
-    const token = getStoredToken();
-    if (!token) {
+    webApi.getMe().catch(() => {
       router.push('/auth/signin');
-    }
+    });
   }, [router]);
 
   const handleNameChange = (val: string) => {

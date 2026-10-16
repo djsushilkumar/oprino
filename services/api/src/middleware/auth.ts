@@ -60,20 +60,45 @@ export function createAuthMiddleware(auth: Auth, deviceService: DeviceService, d
       req.user = session.user as any;
       req.session = session.session as any;
 
-      // Stage 1B: Device / Installation Governance Check
+      // Stage 1B: Device / Installation Governance & Session Binding Check
       const installationId =
         (req.headers['x-installation-id'] as string | undefined) || query?.installationId;
+
+      const boundInstallationId = (req.session as any)?.installationId;
+      if (boundInstallationId) {
+        if (!installationId) {
+          return reply.status(401).send({
+            statusCode: 401,
+            error: 'DEVICE_ID_REQUIRED',
+            message: 'Installation identifier required for bound mobile session.',
+          });
+        }
+        if (installationId !== boundInstallationId) {
+          return reply.status(401).send({
+            statusCode: 401,
+            error: 'DEVICE_MISMATCH',
+            message: 'Session is bound to a different installation identifier.',
+          });
+        }
+      }
+
       if (installationId) {
         req.installationId = installationId;
-        const isRevoked = await deviceService.isInstallationRevoked(req.user!.id, installationId);
+        const governance = await deviceService.getInstallationGovernance(req.user!.id, installationId);
 
-        if (isRevoked) {
+        if (governance.status === 'revoked') {
           return reply.status(401).send({
-            error: {
-              code: 'DEVICE_REVOKED',
-              message: 'This installation has been de-authorized by an administrator.',
-              statusCode: 401,
-            },
+            statusCode: 401,
+            error: 'DEVICE_REVOKED',
+            message: 'This installation has been de-authorized by an administrator.',
+          });
+        }
+
+        if (governance.status === 'pending' || !governance.isTrusted) {
+          return reply.status(401).send({
+            statusCode: 401,
+            error: 'DEVICE_PENDING_APPROVAL',
+            message: 'This device installation is pending administrator approval.',
           });
         }
       }

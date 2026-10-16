@@ -3,8 +3,8 @@ import '../storage/secure_storage_service.dart';
 
 class AuthInterceptor extends Interceptor {
   final SecureStorageService storage;
-  final void Function()? onRevocationDetected;
-  final void Function()? onSessionExpired;
+  void Function()? onRevocationDetected;
+  void Function()? onSessionExpired;
 
   AuthInterceptor({
     required this.storage,
@@ -49,9 +49,15 @@ class AuthInterceptor extends Interceptor {
       String? errorCode;
       String? errorMessage;
 
-      if (responseData is Map<String, dynamic>) {
-        errorCode = responseData['error']?.toString();
-        errorMessage = responseData['message']?.toString();
+      if (responseData is Map) {
+        if (responseData['error'] is Map) {
+          final errObj = responseData['error'] as Map;
+          errorCode = errObj['code']?.toString() ?? errObj['name']?.toString();
+          errorMessage = errObj['message']?.toString();
+        } else {
+          errorCode = responseData['error']?.toString() ?? responseData['code']?.toString();
+          errorMessage = responseData['message']?.toString();
+        }
       }
 
       final isDeviceRevoked = errorCode == 'DEVICE_REVOKED' ||

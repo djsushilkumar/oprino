@@ -66,11 +66,22 @@ Examples:
 
 ---
 
-## 4. Mobile Device Governance & Revocation (`ADR-006`)
+## 4. Mobile Device Governance & Zero-Trust Revocation (`ADR-006`)
 
-To prevent unauthorized access from lost, stolen, or rogue employee handsets:
-1. **Device Registration:** On initial sign-in, the mobile app generates a cryptographically random UUID stored in hardware-backed secure storage.
-2. **Installation Header:** Every API request sends `X-Installation-Id: <uuid>`.
-3. **Manager Revocation Action:** An Admin or Manager can click "Revoke Device" on the web dashboard.
-4. **Instant Invalidation:** The server records the installation status as `REVOKED`. The next API request from that handset immediately returns HTTP 401 `DEVICE_REVOKED`.
-5. **App Lockout:** The mobile app intercepts `DEVICE_REVOKED`, wipes local authentication tokens, halts GPS tracking, and navigates to the `DeviceRevokedScreen`.
+To prevent unauthorized access from lost, stolen, rogue employee handsets, or bypassed installations:
+1. **Device Registration:** On initial sign-in, the mobile app generates a cryptographically random RFC 4122 UUIDv4 stored in hardware-backed secure storage (`flutter_secure_storage`).
+2. **Installation Header & Session Binding:** Every mobile API request transmits `X-Installation-Id: <uuid>`. During sign-in, the session is transactionally bound to this installation ID in the database (`sessions.installation_id`).
+3. **Stage 1B Authentication Enforcement:** Before route logic executes, Fastify verifies:
+   - Requests on bound mobile sessions **MUST** provide `X-Installation-Id`, matching the bound session (`401 DEVICE_ID_REQUIRED` / `401 DEVICE_MISMATCH`).
+   - Device governance state is verified against `user_devices`.
+4. **Zero-Trust State Machine (`pending | active | revoked`):**
+   - **Active:** Authorized for protected workspace routes.
+   - **Revoked:** Rejection with HTTP 401 `DEVICE_REVOKED`. Drops all server-side sessions bound to `(userId, installationId)` immediately.
+   - **Pending:** If a user with a revoked device generates a new UUID or reinstalls the app, the registration defaults to `pending`, returning HTTP 401 `DEVICE_PENDING_APPROVAL` until an administrator approves it.
+5. **Manager Revocation & Approval Actions:**
+   - Workspace Administrators revoke installations via `POST /v1/devices/revoke`.
+   - Administrators approve pending installations via `POST /v1/devices/approve`.
+   - Administrators list all workspace hardware via `GET /v1/workspaces/:workspaceId/devices`.
+6. **Mobile App Lockout & Zero Duty-Hours Tracking Invariant:**
+   - On receiving `DEVICE_REVOKED`, the mobile app intercepts the flat `ApiErrorSchema`, halts background GPS tracking immediately (`locationService.stopTracking()`), purges session credentials, and displays the `DeviceRevokedScreen`.
+   - Client-side UUID regeneration bypass is eliminated; the installation identifier is preserved so the device remains verifiably blocked.

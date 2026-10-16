@@ -137,6 +137,8 @@ export const userDevices = pgTable(
     status: varchar('status', { length: 32 }).notNull().default('active'), // 'pending' | 'active' | 'revoked'
     isTrusted: boolean('is_trusted').notNull().default(true),
     lastActiveAt: timestamp('last_active_at', { withTimezone: true }).notNull().defaultNow(),
+    enrolledAt: timestamp('enrolled_at', { withTimezone: true }).notNull().defaultNow(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

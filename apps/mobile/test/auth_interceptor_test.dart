@@ -114,6 +114,42 @@ void main() {
       expect(await storageService.getSessionToken(), isNull);
       expect(await storageService.isInstallationRevoked(), isTrue);
     });
+
+    test('5. Handles 401 nested ApiError format: marks revoked and triggers revocation callback', () async {
+      await storageService.saveSessionToken('valid-token');
+      await storageService.saveActiveWorkspaceId('workspace-id');
+
+      bool sessionExpiredCalled = false;
+      bool revocationCalled = false;
+
+      final interceptor = AuthInterceptor(
+        storage: storageService,
+        onSessionExpired: () => sessionExpiredCalled = true,
+        onRevocationDetected: () => revocationCalled = true,
+      );
+
+      final dioError = DioException(
+        requestOptions: RequestOptions(path: '/v1/me'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/v1/me'),
+          statusCode: 401,
+          data: {
+            'statusCode': 401,
+            'error': {'code': 'DEVICE_REVOKED', 'message': 'Device installation has been revoked'},
+          },
+        ),
+      );
+
+      final errorHandler = _TestErrorInterceptorHandler();
+      interceptor.onError(dioError, errorHandler);
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(revocationCalled, isTrue);
+      expect(sessionExpiredCalled, isFalse);
+      expect(await storageService.getSessionToken(), isNull);
+      expect(await storageService.isInstallationRevoked(), isTrue);
+    });
   });
 }
 

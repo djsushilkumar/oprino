@@ -734,6 +734,17 @@
           "lastActiveAt": {
             "type": "string",
             "example": "2026-10-05T12:00:00.000Z"
+          },
+          "enrolledAt": {
+            "type": "string",
+            "example": "2026-10-05T12:00:00.000Z"
+          },
+          "revokedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "2026-10-05T12:00:00.000Z"
           }
         },
         "required": [
@@ -766,6 +777,11 @@
             "type": "string",
             "format": "uuid",
             "example": "i1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "u1b2c3d4-e5f6-7890-abcd-ef1234567890"
           }
         },
         "required": [
