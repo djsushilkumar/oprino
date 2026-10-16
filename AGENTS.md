@@ -2,7 +2,11 @@
 
 Welcome to the Oprino repository. All autonomous and assisted coding agents working on this codebase must adhere to the following mandatory instructions:
 
-1. **Read the Handoff Specification First:** Always inspect [`docs/handoff/CODEX-CLOUD-HANDOFF.md`](./docs/handoff/CODEX-CLOUD-HANDOFF.md) to understand current phase status, boundaries, and active milestones.
+1. **Restore Persistent Project Memory First:** Always inspect the permanent agent memory suite in [`docs/agent/`](./docs/agent/) before proposing or modifying any code:
+   - [`docs/agent/OPRINO-PROJECT-BRAIN.md`](./docs/agent/OPRINO-PROJECT-BRAIN.md) — System mission, core invariants, tech stack, and scope boundaries.
+   - [`docs/agent/OPRINO-CURRENT-STATE.md`](./docs/agent/OPRINO-CURRENT-STATE.md) — Live cloud deployment reality, build gates, and test status.
+   - [`docs/agent/OPRINO-SESSION-HANDOFF.md`](./docs/agent/OPRINO-SESSION-HANDOFF.md) — Incoming session restoration protocol and session history.
+   - [`docs/agent/OPRINO-OPEN-ISSUES.md`](./docs/agent/OPRINO-OPEN-ISSUES.md) — Active commercial launch blockers and engineering items.
 2. **Consult Controlling Product PRD:** Read [`docs/product/OPRINO-MASTER-PRD.md`](./docs/product/OPRINO-MASTER-PRD.md) before implementing or modifying any user-facing feature or domain workflow.
 3. **Consult Relevant ADRs:** Read the applicable Architecture Decision Records in [`docs/architecture/ADR/README.md`](./docs/architecture/ADR/README.md) prior to writing code or introducing new dependencies.
 4. **Preserve Brand Assets & Tokens:** Do not modify, compress, or replace the approved assets in `Oprino-Brand-Kit/`. Adhere strictly to the design tokens codified in [`docs/brand/OPRINO-BRAND-SYSTEM.md`](./docs/brand/OPRINO-BRAND-SYSTEM.md).

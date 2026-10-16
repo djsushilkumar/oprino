@@ -68,3 +68,6 @@ Pods/
 # Local Test Media Storage
 .storage/
 
+# Reverse-engineering extraction blobs & decompiled binary dumps
+assets/flutter_assets/
+*.bin
