@@ -193,7 +193,12 @@ export function buildServer(options?: {
   app.register(openapiRoutes);
 
   // Auth & Identity Routes
-  app.register(authRoutes, { auth, db: dbClient.db, workspaceService });
+  app.register(authRoutes, {
+    auth,
+    db: dbClient.db,
+    workspaceService,
+    betterAuthUrl: env.BETTER_AUTH_URL,
+  });
   app.register(workspaceRoutes, {
     workspaceService,
     authMiddleware,

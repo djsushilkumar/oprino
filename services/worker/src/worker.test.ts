@@ -20,4 +20,37 @@ describe('Oprino Worker Scaffolding Tests', () => {
     assert.strictEqual(env.NODE_ENV, 'development');
     assert.strictEqual(env.CONCURRENCY, 5);
   });
+
+  test('WorkerEnv rejects default development database credentials in production', () => {
+    assert.throws(
+      () =>
+        validateWorkerEnv({
+          NODE_ENV: 'production',
+          DATABASE_URL: 'postgresql://oprino_admin:oprino_dev_password@localhost:5432/oprino_db',
+          REDIS_URL: 'rediss://default:token@upstash.io:6379',
+        }),
+      /Insecure Production Worker Database Configuration/,
+    );
+  });
+
+  test('WorkerEnv rejects default development redis in production', () => {
+    assert.throws(
+      () =>
+        validateWorkerEnv({
+          NODE_ENV: 'production',
+          DATABASE_URL: 'postgresql://user:pass@db.neon.tech:5432/oprino_prod',
+          REDIS_URL: 'redis://localhost:6379',
+        }),
+      /Insecure Production Worker Redis Configuration/,
+    );
+  });
+
+  test('WorkerEnv passes with valid production configuration', () => {
+    const env = validateWorkerEnv({
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgresql://user:pass@db.neon.tech:5432/oprino_prod',
+      REDIS_URL: 'rediss://default:token@upstash.io:6379',
+    });
+    assert.strictEqual(env.NODE_ENV, 'production');
+  });
 });

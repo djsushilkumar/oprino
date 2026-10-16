@@ -93,6 +93,17 @@ if (fs.existsSync(mobileReleasePath)) {
     content.includes('OPRINO_RELEASE_KEYSTORE_BASE64') && !content.includes('androiddebugkey'),
     'mobile-release.yml generates debug keystore instead of requiring production signing secrets.'
   );
+  assertCheck(
+    'Mobile Release Workflow uses env mapping for secrets without inline script interpolation',
+    content.includes('RELEASE_KEYSTORE_BASE64: ${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 }}') &&
+      !content.includes('${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 }} | base64'),
+    'mobile-release.yml interpolates secrets directly into inline bash scripts instead of mapping to env.'
+  );
+  assertCheck(
+    'Mobile Release Workflow validates keystore and certificate integrity using keytool',
+    content.includes('keytool -list -v'),
+    'mobile-release.yml lacks fail-closed certificate integrity validation using keytool.'
+  );
 }
 
 const buildGradlePath = path.resolve(rootDir, 'apps/mobile/android/app/build.gradle.kts');
@@ -102,6 +113,11 @@ if (fs.existsSync(buildGradlePath)) {
     'Android Gradle configuration enforces release signing credentials gate',
     content.includes('Production release build requires legitimate release signing credentials'),
     'build.gradle.kts lacks taskGraph fail-closed check for release signing credentials.'
+  );
+  assertCheck(
+    'Android Gradle configuration enforces complete credentials (password and alias)',
+    content.includes('Production release build requires complete release signing credentials'),
+    'build.gradle.kts does not validate storePassword, keyAlias, and keyPassword completeness.'
   );
 }
 
@@ -165,6 +181,27 @@ if (fs.existsSync(apiEnvPath)) {
     'API env.ts rejects development database and redis loopbacks in production',
     content.includes('Cannot target development loopback host') && content.includes('Default development DATABASE_URL'),
     'services/api env.ts does not reject dev db/redis loopbacks in production.'
+  );
+}
+
+const workerEnvPath = path.resolve(rootDir, 'services/worker/src/config/env.ts');
+if (fs.existsSync(workerEnvPath)) {
+  const content = fs.readFileSync(workerEnvPath, 'utf-8');
+  assertCheck(
+    'Worker env.ts rejects development database and redis loopbacks in production',
+    content.includes('Insecure Production Worker Database Configuration') && content.includes('Insecure Production Worker Redis Configuration'),
+    'services/worker env.ts does not reject dev db/redis in production.'
+  );
+}
+
+const authRoutePath = path.resolve(rootDir, 'services/api/src/routes/auth.ts');
+if (fs.existsSync(authRoutePath)) {
+  const content = fs.readFileSync(authRoutePath, 'utf-8');
+  assertCheck(
+    'Auth routes bind canonical Better Auth request URL and enforce Host/X-Forwarded trust boundary',
+    content.includes("headers.set('host', canonicalOrigin.host)") &&
+      content.includes("headers.set('x-forwarded-proto', canonicalOrigin.protocol.replace(':', ''))"),
+    'auth.ts does not enforce canonical request URL and trust boundary on Host and X-Forwarded-Proto.'
   );
 }
 

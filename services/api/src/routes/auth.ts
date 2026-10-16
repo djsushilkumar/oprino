@@ -14,18 +14,27 @@ export interface AuthRoutesOptions {
   auth: Auth;
   db: Database;
   workspaceService?: WorkspaceService;
+  betterAuthUrl?: string;
 }
 
 export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, options) => {
   const { auth, db, workspaceService } = options;
+  const canonicalBaseUrl =
+    options.betterAuthUrl ||
+    process.env.BETTER_AUTH_URL ||
+    (process.env.NODE_ENV === 'production' ? 'https://oprino-api.onrender.com' : 'http://localhost:3001');
+
+  let canonicalOrigin: URL;
+  try {
+    canonicalOrigin = new URL(canonicalBaseUrl);
+  } catch {
+    canonicalOrigin = new URL('http://localhost:3001');
+  }
 
   // Mount Better Auth Native Handler for /api/auth/* routes (Cookies, OAuth, session introspection)
   app.all('/api/auth/*', async (req, reply) => {
-    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
-    const host =
-      req.headers.host ||
-      (process.env.NODE_ENV === 'production' ? 'oprino-api.onrender.com' : 'localhost:3001');
-    const url = new URL(req.url, `${proto}://${host}`);
+    // Construct canonical request URL bound strictly to trusted origin (neutralizing Host header injection)
+    const url = new URL(req.raw.url || req.url, canonicalOrigin.origin);
     const headers = new Headers();
 
     for (const [key, value] of Object.entries(req.headers)) {
@@ -37,6 +46,11 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
         }
       }
     }
+
+    // Enforce trust boundary: bind Host and X-Forwarded-Proto to canonical base
+    headers.set('host', canonicalOrigin.host);
+    headers.set('x-forwarded-proto', canonicalOrigin.protocol.replace(':', ''));
+    headers.delete('x-forwarded-host');
 
     const request = new Request(url.toString(), {
       method: req.method,

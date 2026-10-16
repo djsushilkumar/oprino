@@ -104,9 +104,32 @@ export function normalizeApiBaseUrl(rawUrl?: string): string {
   if (url.endsWith('/v1')) {
     url = url.slice(0, -3);
   }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Security gate violation: Insecure production API URL "${url}". Malformed URL.`);
+  }
+
   if (process.env.NODE_ENV === 'production') {
-    if (url.startsWith('http://') || url.includes('localhost') || url.includes('127.0.0.1')) {
+    if (parsed.protocol !== 'https:') {
       throw new Error(`Security gate violation: Insecure production API URL "${url}". Production builds must use HTTPS.`);
+    }
+    const host = parsed.hostname.toLowerCase().trim();
+    const isLoopbackOrPrivate =
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '::1' ||
+      host === '10.0.2.2' ||
+      host.endsWith('.localhost') ||
+      host.endsWith('.local') ||
+      /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
+      /^192\.168\.\d{1,3}\.\d{1,3}$/.test(host) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(host);
+
+    if (isLoopbackOrPrivate) {
+      throw new Error(`Security gate violation: Insecure production API URL "${url}". Cannot target loopback or private host.`);
     }
   }
   return url;

@@ -61,6 +61,18 @@ describe('Web API Base URL Contract & /v1/ Duplication Prevention Tests', () => 
         () => normalizeApiBaseUrl('https://127.0.0.1:3001'),
         /Security gate violation: Insecure production API URL/,
       );
+      assert.throws(
+        () => normalizeApiBaseUrl('https://10.0.2.2:3000'),
+        /Security gate violation: Insecure production API URL/,
+      );
+      assert.throws(
+        () => normalizeApiBaseUrl('https://192.168.1.100:3000'),
+        /Security gate violation: Insecure production API URL/,
+      );
+      assert.throws(
+        () => normalizeApiBaseUrl('not-a-valid-url'),
+        /Security gate violation: Insecure production API URL.*Malformed URL/,
+      );
     } finally {
       envObj.NODE_ENV = prevNodeEnv;
     }

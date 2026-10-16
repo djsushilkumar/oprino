@@ -205,3 +205,50 @@ describe('Dynamic Deployment Revision Resolution (/v1/version)', () => {
     }
   });
 });
+
+describe('Authentication Host and X-Forwarded-Proto Trust Boundaries', () => {
+  it('Enforces canonical origin and overrides spoofed Host/X-Forwarded headers', async () => {
+    const { authRoutes } = await import('./routes/auth.js');
+    let capturedRequest: Request | null = null;
+    const mockAuth = {
+      handler: async (req: Request) => {
+        capturedRequest = req;
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      },
+    } as any;
+
+    const app = Fastify();
+    await app.register(authRoutes, {
+      auth: mockAuth,
+      db: {} as any,
+      betterAuthUrl: 'https://oprino-api.onrender.com',
+    });
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/auth/session',
+      headers: {
+        host: 'evil-attacker.com',
+        'x-forwarded-proto': 'http',
+        'x-forwarded-host': 'phishing.com',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.ok(capturedRequest, 'Better Auth handler must have been called with Request object');
+    const reqObj = capturedRequest as Request;
+    const reqUrl = new URL(reqObj.url);
+
+    // Canonical URL origin must strictly match betterAuthUrl, not spoofed host
+    assert.strictEqual(reqUrl.origin, 'https://oprino-api.onrender.com');
+    assert.strictEqual(reqUrl.pathname, '/api/auth/session');
+
+    // Trust boundary headers must be sanitized to canonical origin
+    assert.strictEqual(reqObj.headers.get('host'), 'oprino-api.onrender.com');
+    assert.strictEqual(reqObj.headers.get('x-forwarded-proto'), 'https');
+    assert.strictEqual(reqObj.headers.get('x-forwarded-host'), null);
+  });
+});

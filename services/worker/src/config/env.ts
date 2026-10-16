@@ -18,5 +18,27 @@ export function validateWorkerEnv(customEnv?: Record<string, unknown>): WorkerEn
     console.error('❌ Invalid Worker environment variables:', result.error.format());
     throw new Error('Invalid Worker environment configuration');
   }
+
+  const isProduction = result.data.NODE_ENV === 'production';
+  if (isProduction) {
+    if (
+      result.data.DATABASE_URL.includes('oprino_dev_password') ||
+      result.data.DATABASE_URL.includes('localhost:5432') ||
+      result.data.DATABASE_URL.includes('127.0.0.1:5432')
+    ) {
+      throw new Error(
+        'Insecure Production Worker Database Configuration: Default development DATABASE_URL or localhost is strictly forbidden in production.',
+      );
+    }
+    if (
+      result.data.REDIS_URL.includes('localhost:6379') ||
+      result.data.REDIS_URL.includes('127.0.0.1:6379')
+    ) {
+      throw new Error(
+        'Insecure Production Worker Redis Configuration: Default development REDIS_URL or localhost is strictly forbidden in production.',
+      );
+    }
+  }
+
   return result.data;
 }
