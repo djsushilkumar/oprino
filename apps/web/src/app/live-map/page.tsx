@@ -30,7 +30,7 @@ function createGeoJsonCircle(centerLng: number, centerLat: number, radiusMeters:
   return coords;
 }
 
-import { escapeHtml } from '../../lib/html-utils.js';
+import { escapeHtml } from '../../lib/html-utils';
 
 export default function LiveMapPage() {
   const router = useRouter();

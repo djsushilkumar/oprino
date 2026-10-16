@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { escapeHtml } from './lib/html-utils.js';
+import { escapeHtml } from './lib/html-utils';
 
 describe('Live Map DOM XSS & Stale Coordinate Remediation Tests (SEC-001 / DEF-002)', () => {
   it('1. escapeHtml safely encodes malicious XSS script payloads in employee names', () => {
