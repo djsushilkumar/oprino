@@ -130,14 +130,20 @@ export function buildServer(options?: {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
-  // Exact trusted production origins & mobile deep links
-  const allowedOrigins: (string | RegExp)[] = [
+  // 1. Explicit approved origins wherever feasible (production web, staging, official previews, and native mobile scheme)
+  const explicitApprovedOrigins = [
     'https://oprino.vercel.app',
+    'https://oprino-staging.vercel.app',
+    'https://oprino-preview.vercel.app',
+    'https://oprino-git-main-djsushilkumar.vercel.app',
     'oprino://app',
-    // Strictly scoped to verified Oprino team namespace on Vercel (e.g. oprino-*-djsushilkumar*.vercel.app)
-    // Third-party domains imitating the 'oprino-' prefix (e.g. oprino-attacker.vercel.app) are rejected.
-    /^https:\/\/oprino-[a-zA-Z0-9_-]+-djsushilkumar(?:-[a-zA-Z0-9]+)?\.vercel\.app$/,
   ];
+
+  const allowedOrigins: (string | RegExp)[] = [...explicitApprovedOrigins];
+
+  // Dynamic preview deployments: used where static origin declaration is not feasible due to dynamic branch names.
+  // Strictly scoped to the verified team namespace (-djsushilkumar) to reject third-party prefix squatting.
+  allowedOrigins.push(/^https:\/\/oprino-[a-zA-Z0-9_-]+-djsushilkumar(?:-[a-zA-Z0-9]+)?\.vercel\.app$/);
 
   if (env.APP_PUBLIC_URL) {
     try {

@@ -194,4 +194,50 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     assert.strictEqual(res.statusCode, 204);
     assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect suffix spoofing origin');
   });
+
+  it('12. Authorizes explicit approved staging environment origin', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'https://oprino-staging.vercel.app',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-staging.vercel.app');
+    assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
+  });
+
+  it('13. Authorizes explicit approved main preview environment origin', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'https://oprino-preview.vercel.app',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-preview.vercel.app');
+    assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
+  });
+
+  it('14. Authorizes native mobile scheme origin (oprino://app)', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        origin: 'oprino://app',
+        'access-control-request-method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers['access-control-allow-origin'], 'oprino://app');
+    assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
+  });
 });
+
