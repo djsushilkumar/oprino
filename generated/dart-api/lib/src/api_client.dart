@@ -20,19 +20,34 @@ import 'model/sync_models.dart';
 class OprinoApiClient {
   final Dio dio;
 
+  static String normalizeBaseUrl(String url) {
+    var trimmed = url.trim();
+    while (trimmed.endsWith('/')) {
+      trimmed = trimmed.substring(0, trimmed.length - 1);
+    }
+    if (trimmed.endsWith('/v1')) {
+      trimmed = trimmed.substring(0, trimmed.length - 3);
+    }
+    return trimmed;
+  }
+
   OprinoApiClient({
     Dio? dio,
-    String baseUrl = 'http://10.0.2.2:3000',
+    required String baseUrl,
   }) : dio = dio ??
             Dio(BaseOptions(
-              baseUrl: baseUrl,
+              baseUrl: normalizeBaseUrl(baseUrl),
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 10),
               headers: {
                 'Origin': 'oprino://app',
                 'Accept': 'application/json',
               },
-            ));
+            )) {
+    if (baseUrl.trim().isEmpty) {
+      throw ArgumentError('baseUrl must not be empty');
+    }
+  }
 
   // --- System ---
 

@@ -1,14 +1,12 @@
 name: Oprino Mobile Release APK Build
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/mobile/**'
-      - 'packages/tokens/**'
-      - 'packages/contracts/**'
-      - '.github/workflows/mobile-release.yml'
   workflow_dispatch:
+    inputs:
+      release_approval_reference:
+        description: 'Release approval reference or change management ticket ID'
+        required: true
+        default: 'CR-APPROVED'
 
 jobs:
   build-android-release-apk:
@@ -52,21 +50,121 @@ jobs:
           cd apps/mobile
           flutter pub get
 
-      - name: Provision Android Signing Keystore
+      - name: Validate & Provision Production Release Signing Credentials
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.OPRINO_RELEASE_KEYSTORE_BASE64 || secrets.OPRINO_KEYSTORE_BASE64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.OPRINO_RELEASE_KEYSTORE_PASSWORD || secrets.OPRINO_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.OPRINO_RELEASE_KEY_ALIAS || secrets.OPRINO_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.OPRINO_RELEASE_KEY_PASSWORD || secrets.OPRINO_KEY_PASSWORD }}
+          EXPECTED_CERT_SHA256: ${{ vars.OPRINO_RELEASE_CERT_SHA256 || secrets.OPRINO_RELEASE_CERT_SHA256 }}
         run: |
-          mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          cat <<EOF > apps/mobile/android/key.properties
-          storeFile=/home/runner/.android/debug.keystore
-          storePassword=android
-          keyAlias=androiddebugkey
-          keyPassword=android
-          EOF
+          echo "=================================================================="
+          echo "       OPRINO PRODUCTION RELEASE SIGNING CREDENTIALS GATE         "
+          echo "=================================================================="
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ] || [ -z "$RELEASE_KEYSTORE_PASSWORD" ] || [ -z "$RELEASE_KEY_ALIAS" ] || [ -z "$RELEASE_KEY_PASSWORD" ] || [ -z "$EXPECTED_CERT_SHA256" ]; then
+            echo "❌ CRITICAL SECURITY GATE VIOLATION: Production release signing secrets or certificate fingerprint are unconfigured or incomplete."
+            echo "Required GitHub repository secrets / variables:"
+            echo "  - OPRINO_RELEASE_KEYSTORE_BASE64 (or OPRINO_KEYSTORE_BASE64)"
+            echo "  - OPRINO_RELEASE_KEYSTORE_PASSWORD (or OPRINO_KEYSTORE_PASSWORD)"
+            echo "  - OPRINO_RELEASE_KEY_ALIAS (or OPRINO_KEY_ALIAS)"
+            echo "  - OPRINO_RELEASE_KEY_PASSWORD (or OPRINO_KEY_PASSWORD)"
+            echo "  - OPRINO_RELEASE_CERT_SHA256 (mandatory approved certificate SHA-256 fingerprint)"
+            echo "Generating debug keystore for production distribution artifacts is strictly forbidden."
+            exit 1
+          fi
 
-      - name: Build Unified Release APK
+          mkdir -p "$HOME/.android"
+          printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$HOME/.android/oprino-release.jks"
+
+          echo "Validating release keystore and certificate integrity..."
+          KEYTOOL_OUT=$(keytool -list -v \
+            -keystore "$HOME/.android/oprino-release.jks" \
+            -storepass "$RELEASE_KEYSTORE_PASSWORD" \
+            -alias "$RELEASE_KEY_ALIAS")
+
+          ACTUAL_SHA256=$(echo "$KEYTOOL_OUT" | grep -i "SHA256:" | head -n 1 | sed 's/.*SHA256:[[:space:]]*//I' | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ -z "$ACTUAL_SHA256" ]; then
+            echo "❌ Failed to extract SHA-256 certificate fingerprint from release keystore."
+            exit 1
+          fi
+          echo "✓ Keystore certificate validated. SHA-256 fingerprint: $ACTUAL_SHA256"
+
+          NORMALIZED_EXPECTED=$(echo "$EXPECTED_CERT_SHA256" | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ "$ACTUAL_SHA256" != "$NORMALIZED_EXPECTED" ]; then
+            echo "❌ CRITICAL SECURITY ERROR: Release keystore certificate SHA-256 fingerprint mismatch!"
+            echo "Expected approved: $NORMALIZED_EXPECTED"
+            echo "Actual keystore:   $ACTUAL_SHA256"
+            exit 1
+          fi
+          echo "✓ Keystore certificate SHA-256 fingerprint strictly matches mandatory approved fingerprint ($ACTUAL_SHA256)."
+
+          cat <<EOF > apps/mobile/android/key.properties
+          storeFile=$HOME/.android/oprino-release.jks
+          storePassword=$RELEASE_KEYSTORE_PASSWORD
+          keyAlias=$RELEASE_KEY_ALIAS
+          keyPassword=$RELEASE_KEY_PASSWORD
+          EOF
+          echo "✓ Production release keystore provisioned safely."
+
+      - name: Pre-Build Production Environment Validation
+        env:
+          PROD_API_URL: ${{ vars.PROD_API_URL || vars.PRODUCTION_API_URL || 'https://oprino-api.onrender.com' }}
+        run: |
+          node scripts/verify-production-build-defines.mjs \
+            --environment=PRODUCTION \
+            --api-url="$PROD_API_URL"
+
+      - name: Build Unified Production Release APK
+        env:
+          PROD_API_URL: ${{ vars.PROD_API_URL || vars.PRODUCTION_API_URL || 'https://oprino-api.onrender.com' }}
         run: |
           cd apps/mobile
-          flutter build apk --release --no-tree-shake-icons
+          flutter build apk --release --no-tree-shake-icons \
+            --dart-define=ENVIRONMENT=PRODUCTION \
+            --dart-define=API_BASE_URL="$PROD_API_URL"
+
+      - name: Verify Production Release Artifacts & APK Signature
+        env:
+          EXPECTED_CERT_SHA256: ${{ vars.OPRINO_RELEASE_CERT_SHA256 || secrets.OPRINO_RELEASE_CERT_SHA256 }}
+        run: |
+          node scripts/verify-production-artifacts.mjs
+
+          echo "=================================================================="
+          echo "       VERIFYING COMPILED APK CRYPTOGRAPHIC SIGNATURE            "
+          echo "=================================================================="
+          APK_PATH=$(find apps/mobile/build/app/outputs/flutter-apk -name "*release*.apk" 2>/dev/null | head -n 1)
+          if [ -z "$APK_PATH" ] || [ ! -f "$APK_PATH" ]; then
+            echo "❌ CRITICAL: Compiled release APK not found for signature verification."
+            exit 1
+          fi
+          echo "Verifying APK signature: $APK_PATH"
+
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
+          if [ -z "$APKSIGNER" ] || [ ! -x "$APKSIGNER" ]; then
+            echo "❌ CRITICAL SECURITY ERROR: Android SDK 'apksigner' tool not found or not executable in $ANDROID_HOME/build-tools."
+            echo "Failing closed: apksigner is strictly required for release signature verification."
+            exit 1
+          fi
+
+          echo "Using apksigner: $APKSIGNER"
+          APK_VERIFY_OUT=$("$APKSIGNER" verify --verbose --print-certs "$APK_PATH")
+          echo "$APK_VERIFY_OUT"
+          echo "✓ APK signature schemes (v1/v2/v3) verified successfully with apksigner."
+
+          APK_SIGNER_SHA256=$(echo "$APK_VERIFY_OUT" | grep -i "SHA-256" | head -n 1 | sed -E 's/.*SHA-?256[^:]*:[[:space:]]*//I' | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ -z "$APK_SIGNER_SHA256" ]; then
+            echo "❌ CRITICAL SECURITY ERROR: Failed to extract SHA-256 signer certificate digest from compiled APK."
+            exit 1
+          fi
+
+          NORMALIZED_EXPECTED=$(echo "$EXPECTED_CERT_SHA256" | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ "$APK_SIGNER_SHA256" != "$NORMALIZED_EXPECTED" ]; then
+            echo "❌ CRITICAL SECURITY ERROR: Compiled APK signer certificate SHA-256 fingerprint mismatch!"
+            echo "Expected approved: $NORMALIZED_EXPECTED"
+            echo "Actual APK signer: $APK_SIGNER_SHA256"
+            exit 1
+          fi
+          echo "✓ Compiled APK signer certificate SHA-256 strictly matches approved fingerprint: $APK_SIGNER_SHA256"
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4

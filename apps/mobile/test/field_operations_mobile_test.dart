@@ -14,6 +14,7 @@ import 'package:oprino_mobile/features/tasks/presentation/widgets/customer_signa
 import 'package:oprino_mobile/features/tasks/presentation/widgets/photo_proof_sheet.dart';
 import 'package:oprino_mobile/features/tasks/presentation/task_detail_screen.dart';
 import 'package:oprino_mobile/features/visits/presentation/visits_view.dart';
+import 'package:oprino_mobile/core/config/app_config.dart';
 import 'package:oprino_api/oprino_api.dart';
 
 class _TestMediaUploadService extends MediaUploadService {
@@ -160,7 +161,7 @@ void main() {
   setUp(() {
     FlutterSecureStorage.setMockInitialValues({});
     testDb = AppDatabase(NativeDatabase.memory());
-    testClient = OprinoApiClient();
+    testClient = OprinoApiClient(baseUrl: AppConfig.localPilot.apiBaseUrl);
   });
 
   tearDown(() async {

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 enum EnvironmentType {
   localPilotDebug,
   cloudStagingDebug,
@@ -42,6 +44,19 @@ class AppConfig {
     return false;
   }
 
+  /// Normalizes an API base URL by stripping trailing slashes and redundant trailing '/v1'
+  /// to prevent double '/v1/v1/' route concatenation when clients append endpoint paths.
+  static String normalizeApiUrl(String url) {
+    var trimmed = url.trim();
+    while (trimmed.endsWith('/')) {
+      trimmed = trimmed.substring(0, trimmed.length - 1);
+    }
+    if (trimmed.endsWith('/v1')) {
+      trimmed = trimmed.substring(0, trimmed.length - 3);
+    }
+    return trimmed;
+  }
+
   /// Resolves and validates an AppConfig instance given explicit parameters.
   /// Used by fromEnvironment() and automated unit test suites.
   static AppConfig resolve({
@@ -52,9 +67,10 @@ class AppConfig {
     final normalizedEnv = rawEnv.toUpperCase().replaceAll('-', '_');
 
     if (normalizedEnv == 'LOCAL_PILOT_DEBUG' || normalizedEnv == 'PILOT' || normalizedEnv == 'DEVELOPMENT') {
-      final baseUrl = customUrl.isNotEmpty
+      final rawBaseUrl = customUrl.isNotEmpty
           ? customUrl
           : (isEmulator ? 'http://10.0.2.2:3001' : 'http://localhost:3001');
+      final baseUrl = normalizeApiUrl(rawBaseUrl);
 
       final uri = Uri.tryParse(baseUrl);
       if (uri == null || (!uri.isScheme('http') && !uri.isScheme('https'))) {
@@ -79,7 +95,8 @@ class AppConfig {
     }
 
     if (normalizedEnv == 'CLOUD_STAGING_DEBUG' || normalizedEnv == 'STAGING') {
-      final baseUrl = customUrl.isNotEmpty ? customUrl : 'https://staging-api.oprino.com';
+      final rawBaseUrl = customUrl.isNotEmpty ? customUrl : 'https://staging-api.oprino.com';
+      final baseUrl = normalizeApiUrl(rawBaseUrl);
       final uri = Uri.tryParse(baseUrl);
 
       if (uri == null || !uri.isScheme('https') || uri.host.isEmpty) {
@@ -98,13 +115,22 @@ class AppConfig {
     }
 
     if (normalizedEnv == 'PRODUCTION' || normalizedEnv == 'PROD') {
-      final baseUrl = customUrl.isNotEmpty ? customUrl : 'https://oprino-api.onrender.com';
+      final rawBaseUrl = customUrl.isNotEmpty ? customUrl : 'https://oprino-api.onrender.com';
+      final baseUrl = normalizeApiUrl(rawBaseUrl);
       final uri = Uri.tryParse(baseUrl);
 
       if (uri == null || !uri.isScheme('https') || uri.host.isEmpty) {
         throw ArgumentError(
           'Contradictory configuration: PRODUCTION requires a secure HTTPS endpoint, '
           'but received "$baseUrl"',
+        );
+      }
+
+      final host = uri.host.toLowerCase();
+      if (isAuthorizedLocalHost(host)) {
+        throw ArgumentError(
+          'Security barrier violation: PRODUCTION endpoint cannot target local loopback or private networks, '
+          'but received "$host" in "$baseUrl"',
         );
       }
 
@@ -123,7 +149,26 @@ class AppConfig {
     );
   }
 
-  factory AppConfig.fromEnvironment() {
+  factory AppConfig.fromEnvironment({bool? isReleaseModeOverride}) {
+    final effectiveReleaseMode = isReleaseModeOverride ?? kReleaseMode;
+
+    if (effectiveReleaseMode) {
+      const rawReleaseEnv = String.fromEnvironment('ENVIRONMENT', defaultValue: '');
+      if (rawReleaseEnv.isEmpty) {
+        throw StateError(
+          'Security gate violation: Release mode requires explicit --dart-define=ENVIRONMENT=PRODUCTION. '
+          'Silent fallback to development configuration is strictly forbidden in production builds.',
+        );
+      }
+      final normalized = rawReleaseEnv.toUpperCase().replaceAll('-', '_');
+      if (normalized != 'PRODUCTION' && normalized != 'PROD') {
+        throw StateError(
+          'Security gate violation: Release mode cannot target "$rawReleaseEnv". '
+          'Production distribution builds must specify ENVIRONMENT=PRODUCTION.',
+        );
+      }
+    }
+
     const rawEnv = String.fromEnvironment('ENVIRONMENT', defaultValue: 'LOCAL_PILOT_DEBUG');
     const customUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
     const isEmulator = bool.fromEnvironment('EMULATOR', defaultValue: false);

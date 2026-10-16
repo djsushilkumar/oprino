@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 import 'package:oprino_api/oprino_api.dart';
 import 'package:oprino_mobile/core/database/database.dart';
 import 'package:oprino_mobile/core/location/location_service.dart';
+import 'package:oprino_mobile/core/config/app_config.dart';
 import 'package:oprino_mobile/core/sync/sync_service.dart';
 
 class _RecordingAdapter implements HttpClientAdapter {
@@ -130,7 +131,7 @@ void main() {
   setUp(() {
     hardware = FaultyLocationHardwareAdapter();
     mockHttp = _RecordingAdapter(geofencesToReturn: [sampleGeofence]);
-    client = OprinoApiClient();
+    client = OprinoApiClient(baseUrl: AppConfig.localPilot.apiBaseUrl);
     client.dio.httpClientAdapter = mockHttp;
     service = LocationService(client: client, adapter: hardware);
   });

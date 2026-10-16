@@ -12,6 +12,7 @@ import 'package:oprino_mobile/core/sync/sync_service.dart';
 import 'package:oprino_mobile/features/auth/presentation/auth_state_notifier.dart';
 import 'package:oprino_mobile/features/auth/presentation/device_revoked_screen.dart';
 import 'package:oprino_mobile/features/shell/presentation/app_shell_screen.dart';
+import 'package:oprino_mobile/core/config/app_config.dart';
 import 'package:oprino_mobile/core/widgets/oprino_brand_logo.dart';
 import 'package:oprino_api/oprino_api.dart';
 
@@ -80,7 +81,7 @@ void main() {
   setUp(() {
     FlutterSecureStorage.setMockInitialValues({});
     testDb = AppDatabase(NativeDatabase.memory());
-    testClient = OprinoApiClient();
+    testClient = OprinoApiClient(baseUrl: AppConfig.localPilot.apiBaseUrl);
     testClient.dio.httpClientAdapter = _FakeOfflineAdapter();
   });
 

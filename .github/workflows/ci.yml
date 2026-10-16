@@ -2,9 +2,9 @@ name: Oprino Monorepo CI
 
 on:
   push:
-    branches: [main, 'feat/**', 'release/**', 'docs/**']
+    branches: [main, 'feat/**', 'release/**', 'docs/**', 'fix/**']
   pull_request:
-    branches: [main, 'feat/**', 'release/**', 'docs/**']
+    branches: [main, 'feat/**', 'release/**', 'docs/**', 'fix/**']
   workflow_dispatch:
 
 jobs:

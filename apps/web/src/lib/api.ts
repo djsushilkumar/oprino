@@ -98,11 +98,51 @@ export interface WorkspaceMember {
   roleName: string;
   status: string;
 }
-export function getApiBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+export function normalizeApiBaseUrl(rawUrl?: string): string {
+  let url = (rawUrl || process.env.NEXT_PUBLIC_API_URL || 'https://oprino-api.onrender.com').trim();
+  url = url.replace(/\/+$/, '');
+  if (url.endsWith('/v1')) {
+    url = url.slice(0, -3);
   }
-  return 'https://oprino-api.onrender.com';
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Security gate violation: Insecure production API URL "${url}". Malformed URL.`);
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    if (parsed.protocol !== 'https:') {
+      throw new Error(`Security gate violation: Insecure production API URL "${url}". Production builds must use HTTPS.`);
+    }
+    const host = parsed.hostname.toLowerCase().trim();
+    const isLoopbackOrPrivate =
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '::1' ||
+      host === '10.0.2.2' ||
+      host.endsWith('.localhost') ||
+      host.endsWith('.local') ||
+      /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
+      /^192\.168\.\d{1,3}\.\d{1,3}$/.test(host) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(host);
+
+    if (isLoopbackOrPrivate) {
+      throw new Error(`Security gate violation: Insecure production API URL "${url}". Cannot target loopback or private host.`);
+    }
+  }
+  return url;
+}
+
+export function getApiBaseUrl(): string {
+  return normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
+}
+
+export function buildApiUrl(endpoint: string, baseUrl?: string): string {
+  const base = normalizeApiBaseUrl(baseUrl);
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${base}${cleanEndpoint}`;
 }
 
 const TOKEN_KEY = 'oprino_web_auth_token';
@@ -157,8 +197,8 @@ async function request<T>(
   if (activeWorkspaceId) {
     headers['X-Workspace-Id'] = activeWorkspaceId;
   }
-  const baseUrl = getApiBaseUrl();
-  const res = await fetch(`${baseUrl}${endpoint}`, {
+  const fullUrl = buildApiUrl(endpoint);
+  const res = await fetch(fullUrl, {
     ...options,
     headers,
   });
@@ -401,7 +441,7 @@ export const webApi = {
   },
 
   getMediaFileUrl(mediaKey: string): string {
-    return `${getApiBaseUrl()}/v1/media/files/${encodeURIComponent(mediaKey)}`;
+    return buildApiUrl(`/v1/media/files/${encodeURIComponent(mediaKey)}`);
   },
 
   // Phase 02B: Tasks
@@ -738,7 +778,7 @@ export const webApi = {
     if (filters?.startDate) params.set('startDate', filters.startDate);
     if (filters?.endDate) params.set('endDate', filters.endDate);
     const qs = params.toString() ? `?${params.toString()}` : '';
-    return `${getApiBaseUrl()}/v1/reports/export/csv${qs}`;
+    return buildApiUrl(`/v1/reports/export/csv${qs}`);
   },
 
   // --- Phase 04: Notifications ---

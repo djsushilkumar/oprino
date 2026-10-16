@@ -17,6 +17,54 @@ export interface WorkspaceRoutesOptions {
   workspaceService: WorkspaceService;
   authMiddleware: ReturnType<typeof createAuthMiddleware>;
   auth?: Auth;
+  appPublicUrl?: string;
+}
+
+export function resolveCanonicalInvitationBaseUrl(configuredUrl?: string): string {
+  const candidate = configuredUrl || process.env.APP_PUBLIC_URL;
+  if (!candidate || candidate.trim() === '') {
+    throw new Error(
+      'Security barrier violation: Canonical web application URL (APP_PUBLIC_URL) is not configured.',
+    );
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(candidate.trim());
+  } catch {
+    throw new Error(
+      `Security barrier violation: Canonical web application URL "${candidate}" is malformed.`,
+    );
+  }
+
+  const isProductionLike =
+    process.env.NODE_ENV === 'production' ||
+    process.env.APP_ENV === 'production' ||
+    process.env.APP_ENV === 'staging';
+
+  if (isProductionLike) {
+    if (parsed.protocol !== 'https:') {
+      throw new Error(
+        `Security barrier violation: Canonical web application URL in production/staging must use HTTPS, received "${candidate}".`,
+      );
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '::1' ||
+      host === '10.0.2.2' ||
+      host.endsWith('.localhost') ||
+      /^192\.168\./.test(host) ||
+      /^10\./.test(host)
+    ) {
+      throw new Error(
+        `Security barrier violation: Canonical web application URL cannot target loopback or private host "${host}" in production.`,
+      );
+    }
+  }
+
+  return candidate.trim();
 }
 
 export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async (app, options) => {
@@ -187,11 +235,7 @@ export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async
       }
 
       try {
-        const baseUrl =
-          (req.headers.origin as string) ||
-          (req.headers.referer ? new URL(req.headers.referer as string).origin : '') ||
-          process.env.APP_PUBLIC_URL ||
-          'http://localhost:3000';
+        const baseUrl = resolveCanonicalInvitationBaseUrl(options.appPublicUrl);
 
         const invitation = await workspaceService.createInvitation(
           req.workspaceId!,
@@ -290,11 +334,7 @@ export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async
       }
 
       try {
-        const baseUrl =
-          (req.headers.origin as string) ||
-          (req.headers.referer ? new URL(req.headers.referer as string).origin : '') ||
-          process.env.APP_PUBLIC_URL ||
-          'http://localhost:3000';
+        const baseUrl = resolveCanonicalInvitationBaseUrl(options.appPublicUrl);
 
         const result = await workspaceService.bulkImportMembersCsv(
           req.workspaceId!,

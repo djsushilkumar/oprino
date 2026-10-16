@@ -58,6 +58,38 @@ android {
         }
     }
 
+    gradle.taskGraph.whenReady {
+        val isReleaseBuild = allTasks.any {
+            it.name.contains("assembleRelease", ignoreCase = true) ||
+            it.name.contains("bundleRelease", ignoreCase = true) ||
+            it.name.contains("packageRelease", ignoreCase = true)
+        }
+        if (isReleaseBuild) {
+            val keyStoreFilePath = keystoreProperties.getProperty("storeFile")
+                ?: System.getenv("OPRINO_KEYSTORE_PATH")
+            val keyStorePassword = keystoreProperties.getProperty("storePassword")
+                ?: System.getenv("OPRINO_KEYSTORE_PASSWORD")
+            val keyAliasStr = keystoreProperties.getProperty("keyAlias")
+                ?: System.getenv("OPRINO_KEY_ALIAS")
+            val keyPasswordStr = keystoreProperties.getProperty("keyPassword")
+                ?: System.getenv("OPRINO_KEY_PASSWORD")
+
+            if (keyStoreFilePath.isNullOrBlank() || !file(keyStoreFilePath).exists()) {
+                throw GradleException(
+                    "❌ SECURITY GATE VIOLATION: Production release build requires legitimate release signing credentials. " +
+                    "Neither key.properties (storeFile) nor OPRINO_KEYSTORE_PATH was configured or the file does not exist. " +
+                    "Silent debug signing or producing unsigned production artifacts is strictly prohibited."
+                )
+            }
+            if (keyStorePassword.isNullOrBlank() || keyAliasStr.isNullOrBlank() || keyPasswordStr.isNullOrBlank()) {
+                throw GradleException(
+                    "❌ SECURITY GATE VIOLATION: Production release build requires complete release signing credentials. " +
+                    "storePassword, keyAlias, and keyPassword must all be non-empty."
+                )
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
