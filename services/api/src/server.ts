@@ -130,12 +130,37 @@ export function buildServer(options?: {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
-  const allowedOrigins: (string | RegExp)[] = [
-    env.API_PUBLIC_URL,
+  // 1. Explicit approved origins wherever feasible (production web, staging, official previews, and native mobile scheme)
+  const explicitApprovedOrigins = [
     'https://oprino.vercel.app',
-    /\.vercel\.app$/,
+    'https://oprino-staging.vercel.app',
+    'https://oprino-preview.vercel.app',
+    'https://oprino-git-main-djsushilkumar.vercel.app',
     'oprino://app',
   ];
+
+  const allowedOrigins: (string | RegExp)[] = [...explicitApprovedOrigins];
+
+  // Dynamic preview deployments: used where static origin declaration is not feasible due to dynamic branch names.
+  // Strictly scoped to the verified team namespace (-djsushilkumar) to reject third-party prefix squatting.
+  allowedOrigins.push(/^https:\/\/oprino-[a-zA-Z0-9_-]+-djsushilkumar(?:-[a-zA-Z0-9]+)?\.vercel\.app$/);
+
+  if (env.APP_PUBLIC_URL) {
+    try {
+      allowedOrigins.push(new URL(env.APP_PUBLIC_URL).origin);
+    } catch {
+      allowedOrigins.push(env.APP_PUBLIC_URL);
+    }
+  }
+
+  if (env.API_PUBLIC_URL) {
+    try {
+      allowedOrigins.push(new URL(env.API_PUBLIC_URL).origin);
+    } catch {
+      allowedOrigins.push(env.API_PUBLIC_URL);
+    }
+  }
+
   if (env.NODE_ENV !== 'production' && env.APP_ENV !== 'production') {
     allowedOrigins.push(
       'http://localhost:3000',
@@ -144,14 +169,15 @@ export function buildServer(options?: {
       'http://127.0.0.1:3001',
     );
   }
+
+  // Explicitly controlled preview origins configured via CORS_ORIGINS
   if (env.CORS_ORIGINS) {
-    const isProdOrStaging = env.NODE_ENV === 'production' || env.APP_ENV === 'production' || env.APP_ENV === 'staging';
     const extraOrigins = env.CORS_ORIGINS.split(',')
       .map((o) => o.trim())
       .filter(Boolean)
       .filter((o) => {
-        if (isProdOrStaging && o === '*') {
-          app.log.warn('⚠️ Wildcard CORS origin "*" ignored in production/staging environment for credential security.');
+        if (o === '*') {
+          app.log.warn('⚠️ Wildcard CORS origin "*" ignored when credentials: true is enabled for cross-origin security.');
           return false;
         }
         return true;
@@ -263,6 +289,14 @@ export function buildServer(options?: {
     }
 
     return reply.status(statusCode).send(responsePayload);
+  });
+
+  // Deterministic resource teardown on server shutdown
+  app.addHook('onClose', async () => {
+    await pubsub.close();
+    if (!options?.dbClient) {
+      await dbClient.client.end({ timeout: 5 });
+    }
   });
 
   return {

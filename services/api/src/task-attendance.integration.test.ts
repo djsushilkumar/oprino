@@ -169,6 +169,7 @@ describe('Phase 02B: Task & Attendance Core Domain Integration & Security Tests'
         );
     }
     await appDbClient.client.end();
+    await dbClient.client.end();
     await app.close();
   });
 

@@ -85,6 +85,7 @@ describe('V1 Release Blockers Remediation Integration Tests (BLK-002 through BLK
 
   after(async () => {
     await app.close();
+    await dbClient.client.end();
   });
 
   // =========================================================================

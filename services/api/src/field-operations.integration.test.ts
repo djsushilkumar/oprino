@@ -110,6 +110,7 @@ describe('Phase 03: Field Operations, Customer Sites, Visits & Proof of Work Int
 
   after(async () => {
     await app.close();
+    await dbClient.client.end();
   });
 
   describe('1. Customers & Customer Sites Domain', () => {
