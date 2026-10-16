@@ -105,14 +105,24 @@ if (fs.existsSync(mobileReleasePath)) {
     'mobile-release.yml lacks fail-closed certificate integrity validation using keytool.'
   );
   assertCheck(
-    'Mobile Release Workflow validates release certificate SHA-256 fingerprint',
-    content.includes('ACTUAL_SHA256=') && content.includes('OPRINO_RELEASE_CERT_SHA256'),
-    'mobile-release.yml lacks release certificate SHA-256 fingerprint verification.'
+    'Mobile Release Workflow enforces mandatory release certificate SHA-256 fingerprint',
+    content.includes('ACTUAL_SHA256=') && content.includes('OPRINO_RELEASE_CERT_SHA256') && content.includes('[ -z "$EXPECTED_CERT_SHA256" ]'),
+    'mobile-release.yml lacks mandatory release certificate SHA-256 fingerprint verification.'
   );
   assertCheck(
-    'Mobile Release Workflow verifies compiled APK cryptographic signature',
-    content.includes('apksigner verify') || content.includes('jarsigner -verify'),
-    'mobile-release.yml lacks compiled APK signature verification.'
+    'Mobile Release Workflow verifies compiled APK cryptographic signature using apksigner fail-closed',
+    content.includes('verify --verbose --print-certs') && content.includes('apksigner is strictly required'),
+    'mobile-release.yml lacks fail-closed compiled APK signature verification with apksigner.'
+  );
+  assertCheck(
+    'Mobile Release Workflow verifies compiled APK signer certificate against expected fingerprint',
+    content.includes('APK_SIGNER_SHA256') && content.includes('$APK_SIGNER_SHA256" != "$NORMALIZED_EXPECTED'),
+    'mobile-release.yml does not verify compiled APK signer certificate against approved SHA-256 fingerprint.'
+  );
+  assertCheck(
+    'Mobile Release Workflow prevents automatic release generation on push to main',
+    content.includes('workflow_dispatch:') && !content.includes('push:'),
+    'mobile-release.yml contains automatic push trigger to main.'
   );
 }
 

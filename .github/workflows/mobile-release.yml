@@ -1,14 +1,12 @@
 name: Oprino Mobile Release APK Build
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/mobile/**'
-      - 'packages/tokens/**'
-      - 'packages/contracts/**'
-      - '.github/workflows/mobile-release.yml'
   workflow_dispatch:
+    inputs:
+      release_approval_reference:
+        description: 'Release approval reference or change management ticket ID'
+        required: true
+        default: 'CR-APPROVED'
 
 jobs:
   build-android-release-apk:
@@ -63,15 +61,14 @@ jobs:
           echo "=================================================================="
           echo "       OPRINO PRODUCTION RELEASE SIGNING CREDENTIALS GATE         "
           echo "=================================================================="
-          if [ -z "$RELEASE_KEYSTORE_BASE64" ] || [ -z "$RELEASE_KEYSTORE_PASSWORD" ] || [ -z "$RELEASE_KEY_ALIAS" ] || [ -z "$RELEASE_KEY_PASSWORD" ]; then
-            echo "❌ CRITICAL SECURITY GATE VIOLATION: Production release signing secrets are unconfigured or incomplete."
-            echo "Required GitHub repository secrets:"
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ] || [ -z "$RELEASE_KEYSTORE_PASSWORD" ] || [ -z "$RELEASE_KEY_ALIAS" ] || [ -z "$RELEASE_KEY_PASSWORD" ] || [ -z "$EXPECTED_CERT_SHA256" ]; then
+            echo "❌ CRITICAL SECURITY GATE VIOLATION: Production release signing secrets or certificate fingerprint are unconfigured or incomplete."
+            echo "Required GitHub repository secrets / variables:"
             echo "  - OPRINO_RELEASE_KEYSTORE_BASE64 (or OPRINO_KEYSTORE_BASE64)"
             echo "  - OPRINO_RELEASE_KEYSTORE_PASSWORD (or OPRINO_KEYSTORE_PASSWORD)"
             echo "  - OPRINO_RELEASE_KEY_ALIAS (or OPRINO_KEY_ALIAS)"
             echo "  - OPRINO_RELEASE_KEY_PASSWORD (or OPRINO_KEY_PASSWORD)"
-            echo "Optional verification secret/variable:"
-            echo "  - OPRINO_RELEASE_CERT_SHA256"
+            echo "  - OPRINO_RELEASE_CERT_SHA256 (mandatory approved certificate SHA-256 fingerprint)"
             echo "Generating debug keystore for production distribution artifacts is strictly forbidden."
             exit 1
           fi
@@ -92,18 +89,14 @@ jobs:
           fi
           echo "✓ Keystore certificate validated. SHA-256 fingerprint: $ACTUAL_SHA256"
 
-          if [ -n "$EXPECTED_CERT_SHA256" ]; then
-            NORMALIZED_EXPECTED=$(echo "$EXPECTED_CERT_SHA256" | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
-            if [ "$ACTUAL_SHA256" != "$NORMALIZED_EXPECTED" ]; then
-              echo "❌ CRITICAL SECURITY ERROR: Release certificate SHA-256 fingerprint mismatch!"
-              echo "Expected: $NORMALIZED_EXPECTED"
-              echo "Actual:   $ACTUAL_SHA256"
-              exit 1
-            fi
-            echo "✓ Release certificate SHA-256 fingerprint strictly matches expected repository fingerprint."
-          else
-            echo "ℹ Note: OPRINO_RELEASE_CERT_SHA256 is not configured; validated via keystore alias and password integrity."
+          NORMALIZED_EXPECTED=$(echo "$EXPECTED_CERT_SHA256" | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ "$ACTUAL_SHA256" != "$NORMALIZED_EXPECTED" ]; then
+            echo "❌ CRITICAL SECURITY ERROR: Release keystore certificate SHA-256 fingerprint mismatch!"
+            echo "Expected approved: $NORMALIZED_EXPECTED"
+            echo "Actual keystore:   $ACTUAL_SHA256"
+            exit 1
           fi
+          echo "✓ Keystore certificate SHA-256 fingerprint strictly matches mandatory approved fingerprint ($ACTUAL_SHA256)."
 
           cat <<EOF > apps/mobile/android/key.properties
           storeFile=$HOME/.android/oprino-release.jks
@@ -131,6 +124,8 @@ jobs:
             --dart-define=API_BASE_URL="$PROD_API_URL"
 
       - name: Verify Production Release Artifacts & APK Signature
+        env:
+          EXPECTED_CERT_SHA256: ${{ vars.OPRINO_RELEASE_CERT_SHA256 || secrets.OPRINO_RELEASE_CERT_SHA256 }}
         run: |
           node scripts/verify-production-artifacts.mjs
 
@@ -145,15 +140,31 @@ jobs:
           echo "Verifying APK signature: $APK_PATH"
 
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
-          if [ -n "$APKSIGNER" ] && [ -x "$APKSIGNER" ]; then
-            echo "Using apksigner: $APKSIGNER"
-            "$APKSIGNER" verify --verbose --print-certs "$APK_PATH"
-            echo "✓ APK signature schemes (v1/v2/v3) verified successfully with apksigner."
-          else
-            echo "Using jarsigner for APK verification..."
-            jarsigner -verify -verbose -certs "$APK_PATH"
-            echo "✓ APK signature verified successfully with jarsigner."
+          if [ -z "$APKSIGNER" ] || [ ! -x "$APKSIGNER" ]; then
+            echo "❌ CRITICAL SECURITY ERROR: Android SDK 'apksigner' tool not found or not executable in $ANDROID_HOME/build-tools."
+            echo "Failing closed: apksigner is strictly required for release signature verification."
+            exit 1
           fi
+
+          echo "Using apksigner: $APKSIGNER"
+          APK_VERIFY_OUT=$("$APKSIGNER" verify --verbose --print-certs "$APK_PATH")
+          echo "$APK_VERIFY_OUT"
+          echo "✓ APK signature schemes (v1/v2/v3) verified successfully with apksigner."
+
+          APK_SIGNER_SHA256=$(echo "$APK_VERIFY_OUT" | grep -i "SHA-256" | head -n 1 | sed -E 's/.*SHA-?256[^:]*:[[:space:]]*//I' | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ -z "$APK_SIGNER_SHA256" ]; then
+            echo "❌ CRITICAL SECURITY ERROR: Failed to extract SHA-256 signer certificate digest from compiled APK."
+            exit 1
+          fi
+
+          NORMALIZED_EXPECTED=$(echo "$EXPECTED_CERT_SHA256" | tr -d ' ' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ "$APK_SIGNER_SHA256" != "$NORMALIZED_EXPECTED" ]; then
+            echo "❌ CRITICAL SECURITY ERROR: Compiled APK signer certificate SHA-256 fingerprint mismatch!"
+            echo "Expected approved: $NORMALIZED_EXPECTED"
+            echo "Actual APK signer: $APK_SIGNER_SHA256"
+            exit 1
+          fi
+          echo "✓ Compiled APK signer certificate SHA-256 strictly matches approved fingerprint: $APK_SIGNER_SHA256"
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
