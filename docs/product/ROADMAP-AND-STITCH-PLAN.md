@@ -182,20 +182,20 @@ The unified mobile app dynamically renders screens and tabs based on the authent
 ---
 
 ### 2.5 Surface 3: Platform Super Admin Web Console (14 Screens)
-91. **ADM-01:** Super Admin Login & MFA Challenge Shell
-92. **ADM-02:** Platform Global Metrics Dashboard (Total tenants, active seats, MRR)
-93. **ADM-03:** Tenant Management Directory (Search, plan tier, trial status, active users)
-94. **ADM-04:** Tenant Detail Inspector (Usage breakdown, active databases, storage volume)
-95. **ADM-05:** Tenant Subscription Override Modal (Manual trial extension, seat quota edit)
-96. **ADM-06:** Global User Directory & Device Inventory
-97. **ADM-07:** Global System Health & Container Cluster Status (Oracle VM monitor)
-98. **ADM-08:** Global Telemetry Pipeline Throughput & SSE Metrics Monitor
-99. **ADM-09:** Background Queue Studio (BullMQ job failure rates, retry worker)
-100. **ADM-10:** Global Audit Log & Security Forensics Browser
-101. **ADM-11:** Razorpay Payment Gateway Transaction & Webhook Log
-102. **ADM-12:** System Announcement & Global Notification Dispatcher
-103. **ADM-13:** Global Feature Flag Configuration Studio
-104. **ADM-14:** Database Backup Snapshot & Disaster Recovery Status Dashboard
+1. **ADM-01:** Super Admin Login & MFA Challenge Shell
+2. **ADM-02:** Platform Global Metrics Dashboard (Total tenants, active seats, MRR)
+3. **ADM-03:** Tenant Management Directory (Search, plan tier, trial status, active users)
+4. **ADM-04:** Tenant Detail Inspector (Usage breakdown, active databases, storage volume)
+5. **ADM-05:** Tenant Subscription Override Modal (Manual trial extension, seat quota edit)
+6. **ADM-06:** Global User Directory & Device Inventory
+7. **ADM-07:** Global System Health & Container Cluster Status (Oracle VM monitor)
+8. **ADM-08:** Global Telemetry Pipeline Throughput & SSE Metrics Monitor
+9. **ADM-09:** Background Queue Studio (BullMQ job failure rates, retry worker)
+10. **ADM-10:** Global Audit Log & Security Forensics Browser
+11. **ADM-11:** Razorpay Payment Gateway Transaction & Webhook Log
+12. **ADM-12:** System Announcement & Global Notification Dispatcher
+13. **ADM-13:** Global Feature Flag Configuration Studio
+14. **ADM-14:** Database Backup Snapshot & Disaster Recovery Status Dashboard
 
 ---
 
@@ -317,23 +317,34 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 | Screen ID | Screen Title | Device | Stitch Screen ID | HTML Code Asset | High-Res Visual Prototype | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **DS-01** | Oprino Enterprise Design System v1.3 | Design System | `assets/16261881246790250535` | Tokens Applied | [Applied to Project](https://stitch.withgoogle.com/projects/9824638464962009415) | Active |
-| **WEB-01** | Workspace Sign In (v2 Corrected) | Desktop Web | `1ff1be71b0c54878a11e6fcb264efd08` | `files/b0ab37d597454089a4ea16eb64230341` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XwacS_1dDsW_OnTQLmP7-6RAAAx80G0gcS6SIA0MNvInnnrwBsaxKpjEnOt6vFy0t9Bu8NV2Qm3hDE43t5Qimwin7Yn4SoFvc-v__B1B1LZLApzcxCqtjvuf1QaZuMwyiAsXfSVukKGenEXcJ2TcVKUUovCKMi0GZKXEg9nKOTvEZmdcMXAdp6YcC_iiHZafvwbEOSO9qaKDSt7ldj8GzAes42lP5EuvSrQFM4ME3NztbBFNKmK2MU528) | Generated (Active) |
-| **WEB-02** | Workspace Registration & 7-Day Free Trial (v2 Corrected) | Desktop Web | `7fd35d613d6644fbb6854cf5348f6d8d` | `files/1d212f3612434825862e725351de43dc` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XKa7lsHjH8BKypaDrjWaRoBEyKbLCGpcijI8W6L0DkgKgNtGzIT-KMjOux4BtcfTRSVqy5d47pzl3LhxBiWYynqriDUyq9ZdhqxzIYWsPgce-JnkCdKCsrELzJupY-adZrfOyk5LyfmO1ho-D9kT4nS9c5O-M5-6U62QcgENIpJqPC0MxJBYrDD4j2zFpx_G3grRhyc9gH6IzDW9aP3ckqnqeRctiPgcj5bHKDg6gREHI5K9jz-PiNoMo) | Generated (Active) |
+| **WEB-01** | Workspace Sign In (v3 Clean) | Desktop Web | `85048fdfa0164ce5acee6b4490da34c1` | `files/f162d6a428c640c2aac37ce4eaefbf04` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1X9jqhcboSEiX3ZfVm-rFXnQdSeRxUOYx-HhPCd6OvU8xPcl3f-Z89vvQguO_O8Xexjmh_s1qVYe-q3dOKnit5PQAe68uNY-zVgAmcvfWSzNUr7AxT-V8mU7YRODv034jF-CtFh3pYtck_9TQs4tlmS4g1EodbMKHCCTBXHjEFhNxPYkRs3WlYPEcT2kXv3bulLK7cuKpcNIHMq4huZD5yE9-Pd5Cfkj7XU30mN-GotenSMsJBgEyd7OwM) | Generated (Active) |
+| **WEB-02** | Workspace Registration & 7-Day Free Trial (v3 Clean) | Desktop Web | `22f1e30b111b4c9b9aacfb9e994349cc` | `files/90d9bdd35f8d4d52a7c8ae08266041ad` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1Wg2WLqGn0sGUdY05E2PCd5IxBeF6y2zvmhuh_spO2LijiUJ4tpxAnBssBC18mx129lZtO9ARX8Vp3ZRRqnriaQb44VmSnrknNlF1FEcZ44DU3Aahxij8heqo8fJvuoD_okSrWnbMyX0W_UIFzTp7W8iJLRfZbXVwz2X0cUUlWKu5WxbxQnLhyrWHOTApY9fn-G7yHf0kGv85-PA5xtayGwrniZXcalMXYLf43FvPJToCQkufKgCHRoyxo) | Generated (Active) |
 | **WEB-05** | Executive Operations Overview Cockpit | Desktop Web | `78ae05e1af044a5593b047c6e5ad3415` | `files/1f630da44c474758be6b676a873f0aab` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VpF2lV3wx-8xX3hRl6fF7R7DIGu0cjGfS8UY3rW8kZZ7Gc0-4MwU0XPE-WiOaMGaM_MsTbI8EPcDtNkFHX1HdqjhactfIbir6QjgBCW29v16xrSPvRFAcKWfMue4dsYSlB2vZiLf9O-DwjFJxyw-YGg84jpcnhHwvmm3vttEfAxbUmcw_nKLUEI5aId8Fgd6CSGTJaUlTxsJPus2D3dB94r_Z00Shx7cSpFQa2VmBKY03Qncppt7bSBa8) | Generated (Active) |
 | **WEB-06** | Real-Time Live Radar Map | Desktop Web | `98b0dfc9e7f34b719df32125357c2de4` | `files/16d9066121934a87abe96af062991f9a` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VWyyD7Sb5V3MGwyA26YDXqH3abLs1MrJ6GxdZt00bSPPYFIzYTnXu5MH1N5bcnHQeU2jLXnpnQcI6XkmlWNsCeVV2yHS0Y1l3jzrVOL5lqK3EpuH2Yew4o3FjPHQR6A3FH6egL_aFFFmrRjLgF4jC1gQXAYbDkWW6Q1-JsdhcnaHlnJ1GcWOgqFA2Dk2qv9Wam51F0m1N3WRH-RIJ5MAwrjItjJ4HcFpmIR0mEjNxeqNemyfdq1aoe) | Generated (Active) |
 | **WEB-12** | Task Dispatch Matrix Kanban | Desktop Web | `44233e9028ad43469441bf44869bf971` | `files/db3f5b4f6dd0412d862f090272b27837` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UtYNVEqP6e2opoUXkzB6eK3r6RxpMgyWoty5vK2_ms15ZupZJpfvoZ0eH4PlfECVhGhu8LMNhHutIm9wEmCt0KaCv3LSQsw5HAThgYR-pqgkFturPdjsqBuXDP-46bu0zPJUOjtsWj4rsNPg7YEFquSzqJd4f-lzZPPGs52TfZD_hMMEQ-IZ0YwiY5l5_yhT1Ogm5P7IVMy8nYz2mpuQPhkMBfz1oF-h8PHNmpRINOKofi1_6IkiwCWWc) | Generated (Active) |
+| **WEB-13** | Task Creation & Multi-Worker Dispatch Wizard | Desktop Web | `5fd800f0997840958dd455b07e052405` | `files/41b91fbcce144d94a875303cb33d9c15` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UtBEn1g0rP-Zi0FM_HEESZrDVu5i4kqlC4xT6jT_f6XSh1YVfvGwJYtyujCU0ekpIiANPIvrdO4OQZTHn1MPd774a0NE0vDajGi7E1RDuAw43ePEucTi-UmNuR9i_p2LVdIbU23csHwDNKA8hvH3-2Oqci-g9gKL-KGDXYpg-V8E_VNHVLfR9ko0uhAa4F_bUqcieB7hkFks-2BPah0ARKYQEJbfYH6-DfJio1-v97T2XTdPtMQ7RvMZs) | Generated (Active) |
+| **WEB-14** | Task Detail Inspector & Real-Time Workspace | Desktop Web | `19bd3a93cd2e41efa5e57244b88a8468` | `files/fc8183c258c24406ad6ebee50b313fd1` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1Uu1Na-WGjks1fpUE0TCJ2Wzag6qBGSMtzjSZ7ogTLO9UwX5OKA-dOCP0GWCAckXPxYDB4Bph9mmVwEUcp0MjrgvYYXxZvzkC7OLppc7G8B2dWRgVl5HdMPYvUQ0WcbB_tzYJh4aZIRGpVEgUT5brkN44hhpOxnM04TzvgN6K9IlUFC2JheS3Bt2uQzfvkR_2_DGjchENo-OL74xgohWs5y1EBxTIf2ZzZGxGke-fXY33Cp7Zb2GM_9Wxg) | Generated (Active) |
+| **WEB-15** | Proof of Work Supervisory Verification Queue | Desktop Web | `a770a74c513d4bb08b7ca60401756dfe` | `files/381347766b4e44c9b26353d69b9877f6` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WrXsvj3HNLwxRddnfE0pc7-GJ6VjTVCHbQAG59GX2kXYl1tH2gBu1O0dTsnndOLBGnmDyl8YiCCQ8xBAn_aJNUwLMuYH0Xgsex7MN3iBpgPnTZcx0Lfy_owij2zrv1ZH91-HIbBFQUdqaA0iZlDvToJChZLhfITuioGQOPk1B65Z305VvHJAQEU1SScVRas_7hX9L9BHWa8V6T6RApnVMF7SrCrAxfyia5SRcyKI24fVeoI4vFixRxHw) | Generated (Active) |
+| **WEB-16** | Recurring Task Template Studio | Desktop Web | `dcfee7062cf74af8ab23b7d74770d068` | `files/677638b1f2c042a3a0e195a0d7bfb220` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1Wz6FmjGuAkA6n3izD3dq2PsFrzsWwnL7d2LUOAE8Ouz-CPQqzDF-K8WLU6a-5DcAx3jmiyFPx0ZB88m1OB-17gIYsxMHjt-V87MLulIjAjkyONkOyXfAqW9U26TYu9Ztv-fgxfg-xjL7kffdoAKpSUiDaBYZILPl_LIduPg9w3MwR21tImBLDjTcu9FtVjRStlP9rTMAj6rcEJrLNz_TweO1UOc-j88hM--tHA0hwdKx3QhDplNtilDw) | Generated (Active) |
+| **WEB-17** | Advanced Project Portfolio Overview | Desktop Web | `887d486a053d4661abf1329db3c72778` | `files/0d070fd85c8442a6a337ec38c24ad692` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XINnSlM_cMGDJdOvaI5WXalpYSFndUtATBpjcszTGdXQaUBmTNUs-Uj96kkNhk5OqE5CEDYDmYK_lrS2mL6n-yQBaGVEgIqzaX8VR33ZFfYqMDcKkTcSG2mdRzr_dmPDwP69fn7QegJMQTBWLgagouYe31mh20cn-7XksAJm1YanicAWjDS3_Pj5DSAzIkspDrgC_dLu8bOqs5UPHvB0hwvj824kpHnaUJK6QTEcuLeoD1oTKRh9cC_aU) | Generated (Active) |
+| **WEB-18** | Advanced Project Milestone Hierarchy | Desktop Web | `4629555140b84caf95017e8ab0b23425` | `files/235e42422ab24bec94bc1ed11b76a6be` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UE5EEVmxHEqKwWr3cMQdEOxRRUgnJ9aEuc6CApBJiaR-t1UnZ0feCBvAw6sitZaMTlOY2uRyNisGS-FuIJ1wOEydF2DWRuSIH_pu3ufTuwP9-F76Ra38gwTUHnUxrw58SuoMwS--OiMfIlfelCZU0M4m6k9hAR94iCiFUV2HU6xWdvXr1AtjKeacqW43R0r5G5K9HeUmWtqmtu7IDUyUab6TLqfG5CvIysoBSHAx6o_OebneJCVToTng) | Generated (Active) |
 | **WEB-19** | Advanced Project Management Gantt Timeline | Desktop Web | `a1773b03570a4cd7afbe2ec3e0266692` | `files/d468663f735b40f8ac0a453825e1579e` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UQN1TUTEtBTcf7tGEfshb7T6hTE-sXQJW5zSCTUebp52ApZmUWXKQBBNi8-eB-UlNeLtfbzxB9XkTBgdKbKZFhLYMIKygWey2AkVaVTs7QSaR1vjiE53pTP8-nA4P6kSNfXnMMGcbaPJ7wZSVnN4A9yX1QkbfBl8RX0M2xMGZh5uEK-WlxXjwC0lGQ716edHEEx6Bd-tPw6HubzP0qkoCQfG3PhGf_Y1-tuEL8uh-xklKVHhhGMTis6-4) | Generated (Active) |
 | **WEB-20** | Sales CRM Visual Deal Pipeline | Desktop Web | `82323c5505e3427c93abc3bc6c576604` | `files/61d4ddbc09934f029f2f5c566dbb9ad0` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WU8-tVQtGKUjGWkJc6Oo9rH_f7_IqoypQKhOkNIYColOzSu0w12o-FMHF2hgvxEwJAtdeqTR96abrGRaReT1CFL2rao08zgFLQFqZpM7GYkmDc7suCs-2QssEWWH5Lhk4Z9xEM8ZxhxisNLdm8tLP0QSjImfHy0ZBLO6Ewqa0OAbP-3pBDm5i8S5ia9VQzoiLCcplKU_uQb0T0KNdV-s0HwXMVlaaa5hPybkgKg5TDjv0MmTVXKbpMjw) | Generated (Active) |
-| **WEB-07** | Shift Route Playback & Duty Trajectory | Desktop Web | `edcfb51e32534fc182d7a401edd5ea6d` | `files/7ba1d804c846428eafa7cc023537184a` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WUMU1QyrWkSx2Q4hxUBCffrivFCl4oLG_lSRg1ZY8Opz1ZJt5xWMyoa0q5oXsT_b6VFTNACzGkvnrA3dNggGNAr0kDwye7mVWg0_JmaOmyg2Cz38Kp9-9CmDKyBBB7GCwBBKfA7YUJo3M_BLlatzfchLB9-caSFvb8sKB-EVgo2KJfZZoFNeneiqH43H0WI6icqTQTG7zmLSh9mFkh1-ygZTHenAvz1HctvjpF6rZtsAguGYOvSRqqZbU) | Generated (Active) |
-| **WEB-08** | Shift Rosters & Work Schedule Planner | Desktop Web | `7f326a561d8f489bb308a8e37b7228a5` | `files/18680a05cedf43a8a7c723d103755acb` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XYMtU5LCF0moTdjYDFl3Mcu9MLgE5jYqtiUXa7QmSF2FSx2T0-53_6fFx15Lzg9ompg8UTsaptl6UuBNoalvKtH_92qd5jGOCVq7xPeWMk4Nts7r_JI5LwxfoniskqzqmcRqP8t6fQwLRdChGGAvMoZOp-MVm3UQkl7d-go-WXI32btGO0lvZr9MRm7JLVw8zuvu8JAviFXLMHUzdJTrHUKjrPpYFJglcDNNg5vidmhDpN6DX9-MM3uw) | Generated (Active) |
-| **WEB-09** | Daily Attendance & Shift Punch Audit | Desktop Web | `e3d1e0451689405ab2a01689e7382599` | `files/210845dd59f348f3a4db940bb49ded86` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1U9vBxyo-EqeRy66GXLcu28yvQDyw6FFfRX2NA8KNte6thZUg_OOh5HFKKUtfnYRlm0jLl0dKaKy_EL3Pp8upopet6i5d3kK8xwIK7BiUqVxj2nfc0tuw9cRcHGsWmlMjzw5NR7DzmuZ7XyEWVx58PxytLWSLpLbIpoR75rb5Z60X31awrqCcWha7T8UJCgasV2HQpFWwAV9GAA-xM533U3EthxeviXkldVR4d0LGVBRdWoPloQVEjqTA) | Generated (Active) |
-| **WEB-10** | Attendance Regularization & Exception Review | Desktop Web | `1219cecf339e4df494d70ee91b915a0d` | `files/7fc3eb220cb045b68d947be51c7e19d8` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WTM48_PVYfvy-33paF6ew86DyI9lHPRTmN95wb7uEp28eKEpjcW4KwuVYi6on8M2dDJcOupRP6RepaAVt7xLJ0hFjwockCrA3PUE7AfRurKmgEujZC07sHoxZWiHFmvdn13bkI9VgRNeprNeHlPU_-mlVEbFxaCZXMKKCq2RHXvy91wUkeeEtpovgkejG-si9n3XB46X3VI8Q4CfpPOzwplGDrH-BJrX13Vnfn-YHxf7P4W0wUCD-uxp0) | Generated (Active) |
-| **WEB-11** | Timesheet Summary & Overtime Payroll Calculator | Desktop Web | `7327234092004480b360f66717df7789` | `files/2f51740fc16449608683f3ff571c37dd` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VRLs5iucP2IWBwRJBmQzb1hs-CqLBEw8Z0MuJEZS1HbQIsfI3EynaX1r1VJ9uVYdcP5qWr7Dvz8U-ZfkzjZTXBVpL1K1fkqtrUg7A5GdoM3Qm7uY9yEHaQVRDzOlvMDVLTZ8okVvZzrNVYZ4Vji9dGtu9edCk-wyJL7-DjYg6_pOUm22usMphnHhsbcby55Dcg_aZQ5iMrDjW6JBQzlPjDOXX7DeWagXU5mNMNy5Js7727bc07sd-QBCE) | Generated (Active) |
+| **WEB-07** | Historical Breadcrumb Route Playback | Desktop Web | `edcfb51e32534fc182d7a401edd5ea6d` | `files/7ba1d804c846428eafa7cc023537184a` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WUMU1QyrWkSx2Q4hxUBCffrivFCl4oLG_lSRg1ZY8Opz1ZJt5xWMyoa0q5oXsT_b6VFTNACzGkvnrA3dNggGNAr0kDwye7mVWg0_JmaOmyg2Cz38Kp9-9CmDKyBBB7GCwBBKfA7YUJo3M_BLlatzfchLB9-caSFvb8sKB-EVgo2KJfZZoFNeneiqH43H0WI6icqTQTG7zmLSh9mFkh1-ygZTHenAvz1HctvjpF6rZtsAguGYOvSRqqZbU) | Generated (Active) |
+| **WEB-08** | Attendance Management Dashboard | Desktop Web | `d27f660dc346417889cf8c6fb194a3af` | `files/497ea4bbca694a5285cbe8bb9bef66fc` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XrLSDu50yy6ZavMMSDHOu4Htx934G-EtTzI98KM7i8DktetjdrY2_sJ12Th-AZT4xvGmrbmFoSB9zcUfq7tgNXOHE1GJ7ePp4ihZdCQjg44KW6BDNucks-uxRhMGZ1F5mBWnJSlOuIm8I9Jv_QnyJyxBEk7J03EshrchQxGRrEA-m9Gh2m_b2lUsPB2RiO_9ecGKZ9BiYnFUFR3QeVwWJxObXSKwndIIalxUBXxAz90LcrvQ_r0aWKMlE) | Generated (Active) |
+| **WEB-09** | Monthly Attendance Timesheet Calendar Grid | Desktop Web | `b45ea27c2f914d23be7232a367ea0234` | `files/ee39ace1969f449fb9ad52d0805bf815` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WgtB9j7TPnj-BIeGBQH-u3xtmSKxYYPY5g7lQtC39TrVZNLux3qxp_DFFTKBMUCdBlwy_1htJ-OnVx5uoXPtYwx_OPrs-7DXQ7LS7fA_MEq-DQH34kpUOXb5ZS6403YbBo8wJfJ2OW6SPgydkbMZbEM6k9YfFul5Vh5asXe-Qx6ovajQRycdvW9nuStpyvQKHIsFdDtpZwyYEGwLWPNsJr0-SLBjkwMRf0z9Ey2TpzmDsY4zIi6mrlrA) | Generated (Active) |
+| **WEB-10** | Attendance Regularization Supervisory Approval Queue | Desktop Web | `1219cecf339e4df494d70ee91b915a0d` | `files/7fc3eb220cb045b68d947be51c7e19d8` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WTM48_PVYfvy-33paF6ew86DyI9lHPRTmN95wb7uEp28eKEpjcW4KwuVYi6on8M2dDJcOupRP6RepaAVt7xLJ0hFjwockCrA3PUE7AfRurKmgEujZC07sHoxZWiHFmvdn13bkI9VgRNeprNeHlPU_-mlVEbFxaCZXMKKCq2RHXvy91wUkeeEtpovgkejG-si9n3XB46X3VI8Q4CfpPOzwplGDrH-BJrX13Vnfn-YHxf7P4W0wUCD-uxp0) | Generated (Active) |
+| **WEB-11** | Shift Rostering & Working Window Scheduler | Desktop Web | `7f326a561d8f489bb308a8e37b7228a5` | `files/18680a05cedf43a8a7c723d103755acb` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XYMtU5LCF0moTdjYDFl3Mcu9MLgE5jYqtiUXa7QmSF2FSx2T0-53_6fFx15Lzg9ompg8UTsaptl6UuBNoalvKtH_92qd5jGOCVq7xPeWMk4Nts7r_JI5LwxfoniskqzqmcRqP8t6fQwLRdChGGAvMoZOp-MVm3UQkl7d-go-WXI32btGO0lvZr9MRm7JLVw8zuvu8JAviFXLMHUzdJTrHUKjrPpYFJglcDNNg5vidmhDpN6DX9-MM3uw) | Generated (Active) |
 | **WEB-01-Dark** | Workspace Sign In (Dark Theme Variant) | Desktop Web | `16fdf1fbe17744aa92d9290978f8c06d` | Generated Variant | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XiIdztGidvNd36_Ay9HH4HQ6mmpCBCk_M8NcBEaR0ZZUXKBj-69UeIrJYGF0YWL3nMh6QVdGlMapZ5DmiCLt8S0g_0QQxxKi_cxmeDlF4otreJqYFB0fQVFvFdKamjIP6aRt2bbjL0tW3kqn2mSNEYgtwDhTWrsulVg5s9Gd_s_G3_5SpyXUaS_0eNNa8ZeEn4McStC4de_d7uRV9vkWsNQsdchoM7e_E1A-tV2CgBTWzpruQzNbW1Xf0) | Generated (Active) |
 
 ##### Superseded Historical Screen Audit Log (Preserved for Compliance Traceability)
 * `WEB-01-v1` (`7eb6b39001484e08a564f5b636b36df6`): Initial prototype superseded by `WEB-01` (v2) to remove unverified compliance badges and align English/हिंदी localization.
+* `WEB-01-v2` (`1ff1be71b0c54878a11e6fcb264efd08`): Superseded by v3 (`85048fdfa0164ce5acee6b4490da34c1`) to replace unsupported live Google/Okta SSO buttons with proposed enterprise specification tag.
 * `WEB-02-v1` (`c2138ba25a2d4d059ed4b07b9ddb1246`): Initial prototype superseded by `WEB-02` (v2) to eliminate SOC-2/SLA/60s claims and add bilingual English/हिंदी toggles with fictional data.
+* `WEB-02-v2` (`7fd35d613d6644fbb6854cf5348f6d8d`): Superseded by v3 (`22f1e30b111b4c9b9aacfb9e994349cc`) to strictly remove unverified legal entity claims ("Oprino Technologies Inc.").
+* `WEB-08-predecessor` (`7f326a561d8f489bb308a8e37b7228a5`): Reassigned to its canonical ID `WEB-11` (Shift Rostering & Working Window Scheduler) to eliminate semantic mismatch.
+* `WEB-09-variant` (`e3d1e0451689405ab2a01689e7382599` - Daily Attendance & Shift Punch Audit): Preserved as daily audit variant; canonical `WEB-09` generated as Monthly Timesheet Calendar Grid (`b45ea27c2f914d23be7232a367ea0234`).
+* `WEB-11-variant` (`7327234092004480b360f66717df7789` - Timesheet Summary & Overtime Payroll Calculator): Preserved as advanced payroll summary variant / prototype for `WEB-37`.
 
 ---
 
@@ -348,8 +359,8 @@ gantt
     Owner Baseline Approval Gate                     :active, p0_2, 2026-10-17, 1d
     section Phase 1: Google Stitch
     Google Stitch Design System & Tokens Setup      :p1_1, after p0_2, 2d
-    Company Owner/Admin Web Dashboard (50 Screens)  :p1_2, after p1_1, 5d
-    Unified Flutter Mobile UI Prototypes (40 Screens):p1_3, after p1_2, 4d
+    Company Owner/Admin Web Dashboard (56 Screens)  :p1_2, after p1_1, 5d
+    Unified Flutter Mobile UI Prototypes (46 Screens):p1_3, after p1_2, 4d
     Super Admin Web Console Prototypes (14 Screens) :p1_4, after p1_3, 2d
     Owner Full-Platform Design Approval Gate        :p1_5, after p1_4, 1d
     section Phase 2: Antigravity Sprints
