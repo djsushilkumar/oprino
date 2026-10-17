@@ -302,7 +302,7 @@ Oprino executes the complete operational lifecycle:
 ### 17.2 Stitch Design QA (Q31, Q39, Q40, Q64)
 - **Approved Stitch Design Sequence (Q39):** Design System → Company Owner/Admin Web Dashboard → Unified Flutter Mobile App → Platform Super Admin → Design QA / Handoff.
 - **5-Stage Screen Lifecycle (Q40):** Inventory Documented → Screen-Level Contracts → Google Stitch Designs → Design QA → Owner Approval.
-- Complete high-fidelity Google Stitch design baseline covering all 104 screens approved prior to Antigravity feature coding.
+- Complete high-fidelity Google Stitch design baseline covering all 116 canonical screens approved prior to Antigravity feature coding.
 
 ### 17.3 Requirements Freeze (Q37, Q65)
 - Strict zero scope creep. The 65-decision requirements baseline is frozen as the controlling specification. Phased execution proceeds only upon explicit owner authorization.

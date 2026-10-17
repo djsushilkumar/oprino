@@ -33,7 +33,7 @@
 
 ---
 
-## 2. Approved Google Stitch Design Sequence & Screen Inventory (104 Screens)
+## 2. Approved Google Stitch Design Sequence & Screen Inventory (116 Canonical Screens)
 
 ### 2.1 Approved Design Workflow Sequence
 To ensure maximum operational efficiency and dispatch-first management oversight, Google Stitch UI/UX design proceeds strictly in the following sequence:
@@ -62,7 +62,7 @@ Step 5: Full-Platform Design QA & Owner Approval Gate
 
 To maintain absolute transparency and prevent treating a screen list as finished code, every screen transitions through 5 explicit lifecycle states:
 
-1. **Inventory Documented:** Screen ID, surface, title, and operational purpose defined. (Current: 104/104 Complete).
+1. **Inventory Documented:** Screen ID, surface, title, and operational purpose defined. (Current: 116/116 Complete).
 2. **Screen-Level Contract Completed:** API endpoints, request/response Zod contracts, permissions, and loading/error states documented. (Phase 1 Initial Deliverable).
 3. **Google Stitch Design Produced:** High-fidelity interactive component layout created in Google Stitch. (Phase 1 In-Progress).
 4. **Design QA Passed:** Cross-surface design review, contrast audit, touch target verification, and edge cases signed off by Lead Architect. (Phase 1 Exit).
@@ -119,8 +119,8 @@ To maintain absolute transparency and prevent treating a screen list as finished
 46. **WEB-46:** Workspace Settings: Attendance & Biometric Policy Enforcer
 47. **WEB-47:** Workspace Settings: Location Tracking & 90-Day Retention Selector (30/90/180 options)
 48. **WEB-48:** Workspace Settings: Custom Roles & RBAC Permission Matrix Studio
-49. **WEB-49:** Workspace Settings: Subscription & Razorpay Billing Management
-50. **WEB-50:** Workspace Settings: Plan Invoices & Active-Seat Metering Overview [Implemented API]
+49. **WEB-49:** Workspace Settings: Subscription & Razorpay Billing Management [Proposed Phase 2 API]
+50. **WEB-50:** Workspace Settings: Plan Invoices & Active-Seat Metering Overview [Proposed Phase 2 API]
 51. **WEB-51:** Team Collaboration & Department Channels Chat Studio [Proposed Phase 2 API]
 52. **WEB-52:** Unified Supervisory Approvals Inbox (Attendance, Proofs, Leaves, Expenses, Orders) [Proposed Phase 2 API]
 53. **WEB-53:** Central Company Document Vault & Service Files Repository [Proposed Phase 2 API]
@@ -205,7 +205,7 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 
 #### Contract 1: Team Collaboration, Chat & Operational Channels (`MOD-11`)
 - **Primary Screens:** `WEB-33` (Company Operational Broadcasts & Bulletin Composer), `MOB-31` (Company Broadcasts & Safety Feed), `MOB-15` (Task Comment & Timeline Sheet).
-- **Surface Bindings:** Fastify API endpoints:
+- **Surface Bindings [PROPOSED PHASE 2 SPECIFICATION - NOT YET LIVE IN API]:**
   - `GET /v1/channels` — List workspace public and department channels (`#general`, `#operations`, `#safety-alerts`).
   - `GET /v1/channels/:id/messages` — Paginated message history with cursor-based pagination.
   - `POST /v1/channels/:id/messages` — Send message with optional file attachment (`media_url`, `file_type`).
@@ -217,7 +217,7 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 
 #### Contract 2: Unified Cross-Module Approvals Inbox (`MOD-03`, `MOD-05`, `MOD-09`, `MOD-10`)
 - **Primary Screens:** `WEB-10` (Attendance Regularization), `WEB-15` (Proof of Work), `WEB-27` (Leave Management), `WEB-28` (Expense Claims), `MOB-37`–`MOB-39` (Manager Review Sheets).
-- **Surface Bindings:** Fastify API endpoints:
+- **Surface Bindings [PROPOSED PHASE 2 SPECIFICATION - NOT YET LIVE IN API]:**
   - `GET /v1/approvals/pending` — Consolidated supervisory queue aggregated across 4 types: `ATTENDANCE_REGULARIZATION`, `PROOF_VERIFICATION`, `LEAVE_REQUEST`, `EXPENSE_CLAIM`.
   - `POST /v1/approvals/:id/decide` — Atomic decision endpoint: `{ decision: "APPROVED" | "REJECTED", remark: string }`.
 - **UI Contract Elements:**
@@ -227,7 +227,7 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 
 #### Contract 3: Workspace File & Document Vault (`MOD-11`, `MOD-08`)
 - **Primary Screens:** `WEB-21` (Customer Account Documents), `MOB-14` (Task Attachments & Service Document Viewer), `WEB-45` (Company Vault).
-- **Surface Bindings:** Fastify API endpoints:
+- **Surface Bindings [PROPOSED PHASE 2 SPECIFICATION - NOT YET LIVE IN API]:**
   - `POST /v1/storage/upload-ticket` — Returns presigned S3 direct-upload URL for OCI Object Storage.
   - `GET /v1/documents?entity_type=...&entity_id=...` — Filtered document metadata list (`id`, `name`, `size_bytes`, `mime_type`, `uploaded_by`, `uploaded_at`).
   - `DELETE /v1/documents/:id` — Soft-delete with audit logging.
@@ -237,7 +237,7 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 
 #### Contract 4: Bilingual Help, Support & Contextual Knowledge Base (`MOD-01`, `MOD-16`)
 - **Primary Screens:** `WEB-02`, `MOB-40` (Help & Support Action Sheet), Help Drawer Modal across Web.
-- **Surface Bindings:**
+- **Surface Bindings [PROPOSED PHASE 2 SPECIFICATION - NOT YET LIVE IN API]:**
   - `GET /v1/help/articles?lang=en|hi` — Searchable bilingual support articles and FAQs.
   - `POST /v1/support/tickets` — Submit support ticket with automated diagnostic bundle (app version, OS, battery %, pending outbox count, user ID).
 - **UI Contract Elements:**
@@ -246,7 +246,7 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 
 #### Contract 5: Integration Hub & Connectors Studio (`MOD-13`)
 - **Primary Screens:** `WEB-42` (WhatsApp Setup), `WEB-43` (Tally/ERP Export), `WEB-44` (Webhooks Manager).
-- **Surface Bindings:**
+- **Surface Bindings [PROPOSED PHASE 2 SPECIFICATION - NOT YET LIVE IN API]:**
   - `POST /v1/integrations/whatsapp/test` — Send test template alert via WhatsApp Business Cloud API.
   - `GET /v1/reports/tally-export` — Streaming CSV formatted for Tally XML/CSV import schema.
   - `POST /v1/integrations/webhooks` — Register webhook URL with HMAC-SHA256 secret generation and event subscription checkboxes (`task.completed`, `attendance.punched_in`, `order.booked`).
@@ -256,7 +256,7 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 
 #### Contract 6: Bilingual Onboarding & Invites Lifecycle (`MOD-01`)
 - **Primary Screens:** `WEB-02` (Registration), `WEB-03` (Invite Activation), `WEB-31` (Employee Invites Modal), `MOB-01`–`MOB-04` (Splash, Auth & UUID Device Binding).
-- **Surface Bindings:**
+- **Surface Bindings [PROPOSED PHASE 2 SPECIFICATION - NOT YET LIVE IN API]:**
   - `POST /v1/workspaces/invites` — Generate single-use invitation cryptographic tokens.
   - `POST /v1/auth/invites/activate` — Redeem token, set password, bind device installation ID.
 - **UI Contract Elements:**
@@ -265,7 +265,7 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 
 #### Contract 7: Plan Management, Quotas & Active-Seat Metering (`MOD-15`)
 - **Primary Screens:** `WEB-49` (Subscription & Razorpay), `WEB-50` (Plan Invoices & Active-Seat Metering).
-- **Surface Bindings:**
+- **Surface Bindings [PROPOSED PHASE 2 SPECIFICATION - NOT YET LIVE IN API]:**
   - `GET /v1/billing/usage` — Real-time consumption vs plan caps: `{ active_seats: 18, seat_quota: 25, storage_mb: 2400, storage_cap_mb: 10000, gps_retention_days: 90 }`.
   - `POST /v1/billing/checkout` — Generate Razorpay Order ID for seat upgrade or annual plan switch.
 - **UI Contract Elements:**
@@ -317,13 +317,23 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
 | Screen ID | Screen Title | Device | Stitch Screen ID | HTML Code Asset | High-Res Visual Prototype | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **DS-01** | Oprino Enterprise Design System v1.3 | Design System | `assets/16261881246790250535` | Tokens Applied | [Applied to Project](https://stitch.withgoogle.com/projects/9824638464962009415) | Active |
-| **WEB-01** | Workspace Sign In | Desktop Web | `7eb6b39001484e08a564f5b636b36df6` | `files/7387fa16522b4e3d911df15f8d530680` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1U0HYm0NqkClupBnLCCBA8swtCMSg6vytmCJ6wbWPnWLpXkC-WT3mUiQEQiKdehEytTJdL7DQc4KBrNS-yDAJHAImiK6roRERtEx8VujmX0uQ2YnBb2L8EeAjt8hD5UTRIakVxF3_NZEw9K1NhtvNfoNZS1Aj1qiCKsPPYjJlvcuxLmexWd4mHNN99S-hPcF5sMKFfa0cnN6h1qA0KcYq6YUNtXUztwIrZJ64nZl_YEFHrV2zuGXdh-Vw) | Generated |
-| **WEB-02** | Workspace Registration & 7-Day Free Trial | Desktop Web | `c2138ba25a2d4d059ed4b07b9ddb1246` | `files/412f4238546044d19559f7fa3ab9d38c` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1V6BTjaP1pFSW3HauxTQchfVHwnzf4TyZdYYAFFzEWe4Z9AoF5KuPIgiLqvCH5FEcP8-BPz_70VNpmRcakrn8yx_bQK9ZMMTtHca1_PjtFIDEEmcPjgjYDCV8OiE9ALLSNPXMhRElTiHdUcDoMl3AHWqMLF0-gze0BhwEhGMdtC7xZPjRDwivVPQxnLcdZISZ55GSE_P6sPVGrUZVhFm-LC2ZB4c-MD6w_qGDgEP6mPb4_TD5zP6L_QE0Q) | Generated |
-| **WEB-05** | Executive Operations Overview Cockpit | Desktop Web | `78ae05e1af044a5593b047c6e5ad3415` | `files/1f630da44c474758be6b676a873f0aab` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VpF2lV3wx-8xX3hRl6fF7R7DIGu0cjGfS8UY3rW8kZZ7Gc0-4MwU0XPE-WiOaMGaM_MsTbI8EPcDtNkFHX1HdqjhactfIbir6QjgBCW29v16xrSPvRFAcKWfMue4dsYSlB2vZiLf9O-DwjFJxyw-YGg84jpcnhHwvmm3vttEfAxbUmcw_nKLUEI5aId8Fgd6CSGTJaUlTxsJPus2D3dB94r_Z00Shx7cSpFQa2VmBKY03Qncppt7bSBa8) | Generated |
-| **WEB-06** | Real-Time Live Radar Map | Desktop Web | `98b0dfc9e7f34b719df32125357c2de4` | `files/16d9066121934a87abe96af062991f9a` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VWyyD7Sb5V3MGwyA26YDXqH3abLs1MrJ6GxdZt00bSPPYFIzYTnXu5MH1N5bcnHQeU2jLXnpnQcI6XkmlWNsCeVV2yHS0Y1l3jzrVOL5lqK3EpuH2Yew4o3FjPHQR6A3FH6egL_aFFFmrRjLgF4jC1gQXAYbDkWW6Q1-JsdhcnaHlnJ1GcWOgqFA2Dk2qv9Wam51F0m1N3WRH-RIJ5MAwrjItjJ4HcFpmIR0mEjNxeqNemyfdq1aoe) | Generated |
-| **WEB-12** | Task Dispatch Matrix Kanban | Desktop Web | `44233e9028ad43469441bf44869bf971` | `files/db3f5b4f6dd0412d862f090272b27837` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UtYNVEqP6e2opoUXkzB6eK3r6RxpMgyWoty5vK2_ms15ZupZJpfvoZ0eH4PlfECVhGhu8LMNhHutIm9wEmCt0KaCv3LSQsw5HAThgYR-pqgkFturPdjsqBuXDP-46bu0zPJUOjtsWj4rsNPg7YEFquSzqJd4f-lzZPPGs52TfZD_hMMEQ-IZ0YwiY5l5_yhT1Ogm5P7IVMy8nYz2mpuQPhkMBfz1oF-h8PHNmpRINOKofi1_6IkiwCWWc) | Generated |
-| **WEB-19** | Advanced Project Management Gantt Timeline | Desktop Web | `a1773b03570a4cd7afbe2ec3e0266692` | `files/d468663f735b40f8ac0a453825e1579e` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UQN1TUTEtBTcf7tGEfshb7T6hTE-sXQJW5zSCTUebp52ApZmUWXKQBBNi8-eB-UlNeLtfbzxB9XkTBgdKbKZFhLYMIKygWey2AkVaVTs7QSaR1vjiE53pTP8-nA4P6kSNfXnMMGcbaPJ7wZSVnN4A9yX1QkbfBl8RX0M2xMGZh5uEK-WlxXjwC0lGQ716edHEEx6Bd-tPw6HubzP0qkoCQfG3PhGf_Y1-tuEL8uh-xklKVHhhGMTis6-4) | Generated |
-| **WEB-20** | Sales CRM Visual Deal Pipeline | Desktop Web | `82323c5505e3427c93abc3bc6c576604` | `files/61d4ddbc09934f029f2f5c566dbb9ad0` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WU8-tVQtGKUjGWkJc6Oo9rH_f7_IqoypQKhOkNIYColOzSu0w12o-FMHF2hgvxEwJAtdeqTR96abrGRaReT1CFL2rao08zgFLQFqZpM7GYkmDc7suCs-2QssEWWH5Lhk4Z9xEM8ZxhxisNLdm8tLP0QSjImfHy0ZBLO6Ewqa0OAbP-3pBDm5i8S5ia9VQzoiLCcplKU_uQb0T0KNdV-s0HwXMVlaaa5hPybkgKg5TDjv0MmTVXKbpMjw) | Generated |
+| **WEB-01** | Workspace Sign In (v2 Corrected) | Desktop Web | `1ff1be71b0c54878a11e6fcb264efd08` | `files/b0ab37d597454089a4ea16eb64230341` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XwacS_1dDsW_OnTQLmP7-6RAAAx80G0gcS6SIA0MNvInnnrwBsaxKpjEnOt6vFy0t9Bu8NV2Qm3hDE43t5Qimwin7Yn4SoFvc-v__B1B1LZLApzcxCqtjvuf1QaZuMwyiAsXfSVukKGenEXcJ2TcVKUUovCKMi0GZKXEg9nKOTvEZmdcMXAdp6YcC_iiHZafvwbEOSO9qaKDSt7ldj8GzAes42lP5EuvSrQFM4ME3NztbBFNKmK2MU528) | Generated (Active) |
+| **WEB-02** | Workspace Registration & 7-Day Free Trial (v2 Corrected) | Desktop Web | `7fd35d613d6644fbb6854cf5348f6d8d` | `files/1d212f3612434825862e725351de43dc` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XKa7lsHjH8BKypaDrjWaRoBEyKbLCGpcijI8W6L0DkgKgNtGzIT-KMjOux4BtcfTRSVqy5d47pzl3LhxBiWYynqriDUyq9ZdhqxzIYWsPgce-JnkCdKCsrELzJupY-adZrfOyk5LyfmO1ho-D9kT4nS9c5O-M5-6U62QcgENIpJqPC0MxJBYrDD4j2zFpx_G3grRhyc9gH6IzDW9aP3ckqnqeRctiPgcj5bHKDg6gREHI5K9jz-PiNoMo) | Generated (Active) |
+| **WEB-05** | Executive Operations Overview Cockpit | Desktop Web | `78ae05e1af044a5593b047c6e5ad3415` | `files/1f630da44c474758be6b676a873f0aab` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VpF2lV3wx-8xX3hRl6fF7R7DIGu0cjGfS8UY3rW8kZZ7Gc0-4MwU0XPE-WiOaMGaM_MsTbI8EPcDtNkFHX1HdqjhactfIbir6QjgBCW29v16xrSPvRFAcKWfMue4dsYSlB2vZiLf9O-DwjFJxyw-YGg84jpcnhHwvmm3vttEfAxbUmcw_nKLUEI5aId8Fgd6CSGTJaUlTxsJPus2D3dB94r_Z00Shx7cSpFQa2VmBKY03Qncppt7bSBa8) | Generated (Active) |
+| **WEB-06** | Real-Time Live Radar Map | Desktop Web | `98b0dfc9e7f34b719df32125357c2de4` | `files/16d9066121934a87abe96af062991f9a` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VWyyD7Sb5V3MGwyA26YDXqH3abLs1MrJ6GxdZt00bSPPYFIzYTnXu5MH1N5bcnHQeU2jLXnpnQcI6XkmlWNsCeVV2yHS0Y1l3jzrVOL5lqK3EpuH2Yew4o3FjPHQR6A3FH6egL_aFFFmrRjLgF4jC1gQXAYbDkWW6Q1-JsdhcnaHlnJ1GcWOgqFA2Dk2qv9Wam51F0m1N3WRH-RIJ5MAwrjItjJ4HcFpmIR0mEjNxeqNemyfdq1aoe) | Generated (Active) |
+| **WEB-12** | Task Dispatch Matrix Kanban | Desktop Web | `44233e9028ad43469441bf44869bf971` | `files/db3f5b4f6dd0412d862f090272b27837` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UtYNVEqP6e2opoUXkzB6eK3r6RxpMgyWoty5vK2_ms15ZupZJpfvoZ0eH4PlfECVhGhu8LMNhHutIm9wEmCt0KaCv3LSQsw5HAThgYR-pqgkFturPdjsqBuXDP-46bu0zPJUOjtsWj4rsNPg7YEFquSzqJd4f-lzZPPGs52TfZD_hMMEQ-IZ0YwiY5l5_yhT1Ogm5P7IVMy8nYz2mpuQPhkMBfz1oF-h8PHNmpRINOKofi1_6IkiwCWWc) | Generated (Active) |
+| **WEB-19** | Advanced Project Management Gantt Timeline | Desktop Web | `a1773b03570a4cd7afbe2ec3e0266692` | `files/d468663f735b40f8ac0a453825e1579e` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UQN1TUTEtBTcf7tGEfshb7T6hTE-sXQJW5zSCTUebp52ApZmUWXKQBBNi8-eB-UlNeLtfbzxB9XkTBgdKbKZFhLYMIKygWey2AkVaVTs7QSaR1vjiE53pTP8-nA4P6kSNfXnMMGcbaPJ7wZSVnN4A9yX1QkbfBl8RX0M2xMGZh5uEK-WlxXjwC0lGQ716edHEEx6Bd-tPw6HubzP0qkoCQfG3PhGf_Y1-tuEL8uh-xklKVHhhGMTis6-4) | Generated (Active) |
+| **WEB-20** | Sales CRM Visual Deal Pipeline | Desktop Web | `82323c5505e3427c93abc3bc6c576604` | `files/61d4ddbc09934f029f2f5c566dbb9ad0` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WU8-tVQtGKUjGWkJc6Oo9rH_f7_IqoypQKhOkNIYColOzSu0w12o-FMHF2hgvxEwJAtdeqTR96abrGRaReT1CFL2rao08zgFLQFqZpM7GYkmDc7suCs-2QssEWWH5Lhk4Z9xEM8ZxhxisNLdm8tLP0QSjImfHy0ZBLO6Ewqa0OAbP-3pBDm5i8S5ia9VQzoiLCcplKU_uQb0T0KNdV-s0HwXMVlaaa5hPybkgKg5TDjv0MmTVXKbpMjw) | Generated (Active) |
+| **WEB-07** | Shift Route Playback & Duty Trajectory | Desktop Web | `edcfb51e32534fc182d7a401edd5ea6d` | `files/7ba1d804c846428eafa7cc023537184a` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WUMU1QyrWkSx2Q4hxUBCffrivFCl4oLG_lSRg1ZY8Opz1ZJt5xWMyoa0q5oXsT_b6VFTNACzGkvnrA3dNggGNAr0kDwye7mVWg0_JmaOmyg2Cz38Kp9-9CmDKyBBB7GCwBBKfA7YUJo3M_BLlatzfchLB9-caSFvb8sKB-EVgo2KJfZZoFNeneiqH43H0WI6icqTQTG7zmLSh9mFkh1-ygZTHenAvz1HctvjpF6rZtsAguGYOvSRqqZbU) | Generated (Active) |
+| **WEB-08** | Shift Rosters & Work Schedule Planner | Desktop Web | `7f326a561d8f489bb308a8e37b7228a5` | `files/18680a05cedf43a8a7c723d103755acb` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XYMtU5LCF0moTdjYDFl3Mcu9MLgE5jYqtiUXa7QmSF2FSx2T0-53_6fFx15Lzg9ompg8UTsaptl6UuBNoalvKtH_92qd5jGOCVq7xPeWMk4Nts7r_JI5LwxfoniskqzqmcRqP8t6fQwLRdChGGAvMoZOp-MVm3UQkl7d-go-WXI32btGO0lvZr9MRm7JLVw8zuvu8JAviFXLMHUzdJTrHUKjrPpYFJglcDNNg5vidmhDpN6DX9-MM3uw) | Generated (Active) |
+| **WEB-09** | Daily Attendance & Shift Punch Audit | Desktop Web | `e3d1e0451689405ab2a01689e7382599` | `files/210845dd59f348f3a4db940bb49ded86` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1U9vBxyo-EqeRy66GXLcu28yvQDyw6FFfRX2NA8KNte6thZUg_OOh5HFKKUtfnYRlm0jLl0dKaKy_EL3Pp8upopet6i5d3kK8xwIK7BiUqVxj2nfc0tuw9cRcHGsWmlMjzw5NR7DzmuZ7XyEWVx58PxytLWSLpLbIpoR75rb5Z60X31awrqCcWha7T8UJCgasV2HQpFWwAV9GAA-xM533U3EthxeviXkldVR4d0LGVBRdWoPloQVEjqTA) | Generated (Active) |
+| **WEB-10** | Attendance Regularization & Exception Review | Desktop Web | `1219cecf339e4df494d70ee91b915a0d` | `files/7fc3eb220cb045b68d947be51c7e19d8` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WTM48_PVYfvy-33paF6ew86DyI9lHPRTmN95wb7uEp28eKEpjcW4KwuVYi6on8M2dDJcOupRP6RepaAVt7xLJ0hFjwockCrA3PUE7AfRurKmgEujZC07sHoxZWiHFmvdn13bkI9VgRNeprNeHlPU_-mlVEbFxaCZXMKKCq2RHXvy91wUkeeEtpovgkejG-si9n3XB46X3VI8Q4CfpPOzwplGDrH-BJrX13Vnfn-YHxf7P4W0wUCD-uxp0) | Generated (Active) |
+| **WEB-11** | Timesheet Summary & Overtime Payroll Calculator | Desktop Web | `7327234092004480b360f66717df7789` | `files/2f51740fc16449608683f3ff571c37dd` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VRLs5iucP2IWBwRJBmQzb1hs-CqLBEw8Z0MuJEZS1HbQIsfI3EynaX1r1VJ9uVYdcP5qWr7Dvz8U-ZfkzjZTXBVpL1K1fkqtrUg7A5GdoM3Qm7uY9yEHaQVRDzOlvMDVLTZ8okVvZzrNVYZ4Vji9dGtu9edCk-wyJL7-DjYg6_pOUm22usMphnHhsbcby55Dcg_aZQ5iMrDjW6JBQzlPjDOXX7DeWagXU5mNMNy5Js7727bc07sd-QBCE) | Generated (Active) |
+| **WEB-01-Dark** | Workspace Sign In (Dark Theme Variant) | Desktop Web | `16fdf1fbe17744aa92d9290978f8c06d` | Generated Variant | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1XiIdztGidvNd36_Ay9HH4HQ6mmpCBCk_M8NcBEaR0ZZUXKBj-69UeIrJYGF0YWL3nMh6QVdGlMapZ5DmiCLt8S0g_0QQxxKi_cxmeDlF4otreJqYFB0fQVFvFdKamjIP6aRt2bbjL0tW3kqn2mSNEYgtwDhTWrsulVg5s9Gd_s_G3_5SpyXUaS_0eNNa8ZeEn4McStC4de_d7uRV9vkWsNQsdchoM7e_E1A-tV2CgBTWzpruQzNbW1Xf0) | Generated (Active) |
+
+##### Superseded Historical Screen Audit Log (Preserved for Compliance Traceability)
+* `WEB-01-v1` (`7eb6b39001484e08a564f5b636b36df6`): Initial prototype superseded by `WEB-01` (v2) to remove unverified compliance badges and align English/हिंदी localization.
+* `WEB-02-v1` (`c2138ba25a2d4d059ed4b07b9ddb1246`): Initial prototype superseded by `WEB-02` (v2) to eliminate SOC-2/SLA/60s claims and add bilingual English/हिंदी toggles with fictional data.
 
 ---
 

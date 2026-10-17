@@ -225,7 +225,7 @@ erDiagram
 ## 9. Governance & Phased Execution Gates
 
 - **Phase 0:** Master documentation baseline approved by owner.
-- **Phase 1:** Full Google Stitch UI/UX design baseline (104 screens) approved by owner.
+- **Phase 1:** Full Google Stitch UI/UX design baseline (116 canonical screens) approved by owner.
 - **Phase 2:** Phased feature coding in Antigravity.
 - **Phase 3:** Multi-OEM physical field testing.
 - **Phase 4:** Controlled Oracle ARM VM migration.
