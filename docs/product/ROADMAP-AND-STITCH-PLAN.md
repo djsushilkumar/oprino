@@ -39,13 +39,13 @@
 To ensure maximum operational efficiency and dispatch-first management oversight, Google Stitch UI/UX design proceeds strictly in the following sequence:
 
 ```
-Step 1: Oprino Design System & Core Component Tokens
+Step 1: Oprino Design System & Core Component Tokens (Asset: `assets/16261881246790250535`)
    │
    ▼
-Step 2: Company Owner/Admin Web Dashboard (50 Screens: WEB-01 to WEB-50)
+Step 2: Company Owner/Admin Web Dashboard (56 Screens: WEB-01 to WEB-56)
    │
    ▼
-Step 3: Unified Flutter Mobile Application (40 Screens: MOB-01 to MOB-40)
+Step 3: Unified Flutter Mobile Application (46 Screens: MOB-01 to MOB-46)
    │
    ▼
 Step 4: Platform Super Admin Web Console (14 Screens: ADM-01 to ADM-14)
@@ -54,7 +54,7 @@ Step 4: Platform Super Admin Web Console (14 Screens: ADM-01 to ADM-14)
 Step 5: Full-Platform Design QA & Owner Approval Gate
 ```
 
-*(Note: Company Web Dashboard strictly precedes Mobile Application to establish comprehensive administrative, dispatch, and CRM data contracts before mobile client consumption).*
+*(Note: Total Scope expanded from 104 to **116 Canonical Screens** to natively incorporate all 12 missing collaboration, approvals, document vault, support, quota, and executive mobile workflows without ID collisions).*
 
 ---
 
@@ -70,7 +70,7 @@ To maintain absolute transparency and prevent treating a screen list as finished
 
 ---
 
-### 2.3 Surface 1: Company Owner/Admin Web Dashboard (50 Screens)
+### 2.3 Surface 1: Company Owner/Admin Web Dashboard (56 Screens: WEB-01 to WEB-56)
 1. **WEB-01:** Workspace Sign In (Email & Password with HttpOnly session cookie)
 2. **WEB-02:** Workspace Registration & 7-Day Free Trial Creation
 3. **WEB-03:** Invitation Password Setup (Single-use token verification)
@@ -120,11 +120,17 @@ To maintain absolute transparency and prevent treating a screen list as finished
 47. **WEB-47:** Workspace Settings: Location Tracking & 90-Day Retention Selector (30/90/180 options)
 48. **WEB-48:** Workspace Settings: Custom Roles & RBAC Permission Matrix Studio
 49. **WEB-49:** Workspace Settings: Subscription & Razorpay Billing Management
-50. **WEB-50:** Workspace Settings: Plan Invoices & Active-Seat Metering Overview
+50. **WEB-50:** Workspace Settings: Plan Invoices & Active-Seat Metering Overview [Implemented API]
+51. **WEB-51:** Team Collaboration & Department Channels Chat Studio [Proposed Phase 2 API]
+52. **WEB-52:** Unified Supervisory Approvals Inbox (Attendance, Proofs, Leaves, Expenses, Orders) [Proposed Phase 2 API]
+53. **WEB-53:** Central Company Document Vault & Service Files Repository [Proposed Phase 2 API]
+54. **WEB-54:** Bilingual Help Center, Guided Tours & Support Ticket Portal [Proposed Phase 2 API]
+55. **WEB-55:** Subscription Add-On & Quota Manager (Modular add-ons, storage, WhatsApp packs) [Proposed Phase 2 API]
+56. **WEB-56:** Custom BI Report Builder Studio (Drag-and-drop metrics builder, pivot tables, scheduled CSV/PDF exports) [Proposed Phase 2 API]
 
 ---
 
-### 2.4 Surface 2: Unified Flutter Mobile Application (40 Screens)
+### 2.4 Surface 2: Unified Flutter Mobile Application (46 Screens: MOB-01 to MOB-46)
 The unified mobile app dynamically renders screens and tabs based on the authenticated role (`OWNER`, `ADMIN`, `MANAGER`, `FIELD_WORKER`):
 1. **MOB-01:** Splash Screen & Brand Welcome
 2. **MOB-02:** Sign In (Email & Password with validation)
@@ -165,7 +171,13 @@ The unified mobile app dynamically renders screens and tabs based on the authent
 37. **MOB-37:** Manager Task Verification & Approval Queue
 38. **MOB-38:** Manager Attendance Regularization Review Sheet
 39. **MOB-39:** Manager Expense & Leave Approval Sheet
-40. **MOB-40:** Quick Action Emergency Punch-Out & Help Sheet
+40. **MOB-40:** Quick Action Emergency Punch-Out & Help Sheet [Implemented API]
+41. **MOB-41:** Team Channels & Direct Messaging Chat Sheet [Proposed Phase 2 API]
+42. **MOB-42:** Manager Unified Approvals Inbox Sheet [Proposed Phase 2 API]
+43. **MOB-43:** Company Document Vault & Service Files Sheet [Proposed Phase 2 API]
+44. **MOB-44:** In-App Bilingual Support & Diagnostic Ticket Sheet [Proposed Phase 2 API]
+45. **MOB-45:** Owner Mobile Executive Cockpit & Real-Time Cash Flow / KPI Radar [Proposed Phase 2 API]
+46. **MOB-46:** Admin Mobile Member & Device Governance Hardening Sheet [Proposed Phase 2 API]
 
 ---
 
@@ -285,14 +297,33 @@ To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen co
   - [Oprino Brand Guidelines v1.3](https://www.canva.com/d/AjCAR5Ldpw5Rs3X)
   - [16 Vector Logo Variations](https://www.canva.com/d/QpEXUO4bO9PK8Vu)
 
-#### Google Stitch Design Project Status & Disclosure
+#### Google Stitch Design Project Status & Live MCP Integration
+* **Stitch Project ID:** `9824638464962009415`
+* **Stitch Project URL:** [https://stitch.withgoogle.com/projects/9824638464962009415](https://stitch.withgoogle.com/projects/9824638464962009415)
+* **Applied Design System Asset:** `assets/16261881246790250535` (`Oprino Enterprise Design System v1.3`)
+* **MCP Integration:** Connected to official Google Stitch MCP Server (`https://stitch.googleapis.com/mcp`) via authenticated API Key.
+
 > [!IMPORTANT]
 > **No Fake Claims Invariant:**  
 > A markdown inventory of screen names is NOT a designed user interface.  
-> 1. Currently, all 104 screens have completed **State 1 (Inventory Documented)** and essential modules have completed **State 2 (Screen-Level Contracts Specified)**.
-> 2. Visual layout execution in Google Stitch begins in Phase 1 following the mandatory sequence:
->    **Design System Tokens → Company Web Dashboard (50 screens) → Flutter Mobile (40 screens) → Platform Super Admin (14 screens) → Design QA Gate.**
-> 3. Production design prototype URLs will be generated and reported as each visual screen batch is produced in Google Stitch; no screen will be claimed as designed until its actual interactive Stitch prototype URL is delivered.
+> 1. All 116 screens have completed **State 1 (Inventory Documented)** and essential modules have completed **State 2 (Screen-Level Contracts Specified)**.
+> 2. The official Google Stitch project has been created and bound to the Oprino Enterprise Design System tokens (`assets/16261881246790250535`).
+> 3. Visual layout execution proceeds in the mandatory order:
+>    **Design System Tokens (Done) → Company Web Dashboard (56 screens) → Flutter Mobile (46 screens) → Platform Super Admin (14 screens) → Design QA Gate.**
+> 4. Actual Stitch screen IDs and thumbnail download URLs are reported directly from the Stitch MCP tool outputs as screens are generated.
+
+#### Phase 1 Google Stitch Design Execution Registry
+
+| Screen ID | Screen Title | Device | Stitch Screen ID | HTML Code Asset | High-Res Visual Prototype | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **DS-01** | Oprino Enterprise Design System v1.3 | Design System | `assets/16261881246790250535` | Tokens Applied | [Applied to Project](https://stitch.withgoogle.com/projects/9824638464962009415) | Active |
+| **WEB-01** | Workspace Sign In | Desktop Web | `7eb6b39001484e08a564f5b636b36df6` | `files/7387fa16522b4e3d911df15f8d530680` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1U0HYm0NqkClupBnLCCBA8swtCMSg6vytmCJ6wbWPnWLpXkC-WT3mUiQEQiKdehEytTJdL7DQc4KBrNS-yDAJHAImiK6roRERtEx8VujmX0uQ2YnBb2L8EeAjt8hD5UTRIakVxF3_NZEw9K1NhtvNfoNZS1Aj1qiCKsPPYjJlvcuxLmexWd4mHNN99S-hPcF5sMKFfa0cnN6h1qA0KcYq6YUNtXUztwIrZJ64nZl_YEFHrV2zuGXdh-Vw) | Generated |
+| **WEB-02** | Workspace Registration & 7-Day Free Trial | Desktop Web | `c2138ba25a2d4d059ed4b07b9ddb1246` | `files/412f4238546044d19559f7fa3ab9d38c` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1V6BTjaP1pFSW3HauxTQchfVHwnzf4TyZdYYAFFzEWe4Z9AoF5KuPIgiLqvCH5FEcP8-BPz_70VNpmRcakrn8yx_bQK9ZMMTtHca1_PjtFIDEEmcPjgjYDCV8OiE9ALLSNPXMhRElTiHdUcDoMl3AHWqMLF0-gze0BhwEhGMdtC7xZPjRDwivVPQxnLcdZISZ55GSE_P6sPVGrUZVhFm-LC2ZB4c-MD6w_qGDgEP6mPb4_TD5zP6L_QE0Q) | Generated |
+| **WEB-05** | Executive Operations Overview Cockpit | Desktop Web | `78ae05e1af044a5593b047c6e5ad3415` | `files/1f630da44c474758be6b676a873f0aab` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VpF2lV3wx-8xX3hRl6fF7R7DIGu0cjGfS8UY3rW8kZZ7Gc0-4MwU0XPE-WiOaMGaM_MsTbI8EPcDtNkFHX1HdqjhactfIbir6QjgBCW29v16xrSPvRFAcKWfMue4dsYSlB2vZiLf9O-DwjFJxyw-YGg84jpcnhHwvmm3vttEfAxbUmcw_nKLUEI5aId8Fgd6CSGTJaUlTxsJPus2D3dB94r_Z00Shx7cSpFQa2VmBKY03Qncppt7bSBa8) | Generated |
+| **WEB-06** | Real-Time Live Radar Map | Desktop Web | `98b0dfc9e7f34b719df32125357c2de4` | `files/16d9066121934a87abe96af062991f9a` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1VWyyD7Sb5V3MGwyA26YDXqH3abLs1MrJ6GxdZt00bSPPYFIzYTnXu5MH1N5bcnHQeU2jLXnpnQcI6XkmlWNsCeVV2yHS0Y1l3jzrVOL5lqK3EpuH2Yew4o3FjPHQR6A3FH6egL_aFFFmrRjLgF4jC1gQXAYbDkWW6Q1-JsdhcnaHlnJ1GcWOgqFA2Dk2qv9Wam51F0m1N3WRH-RIJ5MAwrjItjJ4HcFpmIR0mEjNxeqNemyfdq1aoe) | Generated |
+| **WEB-12** | Task Dispatch Matrix Kanban | Desktop Web | `44233e9028ad43469441bf44869bf971` | `files/db3f5b4f6dd0412d862f090272b27837` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UtYNVEqP6e2opoUXkzB6eK3r6RxpMgyWoty5vK2_ms15ZupZJpfvoZ0eH4PlfECVhGhu8LMNhHutIm9wEmCt0KaCv3LSQsw5HAThgYR-pqgkFturPdjsqBuXDP-46bu0zPJUOjtsWj4rsNPg7YEFquSzqJd4f-lzZPPGs52TfZD_hMMEQ-IZ0YwiY5l5_yhT1Ogm5P7IVMy8nYz2mpuQPhkMBfz1oF-h8PHNmpRINOKofi1_6IkiwCWWc) | Generated |
+| **WEB-19** | Advanced Project Management Gantt Timeline | Desktop Web | `a1773b03570a4cd7afbe2ec3e0266692` | `files/d468663f735b40f8ac0a453825e1579e` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1UQN1TUTEtBTcf7tGEfshb7T6hTE-sXQJW5zSCTUebp52ApZmUWXKQBBNi8-eB-UlNeLtfbzxB9XkTBgdKbKZFhLYMIKygWey2AkVaVTs7QSaR1vjiE53pTP8-nA4P6kSNfXnMMGcbaPJ7wZSVnN4A9yX1QkbfBl8RX0M2xMGZh5uEK-WlxXjwC0lGQ716edHEEx6Bd-tPw6HubzP0qkoCQfG3PhGf_Y1-tuEL8uh-xklKVHhhGMTis6-4) | Generated |
+| **WEB-20** | Sales CRM Visual Deal Pipeline | Desktop Web | `82323c5505e3427c93abc3bc6c576604` | `files/61d4ddbc09934f029f2f5c566dbb9ad0` | [View Visual](https://lh3.googleusercontent.com/aida/AEtjO1WU8-tVQtGKUjGWkJc6Oo9rH_f7_IqoypQKhOkNIYColOzSu0w12o-FMHF2hgvxEwJAtdeqTR96abrGRaReT1CFL2rao08zgFLQFqZpM7GYkmDc7suCs-2QssEWWH5Lhk4Z9xEM8ZxhxisNLdm8tLP0QSjImfHy0ZBLO6Ewqa0OAbP-3pBDm5i8S5ia9VQzoiLCcplKU_uQb0T0KNdV-s0HwXMVlaaa5hPybkgKg5TDjv0MmTVXKbpMjw) | Generated |
 
 ---
 
@@ -333,7 +364,7 @@ gantt
    - Reconcile all 65 decisions, Master PRD v2, Architecture v2, Conflict Register, and Q01–Q65 matrix.
    - **Gate:** Owner sign-off on documentation baseline.
 2. **Phase 1: Full-Platform Google Stitch Design Baseline:**
-   - Execute complete high-fidelity UI/UX interactive prototype covering all 104 screens following the approved sequence: Design System → Web Dashboard → Mobile App → Super Admin → QA.
+   - Execute complete high-fidelity UI/UX interactive prototype covering all 116 canonical screens following the approved sequence: Design System → Web Dashboard (56) → Mobile App (46) → Super Admin (14) → QA.
    - **Gate:** Owner sign-off on Google Stitch UI/UX design baseline.
 3. **Phase 2: Antigravity Phased Feature Engineering:**
    - Sequential development sprints following the design specifications.
