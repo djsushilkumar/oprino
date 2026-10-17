@@ -25,7 +25,7 @@ This register tracks every material conflict between the historical frozen V1 Sc
 │  CR-05: 7-Day Trial (Read-Only Expiry) & Razorpay Active-Seat Metering (₹129/₹249/₹449). (Q06–Q10, Q58)│
 │  CR-06: Target Infrastructure: Single Oracle ARM VM (Ampere A1) with Docker Prod + Staging. (Q33–Q35) │
 │  CR-07: Full Scope: Advanced HR, Automation, Integrations, Super Admin, Correct DR (RPO 4h/RTO 8h). (Q60) │
-│  CR-08: Phased Workflow: Documentation -> Google Stitch (104 Screens, Q39) -> Antigravity Sprints. (Q39) │
+│  CR-08: Phased Workflow: Documentation -> Google Stitch (116 Canonical Screens, Q39) -> Antigravity Sprints. (Q39) │
 │  CR-09: Mobile Client: ONE unified Flutter app for all 4 roles. Separate Web Super Admin. (Q29, Q30)  │
 │  CR-10: Document Integrity: Reconciled existing docs; no redundant new trees or duplicate ADRs.       │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -81,13 +81,13 @@ This register tracks every material conflict between the historical frozen V1 Sc
 
 ### CR-08: Development Workflow & Design Gates
 - **Prior Draft Mistake:** Planned immediate feature coding, R2 wiring, and FCM setup during Phase 0.
-- **Superseding Decision (Q31, Q37, Q39, Q63, Q64, Q65):** Strict phased gating enforced. Master Documentation must be completed and owner-approved first. Next, the complete full-platform Google Stitch UI/UX design baseline (all 104 screens) must be designed, reviewed, and approved following the sequence: **Design System → Company Web Dashboard → Flutter Mobile → Super Admin → QA**. Only then will planned phased feature coding begin in Antigravity.
+- **Superseding Decision (Q31, Q37, Q39, Q63, Q64, Q65):** Strict phased gating enforced. Master Documentation must be completed and owner-approved first. Next, the complete full-platform Google Stitch UI/UX design baseline (all 116 canonical screens) must be designed, reviewed, and approved following the sequence: **Design System → Company Web Dashboard → Flutter Mobile → Super Admin → QA**. Only then will planned phased feature coding begin in Antigravity.
 - **Resolution:** Formalized in [`ROADMAP-AND-STITCH-PLAN.md`](./ROADMAP-AND-STITCH-PLAN.md).
 
 ### CR-09: Mobile Client Architecture
 - **Prior Draft Mistake:** Proposed a separate "Manager Mobile Application."
 - **Superseding Decision (Q29, Q30):** **ONE unified Flutter mobile application** serving all four company roles (`OWNER`, `ADMIN`, `MANAGER`, `FIELD_WORKER`). The mobile application dynamically adjusts its navigation, tabs, and permissions based on the authenticated user's assigned role. Platform Super Admin is delivered strictly as a separate desktop web portal.
-- **Resolution:** Formalized in [`OPRINO-MASTER-PRD-V2.md §1.2`](./OPRINO-MASTER-PRD-V2.md#12-supported-surfaces) and Stitch Mobile Screen Inventory (Screens MOB-01 to MOB-40).
+- **Resolution:** Formalized in [`OPRINO-MASTER-PRD-V2.md §1.2`](./OPRINO-MASTER-PRD-V2.md#12-supported-surfaces) and Stitch Mobile Screen Inventory (Screens MOB-01 to MOB-46).
 
 ### CR-10: Documentation Hierarchy & De-duplication
 - **Prior Draft Mistake:** Duplicated ADRs across multiple directories and created confusing report hierarchies.
