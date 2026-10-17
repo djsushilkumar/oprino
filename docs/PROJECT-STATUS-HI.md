@@ -1,7 +1,7 @@
 # Oprino — प्रोजेक्ट वर्तमान स्टेटस डैशबोर्ड (Owner Status Dashboard)
 
-> **अंतिम अपडेट:** 17 अक्टूबर 2026 | **सक्रिय शाखा:** `docs/phase-0-documentation-reconciliation`  
-> **दस्तावेज़ स्थिति:** Phase 0 अंतिम साक्ष्य सत्यापन पूर्ण — **मालिक के हस्ताक्षर हेतु तैयार (READY FOR OWNER SIGN-OFF)**  
+> **अंतिम अपडेट:** 17 अक्टूबर 2026 | **ऐतिहासिक ऑडिट शाखा:** `docs/phase-0-documentation-reconciliation` | **आधिकारिक GitHub PR:** [PR #10](https://github.com/djsushilkumar/oprino/pull/10) (`docs/phase-0-documentation-baseline`)  
+> **दस्तावेज़ स्थिति:** Phase 0 ड्राफ्ट पीआर #10 स्वीकृत — **Phase 1 Google Stitch डिज़ाइन तैयारी सक्रिय**  
 > **उद्देश्य:** प्रोजेक्ट मालिक को बिना तकनीकी जटिलता के सत्य-आधारित जानकारी देना कि क्या बना है, क्या पेंडिंग है, और Phase 0 गेट पर क्या स्थिति है।
 
 ---
@@ -48,24 +48,36 @@
    - **Next.js Web:** 17/17 Vitest टेस्ट्स पास हैं (`apps/web/src/web-auth-flows.test.ts`, `apps/web/src/live-map-security.test.ts`, `apps/web/src/api-url.test.ts`)। सभी 14 पेजों का प्रोडक्शन बिल्ड सफल।
    - **Flutter Mobile:** 81/82 टेस्ट्स पास हैं (`watermark_test.dart`, `location_service_test.dart` में 65 पॉइंट्स ड्रेन, `signature_rasterizer_test.dart`)। 1 विजेट टेस्ट सुरक्षा स्क्रीन के बदले हुए टेक्स्ट के कारण रुका है जिसे Phase 2 में सुधारा जाएगा।
    - **API हार्डनिंग:** Fastify API में CORS सुरक्षा (12/12), डिवाइस टोकन (12/12), और प्रोडक्शन हार्डनिंग यूनिट टेस्ट्स पास हैं।
-2. **रिमोट CI वातावरण टेस्ट्स (`.github/workflows/ci.yml`):**
-   - PostgreSQL RLS मल्टी-टेनेंसी टेस्ट्स (12/12 पास) और V1 ब्लॉकर टेस्ट्स (BLK-001 से BLK-006) GitHub Actions में कंटेनराइज्ड Postgres पर 100% पास हैं। (लोकल कंप्यूटर पर डॉकर सेवा बंद होने के कारण लोकल इंटीग्रेशन टेस्ट ब्लॉक थे)।
+2. **रिमोट GitHub Actions CI टेस्ट्स ([PR #10](https://github.com/djsushilkumar/oprino/pull/10)):**
+   - **Full End-to-End Smoke Test:** ✅ **PASS** (1m53s)
+   - **TypeScript Lint, Typecheck, Test & Build:** ✅ **PASS** (1m45s)
+   - **Flutter Analyze, Test & Android Baseline (APK):** ✅ **PASS** (5m25s)
+   - **Vercel Web Deployment:** ✅ **PASS** (सफल डिप्लॉयमेंट)
+   - **CodeRabbit AI Review:** ⚠️ **SKIPPED** (ड्राफ्ट पीआर होने के कारण स्किप हुआ; यह कोड समीक्षा पास होना नहीं है)
 
 ---
 
-## 4. बची हुई अनुमानित सीमाएं (Documented Assumptions & Gaps)
+## 4. Google Stitch डिज़ाइन सिस्टम व स्क्रीन अनुबंध (Phase 1 Preparation)
 
-बिना मालिक की मंज़ूरी के कोई भी नया नियम नहीं गढ़ा गया है। निम्नलिखित बिंदु Phase 1/2 में तय किए जाएंगे:
-1. **प्लान कोटा (Q55):** प्रति सीट मासिक टास्क निर्माण सीमा, स्टोरेज GB और API थ्रॉटल दरें।
-2. **OAuth प्रदाता (Q24):** Google Workspace या Microsoft Entra ID के क्रेडेंशियल्स का चयन।
-3. **सुपर एडमिन नियंत्रण (Q25):** मैनुअल टेनेंट निलंबन और आपातकालीन डेटाबेस एक्सपोर्ट के नियम।
-4. **DPDP कर्मचारी अधिकार (Q61):** व्यक्तिगत टाइमशीट और लोकेशन डेटा डाउनलोड का सटीक प्रारूप (JSON/PDF)।
-5. **ऑफलाइन एज केसेस (Q28):** स्थानीय SQLite कतार की अधिकतम बिंदु सीमा (5,000 पॉइंट्स) और मोबाइल टाइम-ड्रिफ्ट टॉलरेंस।
+1. **ब्रांड किट व डिज़ाइन सिस्टम टोकन्स:**
+   - आधिकारिक टोकन्स रिपॉजिटरी में मौजूद हैं: [`Oprino-Brand-Kit/05-Design-Tokens/Oprino-tokens.json`](../Oprino-Brand-Kit/05-Design-Tokens/Oprino-tokens.json)
+   - मुख्य रंग: Navy (`#0F172A`), Cobalt (`#164CFF`), Ocean (`#087DE5`), Mint (`#20BAAA`), Paper (`#F8FAFC`)
+   - टाइपोग्राफी: `Space Grotesk` (शीर्षक), `Manrope` (बॉडी), `Unbounded Medium` (वर्डमार्क)
+   - [कैनवा ब्रांड किट फोल्डर](https://www.canva.com/folder/FAHW5FSpPw8) | [ब्रांड गाइडलाइन्स v1.3](https://www.canva.com/d/AjCAR5Ldpw5Rs3X)
+2. **7 महत्वपूर्ण मॉड्यूल स्क्रीन अनुबंध (Screen Contracts) जोड़े गए:**
+   - चैट व डिपार्टमेंट चैनल्स (`MOD-11`)
+   - एकीकृत अनुमोदन इनबॉक्स (Unified Approvals: Attendance, Proofs, Leaves, Expenses)
+   - कंपनी फ़ाइल व दस्तावेज़ वॉल्ट (`MOD-11`, `MOD-08`)
+   - द्विभाषी सहायता व सहायता केंद्र (`MOD-01`, `MOD-16`)
+   - इंटीग्रेशन हब (WhatsApp Cloud API, Tally CSV, Webhooks)
+   - द्विभाषी ऑनबोर्डिंग व आमंत्रण वर्कफ़्लो (English / हिंदी)
+   - प्लान कोटा, यूसेज मीटरिंग व Razorpay अपग्रेड
+3. **पारदर्शी घोषणा (No Fake Claims):** मार्कडाउन इन्वेंटरी को डिज़ाइन नहीं माना गया है। विज़ुअल स्क्रीन्स Google Stitch में निर्धारित क्रम (वेब 50 ➔ मोबाइल 40 ➔ सुपर एडमिन 14) में बनने पर ही उनके वास्तविक लिंक रिपोर्ट किए जाएंगे।
 
 ---
 
-## 5. Phase 0 सिफ़ारिश: PASS — READY FOR OWNER SIGN-OFF
+## 5. Phase 0 स्थिति: PR #10 CONDITIONALLY ACCEPTED — PHASE 1 ACTIVE
 
-* **सिफ़ारिश:** **PASS (मंज़ूरी हेतु तैयार)**।
-* **कारण:** सभी 65 प्राथमिक निर्णयों की सत्य-आधारित मैपिंग पूरी हो गई है, सभी 306 लिंक्स स्थानीय फ़ाइलों से 100% सत्यापित हैं, कोई मनमाना कोड या डेटाबेस बदलाव नहीं किया गया है, और सभी 10 आपत्तियों का साक्ष्य-आधारित समाधान कर दिया गया है।
-* **मालिक को अब क्या करना है:** इस सुलह दस्तावेज़ और Q01–Q65 ट्रेसिएबिलिटी मैट्रिक्स की समीक्षा कर Phase 1 (Google Stitch 104-स्क्रीन डिज़ाइन) शुरू करने का औपचारिक अनुमोदन (Sign-Off) प्रदान करें।
+* **स्थिति:** **पीआर #10 Phase 1 डिज़ाइन तैयारी हेतु सशर्त स्वीकृत (Do Not Merge)**।
+* **सक्रिय GitHub PR:** **[https://github.com/djsushilkumar/oprino/pull/10](https://github.com/djsushilkumar/oprino/pull/10)** (कमिट: `2b55449`, केवल 6 दस्तावेज़ फ़ाइलें)।
+* **अगला मील का पत्थर (Next Milestone):** Google Stitch में Oprino Design System स्थापित कर कंपनी वेब डैशबोर्ड (50 स्क्रीन्स: `WEB-01` से `WEB-50`) के विज़ुअल प्रोटोटाइप्स तैयार करना।

@@ -3,8 +3,9 @@
 **Document Status:** CANONICAL REVISED DRAFT — READY FOR OWNER SIGN-OFF  
 **Version:** 2.0 (Phase 0 Rework Baseline)  
 **Controlling Decision Register:** Authoritative Q01 – Q65 Approved Baseline  
-**Branch:** `docs/phase-0-documentation-reconciliation`  
-**Parent Commit:** `53bc209`  
+**Historical Audit Branch:** `docs/phase-0-documentation-reconciliation`  
+**Official GitHub PR Branch:** `docs/phase-0-documentation-baseline` ([PR #10](https://github.com/djsushilkumar/oprino/pull/10))  
+**Base Commit:** `87883a0` (`origin/main`)  
 **Date:** October 17, 2026  
 **Auditor:** Principal Architect & Engineering Lead  
 
@@ -77,7 +78,7 @@ Oprino executes the complete operational lifecycle:
 
 ---
 
-## 4. Task Management & Advanced Project Management
+## 4. Advanced Task & Project Management Engine (Q18)
 
 ### 4.1 Task Lifecycle Engine (Q01, Q18)
 - Strict 7-stage state transitions: `ASSIGNED` → `ACCEPTED` → `EN_ROUTE` → `ARRIVED` → `IN_PROGRESS` → `COMPLETED` → `VERIFIED`.
@@ -154,7 +155,7 @@ Oprino executes the complete operational lifecycle:
 
 ---
 
-## 8. Sales CRM & Field Sales Engine
+## 8. Sales CRM & Field Sales Engine (Q19)
 
 ### 8.1 Lead Management (Q01, Q19)
 - Multi-channel lead capture (manual, website webhook, bulk import, mobile field entry) with source attribution.

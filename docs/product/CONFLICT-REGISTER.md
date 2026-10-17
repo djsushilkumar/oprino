@@ -2,8 +2,9 @@
 
 **Document Status:** CANONICAL REVISED DRAFT — READY FOR OWNER SIGN-OFF  
 **Version:** 2.0 (Phase 0 Rework Baseline)  
-**Branch:** `docs/phase-0-documentation-reconciliation`  
-**Parent Commit:** `53bc209`  
+**Historical Audit Branch:** `docs/phase-0-documentation-reconciliation`  
+**Official GitHub PR Branch:** `docs/phase-0-documentation-baseline` ([PR #10](https://github.com/djsushilkumar/oprino/pull/10))  
+**Base Commit:** `87883a0` (`origin/main`)  
 **Date:** October 17, 2026  
 **Auditor:** Principal Architect & Engineering Lead  
 
@@ -23,8 +24,8 @@ This register tracks every material conflict between the historical frozen V1 Sc
 │  CR-04: Default 90-Day GPS Retention (Options: 30 / 90 / 180 days; no cold raw archive). (Q49)        │
 │  CR-05: 7-Day Trial (Read-Only Expiry) & Razorpay Active-Seat Metering (₹129/₹249/₹449). (Q06–Q10, Q58)│
 │  CR-06: Target Infrastructure: Single Oracle ARM VM (Ampere A1) with Docker Prod + Staging. (Q33–Q35) │
-│  CR-07: Full Scope: Advanced HR, Automation, Integrations, Super Admin, Correct DR (RPO 4h/RTO 8h).   │
-│  CR-08: Phased Workflow: Documentation -> Google Stitch (104 Screens) -> Antigravity Phased Sprints.  │
+│  CR-07: Full Scope: Advanced HR, Automation, Integrations, Super Admin, Correct DR (RPO 4h/RTO 8h). (Q60) │
+│  CR-08: Phased Workflow: Documentation -> Google Stitch (104 Screens, Q39) -> Antigravity Sprints. (Q39) │
 │  CR-09: Mobile Client: ONE unified Flutter app for all 4 roles. Separate Web Super Admin. (Q29, Q30)  │
 │  CR-10: Document Integrity: Reconciled existing docs; no redundant new trees or duplicate ADRs.       │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────┘

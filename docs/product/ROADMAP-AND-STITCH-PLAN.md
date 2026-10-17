@@ -2,8 +2,9 @@
 
 **Document Status:** CANONICAL REVISED DRAFT — READY FOR OWNER SIGN-OFF  
 **Version:** 2.0 (Phase 0 Rework Baseline)  
-**Branch:** `docs/phase-0-documentation-reconciliation`  
-**Parent Commit:** `53bc209`  
+**Historical Audit Branch:** `docs/phase-0-documentation-reconciliation`  
+**Official GitHub PR Branch:** `docs/phase-0-documentation-baseline` ([PR #10](https://github.com/djsushilkumar/oprino/pull/10))  
+**Base Commit:** `87883a0` (`origin/main`)  
 **Date:** October 17, 2026  
 **Auditor:** Principal Architect & Engineering Lead  
 
@@ -183,6 +184,115 @@ The unified mobile app dynamically renders screens and tabs based on the authent
 102. **ADM-12:** System Announcement & Global Notification Dispatcher
 103. **ADM-13:** Global Feature Flag Configuration Studio
 104. **ADM-14:** Database Backup Snapshot & Disaster Recovery Status Dashboard
+
+---
+
+### 2.6 Detailed Screen Contracts for Crucial Operational Modules (Q40)
+
+To ensure zero ambiguity during Phase 1 Google Stitch design, detailed screen contracts are defined below for essential modules:
+
+#### Contract 1: Team Collaboration, Chat & Operational Channels (`MOD-11`)
+- **Primary Screens:** `WEB-33` (Company Operational Broadcasts & Bulletin Composer), `MOB-31` (Company Broadcasts & Safety Feed), `MOB-15` (Task Comment & Timeline Sheet).
+- **Surface Bindings:** Fastify API endpoints:
+  - `GET /v1/channels` — List workspace public and department channels (`#general`, `#operations`, `#safety-alerts`).
+  - `GET /v1/channels/:id/messages` — Paginated message history with cursor-based pagination.
+  - `POST /v1/channels/:id/messages` — Send message with optional file attachment (`media_url`, `file_type`).
+  - `GET /v1/notifications/stream` — Real-time Server-Sent Events (SSE) stream for instant dispatch alerts and `@mentions`.
+- **UI Contract Elements:**
+  - Pinned announcement banners with high-contrast Mint/Navy badges.
+  - Read-receipt indicators, rich text / checklist rendering, and tap-to-dial phone number recognition.
+  - Emergency safety alert modal with mandatory "Acknowledge" button.
+
+#### Contract 2: Unified Cross-Module Approvals Inbox (`MOD-03`, `MOD-05`, `MOD-09`, `MOD-10`)
+- **Primary Screens:** `WEB-10` (Attendance Regularization), `WEB-15` (Proof of Work), `WEB-27` (Leave Management), `WEB-28` (Expense Claims), `MOB-37`–`MOB-39` (Manager Review Sheets).
+- **Surface Bindings:** Fastify API endpoints:
+  - `GET /v1/approvals/pending` — Consolidated supervisory queue aggregated across 4 types: `ATTENDANCE_REGULARIZATION`, `PROOF_VERIFICATION`, `LEAVE_REQUEST`, `EXPENSE_CLAIM`.
+  - `POST /v1/approvals/:id/decide` — Atomic decision endpoint: `{ decision: "APPROVED" | "REJECTED", remark: string }`.
+- **UI Contract Elements:**
+  - Unified badge counter on Web header and Mobile Manager tab.
+  - Split-view inspector: Side-by-side comparison of original punch vs requested punch, receipt photo vs claimed amount, watermarked photo vs task requirement.
+  - One-click batch approval for verified items with optimistic UI rollback on network error.
+
+#### Contract 3: Workspace File & Document Vault (`MOD-11`, `MOD-08`)
+- **Primary Screens:** `WEB-21` (Customer Account Documents), `MOB-14` (Task Attachments & Service Document Viewer), `WEB-45` (Company Vault).
+- **Surface Bindings:** Fastify API endpoints:
+  - `POST /v1/storage/upload-ticket` — Returns presigned S3 direct-upload URL for OCI Object Storage.
+  - `GET /v1/documents?entity_type=...&entity_id=...` — Filtered document metadata list (`id`, `name`, `size_bytes`, `mime_type`, `uploaded_by`, `uploaded_at`).
+  - `DELETE /v1/documents/:id` — Soft-delete with audit logging.
+- **UI Contract Elements:**
+  - File category chips: `Contracts`, `SOP PDFs`, `Service Blueprints`, `Tax / Invoices`, `Site Photos`.
+  - In-app PDF/image viewer with zoom, rotation, and offline caching via Drift SQLite.
+
+#### Contract 4: Bilingual Help, Support & Contextual Knowledge Base (`MOD-01`, `MOD-16`)
+- **Primary Screens:** `WEB-02`, `MOB-40` (Help & Support Action Sheet), Help Drawer Modal across Web.
+- **Surface Bindings:**
+  - `GET /v1/help/articles?lang=en|hi` — Searchable bilingual support articles and FAQs.
+  - `POST /v1/support/tickets` — Submit support ticket with automated diagnostic bundle (app version, OS, battery %, pending outbox count, user ID).
+- **UI Contract Elements:**
+  - Contextual tooltip anchors (`?` icon) on complex forms (e.g. geofence radius, cron recurrence syntax, RLS roles).
+  - Bilingual video/GIF walkthrough clips demonstrating core workflows (Punch-in, Proof Capture, Offline Sync).
+
+#### Contract 5: Integration Hub & Connectors Studio (`MOD-13`)
+- **Primary Screens:** `WEB-42` (WhatsApp Setup), `WEB-43` (Tally/ERP Export), `WEB-44` (Webhooks Manager).
+- **Surface Bindings:**
+  - `POST /v1/integrations/whatsapp/test` — Send test template alert via WhatsApp Business Cloud API.
+  - `GET /v1/reports/tally-export` — Streaming CSV formatted for Tally XML/CSV import schema.
+  - `POST /v1/integrations/webhooks` — Register webhook URL with HMAC-SHA256 secret generation and event subscription checkboxes (`task.completed`, `attendance.punched_in`, `order.booked`).
+- **UI Contract Elements:**
+  - Event payload preview inspector with JSON syntax highlighting and "Send Test Event" button.
+  - Webhook delivery health log: 200 OK green pills vs 5xx red retry badges with full request/response headers.
+
+#### Contract 6: Bilingual Onboarding & Invites Lifecycle (`MOD-01`)
+- **Primary Screens:** `WEB-02` (Registration), `WEB-03` (Invite Activation), `WEB-31` (Employee Invites Modal), `MOB-01`–`MOB-04` (Splash, Auth & UUID Device Binding).
+- **Surface Bindings:**
+  - `POST /v1/workspaces/invites` — Generate single-use invitation cryptographic tokens.
+  - `POST /v1/auth/invites/activate` — Redeem token, set password, bind device installation ID.
+- **UI Contract Elements:**
+  - Persistent language selector pill (`English` / `हिंदी`) at top-right of all auth and onboarding screens.
+  - 3-step progressive onboarding checklist: 1. Setup Company Details ➔ 2. Invite First Team Member ➔ 3. Download Mobile App.
+
+#### Contract 7: Plan Management, Quotas & Active-Seat Metering (`MOD-15`)
+- **Primary Screens:** `WEB-49` (Subscription & Razorpay), `WEB-50` (Plan Invoices & Active-Seat Metering).
+- **Surface Bindings:**
+  - `GET /v1/billing/usage` — Real-time consumption vs plan caps: `{ active_seats: 18, seat_quota: 25, storage_mb: 2400, storage_cap_mb: 10000, gps_retention_days: 90 }`.
+  - `POST /v1/billing/checkout` — Generate Razorpay Order ID for seat upgrade or annual plan switch.
+- **UI Contract Elements:**
+  - Visual usage progress bars with amber warning states at 80% quota and red warning at 100%.
+  - Prorated seat addition calculator previewing immediate charge vs next monthly invoice.
+  - Grace period banner (7 days remaining before read-only lockout) with prominent "Pay Now" Razorpay CTA.
+
+---
+
+### 2.7 Google Stitch Design System & Project Links (Q39, Q64)
+
+#### Approved Design System Tokens (OPRINO Brand Kit v1.3)
+- **Design Tokens Repository:** [`Oprino-Brand-Kit/05-Design-Tokens/Oprino-tokens.json`](../../Oprino-Brand-Kit/05-Design-Tokens/Oprino-tokens.json)
+- **Palette:**
+  - Primary Navy: `#0F172A`
+  - Cobalt: `#164CFF`
+  - Ocean: `#087DE5`
+  - Mint: `#20BAAA`
+  - Deep Blue: `#1235A4`
+  - Slate: `#475569`
+  - Paper: `#F8FAFC`
+  - Border: `#DDE5EF`
+- **Typography:**
+  - Headings: `Space Grotesk`
+  - Body Text: `Manrope`
+  - Wordmark: `Unbounded Medium 500`
+- **Canva Brand Asset Links:**
+  - [Full Oprino Brand Kit Folder](https://www.canva.com/folder/FAHW5FSpPw8)
+  - [Oprino Brand Guidelines v1.3](https://www.canva.com/d/AjCAR5Ldpw5Rs3X)
+  - [16 Vector Logo Variations](https://www.canva.com/d/QpEXUO4bO9PK8Vu)
+
+#### Google Stitch Design Project Status & Disclosure
+> [!IMPORTANT]
+> **No Fake Claims Invariant:**  
+> A markdown inventory of screen names is NOT a designed user interface.  
+> 1. Currently, all 104 screens have completed **State 1 (Inventory Documented)** and essential modules have completed **State 2 (Screen-Level Contracts Specified)**.
+> 2. Visual layout execution in Google Stitch begins in Phase 1 following the mandatory sequence:
+>    **Design System Tokens → Company Web Dashboard (50 screens) → Flutter Mobile (40 screens) → Platform Super Admin (14 screens) → Design QA Gate.**
+> 3. Production design prototype URLs will be generated and reported as each visual screen batch is produced in Google Stitch; no screen will be claimed as designed until its actual interactive Stitch prototype URL is delivered.
 
 ---
 

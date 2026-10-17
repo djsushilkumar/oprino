@@ -3,7 +3,8 @@
 **Document Status:** CANONICAL DRAFT — PENDING OWNER APPROVAL  
 **Version:** 2.0 (Phase 0 Rework Baseline)  
 **Target Infrastructure:** Single Oracle Cloud Infrastructure (OCI) ARM VM  
-**Branch:** `docs/phase-0-documentation-reconciliation`  
+**Historical Audit Branch:** `docs/phase-0-documentation-reconciliation`  
+**Official GitHub PR Branch:** `docs/phase-0-documentation-baseline` ([PR #10](https://github.com/djsushilkumar/oprino/pull/10))  
 **Date:** October 17, 2026  
 **Auditor:** Principal Architect & Engineering Lead  
 
@@ -40,7 +41,7 @@ OPRINO is a monorepo platform engineered using Turborepo and pnpm 11. It provide
 
 ---
 
-## 3. Target Infrastructure Topology: Single Oracle ARM VM
+## 3. Target Infrastructure Topology: Single Oracle ARM VM (Q33)
 
 ```mermaid
 graph TB
@@ -106,7 +107,7 @@ graph TB
 - **Phase C (Owner Staging Review):** Validate staging environment with real mobile app builds.
 - **Phase D (Production Cutover):** Execute database sync from Neon, switch Cloudflare DNS records, and verify production health probes.
 
-### 3.4 Disaster Recovery & Backup Topology (Calibrated for Pilot)
+### 3.4 Disaster Recovery & Backup Topology (Q60, Calibrated for Pilot)
 - **Approved Planning Targets (Pilot Planning Targets, Not Guaranteed SLAs):**
   - **Recovery Point Objective (RPO):** 4 hours
   - **Recovery Time Objective (RTO):** 8 hours
@@ -116,7 +117,7 @@ graph TB
 
 ---
 
-## 4. Project Management Architecture
+## 4. Advanced Task & Project Management Architecture (Q18)
 
 ```mermaid
 erDiagram
@@ -159,7 +160,7 @@ erDiagram
 
 ---
 
-## 5. Sales CRM Architecture
+## 5. Sales CRM Architecture (Q19)
 
 ```mermaid
 erDiagram
