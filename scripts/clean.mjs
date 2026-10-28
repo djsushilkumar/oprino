@@ -32,4 +32,3 @@ for (const dir of dirsToClean) {
 }
 
 console.log('✨ Project cleanup completed successfully.\n');
-
