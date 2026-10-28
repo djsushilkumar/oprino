@@ -7,7 +7,10 @@ export class PubSubService {
   private redisSub?: Redis;
   private localEmitter: EventEmitter;
   private isRedisConnected = false;
-  private streamingTickets = new Map<string, { userId: string; workspaceId: string; expiresAt: number }>();
+  private streamingTickets = new Map<
+    string,
+    { userId: string; workspaceId: string; expiresAt: number }
+  >();
 
   async createStreamingTicket(userId: string, workspaceId: string): Promise<string> {
     const randomPart = randomBytes(24).toString('base64url');
@@ -28,7 +31,9 @@ export class PubSubService {
     return ticket;
   }
 
-  async consumeStreamingTicket(ticket: string): Promise<{ userId: string; workspaceId: string } | null> {
+  async consumeStreamingTicket(
+    ticket: string,
+  ): Promise<{ userId: string; workspaceId: string } | null> {
     if (!ticket || !ticket.startsWith('tkt_')) return null;
 
     if (this.isRedisConnected && this.redisPub) {
@@ -37,7 +42,11 @@ export class PubSubService {
         if (typeof (this.redisPub as any).getdel === 'function') {
           raw = await (this.redisPub as any).getdel(`stream_ticket:${ticket}`);
         } else {
-          const res = await this.redisPub.multi().get(`stream_ticket:${ticket}`).del(`stream_ticket:${ticket}`).exec();
+          const res = await this.redisPub
+            .multi()
+            .get(`stream_ticket:${ticket}`)
+            .del(`stream_ticket:${ticket}`)
+            .exec();
           if (res && res[0] && res[0][1]) {
             raw = res[0][1] as string;
           }
@@ -116,10 +125,7 @@ export class PubSubService {
     }
   }
 
-  async subscribe(
-    channel: string,
-    handler: (data: any) => void,
-  ): Promise<() => void> {
+  async subscribe(channel: string, handler: (data: any) => void): Promise<() => void> {
     const localListener = (raw: string) => {
       try {
         handler(JSON.parse(raw));

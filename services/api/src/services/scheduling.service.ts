@@ -276,7 +276,8 @@ export class SchedulingService {
         }
 
         // 3. Checklist Items
-        const checklist = (template.checklistTemplate as Array<{ title: string; sortOrder?: number }>) || [];
+        const checklist =
+          (template.checklistTemplate as Array<{ title: string; sortOrder?: number }>) || [];
         for (let i = 0; i < checklist.length; i++) {
           await tx.insert(taskChecklistItems).values({
             workspaceId: template.workspaceId,
@@ -325,10 +326,7 @@ export class SchedulingService {
   /**
    * Assigns shift rosters for employees across specific dates.
    */
-  async assignShiftRosters(
-    workspaceId: string,
-    input: AssignShiftRosterRequest,
-  ) {
+  async assignShiftRosters(workspaceId: string, input: AssignShiftRosterRequest) {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 

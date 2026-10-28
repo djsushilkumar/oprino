@@ -24,11 +24,15 @@ for (const signal of signals) {
       return;
     }
     isShuttingDown = true;
-    app.log.info(`Received ${signal}, initiating graceful shutdown (timeout: ${env.SHUTDOWN_TIMEOUT_MS}ms)...`);
+    app.log.info(
+      `Received ${signal}, initiating graceful shutdown (timeout: ${env.SHUTDOWN_TIMEOUT_MS}ms)...`,
+    );
 
     // Safety watchdog: force exit if connections fail to drain in time
     const forceExitTimer = setTimeout(() => {
-      app.log.error(`Graceful shutdown timed out after ${env.SHUTDOWN_TIMEOUT_MS}ms. Forcing process exit.`);
+      app.log.error(
+        `Graceful shutdown timed out after ${env.SHUTDOWN_TIMEOUT_MS}ms. Forcing process exit.`,
+      );
       process.exit(1);
     }, env.SHUTDOWN_TIMEOUT_MS);
     forceExitTimer.unref();

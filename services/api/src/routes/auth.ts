@@ -22,7 +22,9 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
   const canonicalBaseUrl =
     options.betterAuthUrl ||
     process.env.BETTER_AUTH_URL ||
-    (process.env.NODE_ENV === 'production' ? 'https://oprino-api.onrender.com' : 'http://localhost:3001');
+    (process.env.NODE_ENV === 'production'
+      ? 'https://oprino-api.onrender.com'
+      : 'http://localhost:3001');
 
   let canonicalOrigin: URL;
   try {
@@ -94,38 +96,39 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
         });
       }
 
-    try {
-      const result = await auth.api.signUpEmail({
-        body: {
-          email: parsed.data.email,
-          password: parsed.data.password,
-          name: parsed.data.name,
-        },
-        headers: req.headers as Record<string, string>,
-      });
+      try {
+        const result = await auth.api.signUpEmail({
+          body: {
+            email: parsed.data.email,
+            password: parsed.data.password,
+            name: parsed.data.name,
+          },
+          headers: req.headers as Record<string, string>,
+        });
 
-      // Forward cookies if set
-      return reply.status(200).send({
-        token: (result as any).token || '',
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          name: result.user.name,
-          emailVerified: result.user.emailVerified,
-          image: result.user.image ?? null,
-        },
-        activeWorkspaceId: null,
-      });
-    } catch (err: any) {
-      req.log.error(err, 'Signup failed');
-      const status = err.statusCode || 400;
-      return reply.status(status).send({
-        statusCode: status,
-        error: err.body?.code || 'SIGNUP_FAILED',
-        message: err.body?.message || err.message || 'Failed to create user',
-      });
-    }
-  });
+        // Forward cookies if set
+        return reply.status(200).send({
+          token: (result as any).token || '',
+          user: {
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
+            emailVerified: result.user.emailVerified,
+            image: result.user.image ?? null,
+          },
+          activeWorkspaceId: null,
+        });
+      } catch (err: any) {
+        req.log.error(err, 'Signup failed');
+        const status = err.statusCode || 400;
+        return reply.status(status).send({
+          statusCode: status,
+          error: err.body?.code || 'SIGNUP_FAILED',
+          message: err.body?.message || err.message || 'Failed to create user',
+        });
+      }
+    },
+  );
 
   // POST /v1/auth/signin
   app.post(
@@ -149,53 +152,54 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
         });
       }
 
-    try {
-      const result = await auth.api.signInEmail({
-        body: {
-          email: parsed.data.email,
-          password: parsed.data.password,
-        },
-        headers: req.headers as Record<string, string>,
-      });
+      try {
+        const result = await auth.api.signInEmail({
+          body: {
+            email: parsed.data.email,
+            password: parsed.data.password,
+          },
+          headers: req.headers as Record<string, string>,
+        });
 
-      // Find user's active workspace
-      const activeWorkspaceId = await db.transaction(async (tx) => {
-        await tx.execute(sql`SELECT set_config('app.bypass_rls', 'on', true)`);
-        const [firstActive] = await tx
-          .select({ workspaceId: workspaceMemberships.workspaceId })
-          .from(workspaceMemberships)
-          .where(
-            and(
-              eq(workspaceMemberships.userId, result.user.id),
-              eq(workspaceMemberships.status, 'active'),
-            ),
-          )
-          .limit(1);
+        // Find user's active workspace
+        const activeWorkspaceId = await db.transaction(async (tx) => {
+          await tx.execute(sql`SELECT set_config('app.bypass_rls', 'on', true)`);
+          const [firstActive] = await tx
+            .select({ workspaceId: workspaceMemberships.workspaceId })
+            .from(workspaceMemberships)
+            .where(
+              and(
+                eq(workspaceMemberships.userId, result.user.id),
+                eq(workspaceMemberships.status, 'active'),
+              ),
+            )
+            .limit(1);
 
-        return firstActive?.workspaceId ?? null;
-      });
+          return firstActive?.workspaceId ?? null;
+        });
 
-      return reply.status(200).send({
-        token: (result as any).token || '',
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          name: result.user.name,
-          emailVerified: result.user.emailVerified,
-          image: result.user.image ?? null,
-        },
-        activeWorkspaceId,
-      });
-    } catch (err: any) {
-      req.log.error(err, 'Sign in failed');
-      const status = err.statusCode || 401;
-      return reply.status(status).send({
-        statusCode: status,
-        error: err.body?.code || 'INVALID_CREDENTIALS',
-        message: err.body?.message || 'Invalid email or password',
-      });
-    }
-  });
+        return reply.status(200).send({
+          token: (result as any).token || '',
+          user: {
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
+            emailVerified: result.user.emailVerified,
+            image: result.user.image ?? null,
+          },
+          activeWorkspaceId,
+        });
+      } catch (err: any) {
+        req.log.error(err, 'Sign in failed');
+        const status = err.statusCode || 401;
+        return reply.status(status).send({
+          statusCode: status,
+          error: err.body?.code || 'INVALID_CREDENTIALS',
+          message: err.body?.message || 'Invalid email or password',
+        });
+      }
+    },
+  );
 
   // POST /v1/auth/signout
   app.post('/v1/auth/signout', async (req, reply) => {
@@ -281,4 +285,3 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
     },
   );
 };
-

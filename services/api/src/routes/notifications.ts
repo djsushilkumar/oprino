@@ -17,17 +17,11 @@ export const notificationRoutes: FastifyPluginAsync<NotificationRoutesOptions> =
   app.get(
     '/v1/notifications',
     {
-      preHandler: [
-        authMiddleware.authenticate,
-        authMiddleware.requireWorkspace,
-      ],
+      preHandler: [authMiddleware.authenticate, authMiddleware.requireWorkspace],
     },
     async (req, reply) => {
       try {
-        const result = await notificationService.listNotifications(
-          req.workspaceId!,
-          req.user!.id,
-        );
+        const result = await notificationService.listNotifications(req.workspaceId!, req.user!.id);
         return reply.status(200).send(result);
       } catch (err: any) {
         req.log.error(err, 'Failed to list notifications');
@@ -44,19 +38,12 @@ export const notificationRoutes: FastifyPluginAsync<NotificationRoutesOptions> =
   app.patch(
     '/v1/notifications/:id/read',
     {
-      preHandler: [
-        authMiddleware.authenticate,
-        authMiddleware.requireWorkspace,
-      ],
+      preHandler: [authMiddleware.authenticate, authMiddleware.requireWorkspace],
     },
     async (req, reply) => {
       const { id } = req.params as { id: string };
       try {
-        const result = await notificationService.markAsRead(
-          req.workspaceId!,
-          req.user!.id,
-          id,
-        );
+        const result = await notificationService.markAsRead(req.workspaceId!, req.user!.id, id);
         return reply.status(200).send(result);
       } catch (err: any) {
         req.log.error(err, 'Failed to mark notification read');
@@ -73,17 +60,11 @@ export const notificationRoutes: FastifyPluginAsync<NotificationRoutesOptions> =
   app.post(
     '/v1/notifications/read-all',
     {
-      preHandler: [
-        authMiddleware.authenticate,
-        authMiddleware.requireWorkspace,
-      ],
+      preHandler: [authMiddleware.authenticate, authMiddleware.requireWorkspace],
     },
     async (req, reply) => {
       try {
-        const result = await notificationService.markAllAsRead(
-          req.workspaceId!,
-          req.user!.id,
-        );
+        const result = await notificationService.markAllAsRead(req.workspaceId!, req.user!.id);
         return reply.status(200).send(result);
       } catch (err: any) {
         req.log.error(err, 'Failed to mark all notifications read');

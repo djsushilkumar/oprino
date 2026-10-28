@@ -682,7 +682,9 @@ export class WorkspaceService {
       }
 
       if (row.invitation.status !== 'PENDING') {
-        const error: any = new Error(`Invitation is already ${row.invitation.status.toLowerCase()}`);
+        const error: any = new Error(
+          `Invitation is already ${row.invitation.status.toLowerCase()}`,
+        );
         error.statusCode = 400;
         throw error;
       }
@@ -692,7 +694,9 @@ export class WorkspaceService {
           .update(workspaceInvitations)
           .set({ status: 'EXPIRED', updatedAt: new Date() })
           .where(eq(workspaceInvitations.id, row.invitation.id));
-        const error: any = new Error('Invitation has expired. Please ask your administrator to resend it.');
+        const error: any = new Error(
+          'Invitation has expired. Please ask your administrator to resend it.',
+        );
         error.statusCode = 400;
         throw error;
       }
@@ -701,11 +705,7 @@ export class WorkspaceService {
       const displayName = input.name?.trim() || row.invitation.name || email.split('@')[0];
 
       // Check if user already exists
-      const [existingUser] = await tx
-        .select()
-        .from(users)
-        .where(eq(users.email, email))
-        .limit(1);
+      const [existingUser] = await tx.select().from(users).where(eq(users.email, email)).limit(1);
 
       let targetUserId: string;
 
@@ -852,7 +852,12 @@ export class WorkspaceService {
       seenEmailsInBatch.add(email);
 
       try {
-        const inv = await this.createInvitation(workspaceId, actorId, { email, name, roleName: role }, baseUrl);
+        const inv = await this.createInvitation(
+          workspaceId,
+          actorId,
+          { email, name, roleName: role },
+          baseUrl,
+        );
         results.push({
           row: rowNum,
           email,
@@ -872,7 +877,9 @@ export class WorkspaceService {
     }
 
     const successCount = results.filter((r) => r.status === 'INVITED').length;
-    const failureCount = results.filter((r) => r.status === 'FAILED' || r.status === 'SKIPPED').length;
+    const failureCount = results.filter(
+      (r) => r.status === 'FAILED' || r.status === 'SKIPPED',
+    ).length;
 
     return {
       totalRows: rows.length,
@@ -945,7 +952,9 @@ export class WorkspaceService {
           );
 
         if ((ownerCountRow?.count ?? 0) <= 1) {
-          const error: any = new Error('Cannot demote, suspend, or remove the last active Owner of the workspace');
+          const error: any = new Error(
+            'Cannot demote, suspend, or remove the last active Owner of the workspace',
+          );
           error.statusCode = 400;
           throw error;
         }
@@ -1064,7 +1073,12 @@ export class WorkspaceService {
     actorId: string,
     input: {
       locationRetentionDays?: 7 | 30 | 90 | 180;
-      attendancePolicy?: 'SIMPLE' | 'GPS_REQUIRED' | 'SELFIE_REQUIRED' | 'GPS_AND_SELFIE_REQUIRED' | 'GEOFENCE_REQUIRED';
+      attendancePolicy?:
+        | 'SIMPLE'
+        | 'GPS_REQUIRED'
+        | 'SELFIE_REQUIRED'
+        | 'GPS_AND_SELFIE_REQUIRED'
+        | 'GEOFENCE_REQUIRED';
     },
   ) {
     return this.db.transaction(async (tx) => {
@@ -1120,5 +1134,3 @@ export class WorkspaceService {
     });
   }
 }
-
-

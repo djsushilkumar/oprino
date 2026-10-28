@@ -83,7 +83,9 @@ export function createAuth(env: Env, dbClient?: ReturnType<typeof createDatabase
         ? ['http://localhost:3000', 'http://127.0.0.1:3000']
         : []),
       ...(env.CORS_ORIGINS
-        ? env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter((o) => o && o !== '*')
+        ? env.CORS_ORIGINS.split(',')
+            .map((o) => o.trim())
+            .filter((o) => o && o !== '*')
         : []),
     ].filter(Boolean),
     plugins: [bearer()],

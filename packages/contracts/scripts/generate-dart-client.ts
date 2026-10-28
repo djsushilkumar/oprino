@@ -1198,7 +1198,11 @@ class TeamAttendanceResponse {
       };
 }
 `;
-fs.writeFileSync(path.resolve(modelDir, 'attendance_models.dart'), attendanceModelsContent, 'utf-8');
+fs.writeFileSync(
+  path.resolve(modelDir, 'attendance_models.dart'),
+  attendanceModelsContent,
+  'utf-8',
+);
 
 // 10. Generate Telemetry Models (Phase 02C)
 const telemetryModelsContent = `// GENERATED CODE - DO NOT MODIFY BY HAND
@@ -3236,5 +3240,3 @@ export 'src/model/sync_models.dart';
 fs.writeFileSync(path.resolve(libDir, 'oprino_api.dart'), oprinoApiContent, 'utf-8');
 
 console.log(`✓ Generated Dart API client from OpenAPI ${spec.openapi} into generated/dart-api`);
-
-

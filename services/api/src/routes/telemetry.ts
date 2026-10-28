@@ -1,8 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import {
-  LocationIngestBatchRequestSchema,
-  LocationHistoryQuerySchema,
-} from '@oprino/contracts';
+import { LocationIngestBatchRequestSchema, LocationHistoryQuerySchema } from '@oprino/contracts';
 import type { TelemetryService } from '../services/telemetry.service.js';
 import type { PubSubService } from '../services/pubsub.service.js';
 import type { createAuthMiddleware } from '../middleware/auth.js';
@@ -165,59 +162,56 @@ export const telemetryRoutes: FastifyPluginAsync<TelemetryRoutesOptions> = async
    * Realtime Server-Sent Events (SSE) stream for web live map.
    * Supports secure single-use ticket (?ticket=) or standard auth headers/cookies.
    */
-  fastify.get(
-    '/v1/telemetry/stream',
-    async (request, reply) => {
-      const query = request.query as Record<string, string> | undefined;
-      let activeWorkspaceId: string | null = null;
+  fastify.get('/v1/telemetry/stream', async (request, reply) => {
+    const query = request.query as Record<string, string> | undefined;
+    let activeWorkspaceId: string | null = null;
 
-      // 1. Single-use ticket authentication
-      if (query?.ticket) {
-        const ticketData = await pubsub.consumeStreamingTicket(query.ticket);
-        if (!ticketData) {
-          return reply.status(401).send({
-            statusCode: 401,
-            error: 'Unauthorized',
-            message: 'Invalid or expired streaming ticket',
-          });
-        }
-        activeWorkspaceId = ticketData.workspaceId;
-      } else {
-        // 2. Standard authentication through cookies or Authorization header
-        await authMiddleware.authenticate(request, reply);
-        if (reply.sent) return;
-        await authMiddleware.requireWorkspace(request, reply);
-        if (reply.sent) return;
-        await authMiddleware.requirePermission(PERMISSIONS.LOCATION_READ)(request, reply);
-        if (reply.sent) return;
-        activeWorkspaceId = request.workspaceId!;
+    // 1. Single-use ticket authentication
+    if (query?.ticket) {
+      const ticketData = await pubsub.consumeStreamingTicket(query.ticket);
+      if (!ticketData) {
+        return reply.status(401).send({
+          statusCode: 401,
+          error: 'Unauthorized',
+          message: 'Invalid or expired streaming ticket',
+        });
       }
+      activeWorkspaceId = ticketData.workspaceId;
+    } else {
+      // 2. Standard authentication through cookies or Authorization header
+      await authMiddleware.authenticate(request, reply);
+      if (reply.sent) return;
+      await authMiddleware.requireWorkspace(request, reply);
+      if (reply.sent) return;
+      await authMiddleware.requirePermission(PERMISSIONS.LOCATION_READ)(request, reply);
+      if (reply.sent) return;
+      activeWorkspaceId = request.workspaceId!;
+    }
 
-      reply.raw.setHeader('Content-Type', 'text/event-stream');
-      reply.raw.setHeader('Cache-Control', 'no-cache, no-transform');
-      reply.raw.setHeader('Connection', 'keep-alive');
-      reply.raw.setHeader('X-Accel-Buffering', 'no');
-      reply.raw.flushHeaders();
+    reply.raw.setHeader('Content-Type', 'text/event-stream');
+    reply.raw.setHeader('Cache-Control', 'no-cache, no-transform');
+    reply.raw.setHeader('Connection', 'keep-alive');
+    reply.raw.setHeader('X-Accel-Buffering', 'no');
+    reply.raw.flushHeaders();
 
-      // Send initial heartbeat
-      reply.raw.write(
-        `event: connected\ndata: ${JSON.stringify({ workspaceId: activeWorkspaceId })}\n\n`,
-      );
+    // Send initial heartbeat
+    reply.raw.write(
+      `event: connected\ndata: ${JSON.stringify({ workspaceId: activeWorkspaceId })}\n\n`,
+    );
 
-      const unsubscribe = await pubsub.subscribe(`live_ops:${activeWorkspaceId}`, (payload) => {
-        try {
-          reply.raw.write(`event: location_update\ndata: ${JSON.stringify(payload)}\n\n`);
-        } catch {
-          // Socket closed
-        }
-      });
+    const unsubscribe = await pubsub.subscribe(`live_ops:${activeWorkspaceId}`, (payload) => {
+      try {
+        reply.raw.write(`event: location_update\ndata: ${JSON.stringify(payload)}\n\n`);
+      } catch {
+        // Socket closed
+      }
+    });
 
-      request.raw.on('close', () => {
-        unsubscribe();
-      });
+    request.raw.on('close', () => {
+      unsubscribe();
+    });
 
-      // Keep connection open; return nothing to avoid Fastify closing response automatically
-      return new Promise(() => {});
-    },
-  );
+    // Keep connection open; return nothing to avoid Fastify closing response automatically
+    return new Promise(() => {});
+  });
 };

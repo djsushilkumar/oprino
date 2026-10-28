@@ -13,7 +13,12 @@ function findMarkdownFiles(dir) {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === '.turbo' || entry.name === 'build') {
+      if (
+        entry.name === 'node_modules' ||
+        entry.name === '.git' ||
+        entry.name === '.turbo' ||
+        entry.name === 'build'
+      ) {
         continue;
       }
       findMarkdownFiles(fullPath);
@@ -37,20 +42,23 @@ for (const file of markdownFiles) {
   const fileDir = path.dirname(file);
   let fileReplacements = 0;
 
-  const newContent = content.replace(/file:\/\/\/workspace\/oprino\/([^\s)"']+)/g, (match, relPath) => {
-    fileReplacements++;
-    totalReplacements++;
+  const newContent = content.replace(
+    /file:\/\/\/workspace\/oprino\/([^\s)"']+)/g,
+    (match, relPath) => {
+      fileReplacements++;
+      totalReplacements++;
 
-    const targetFullPath = path.join(repoRoot, relPath);
-    let relativePath = path.relative(fileDir, targetFullPath).replace(/\\/g, '/');
+      const targetFullPath = path.join(repoRoot, relPath);
+      let relativePath = path.relative(fileDir, targetFullPath).replace(/\\/g, '/');
 
-    // If relative path doesn't start with . or .., prefix with ./ for clarity
-    if (!relativePath.startsWith('.')) {
-      relativePath = './' + relativePath;
-    }
+      // If relative path doesn't start with . or .., prefix with ./ for clarity
+      if (!relativePath.startsWith('.')) {
+        relativePath = './' + relativePath;
+      }
 
-    return relativePath;
-  });
+      return relativePath;
+    },
+  );
 
   if (fileReplacements > 0) {
     fs.writeFileSync(file, newContent, 'utf8');
@@ -59,4 +67,6 @@ for (const file of markdownFiles) {
   }
 }
 
-console.log(`\n✓ Conversion complete! ${totalReplacements} nonportable links converted across ${modifiedFiles} files.`);
+console.log(
+  `\n✓ Conversion complete! ${totalReplacements} nonportable links converted across ${modifiedFiles} files.`,
+);

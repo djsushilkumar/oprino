@@ -13,11 +13,7 @@ export class VisitService {
   /**
    * Schedules or creates a site visit.
    */
-  async createVisit(
-    workspaceId: string,
-    input: CreateVisitRequest,
-    fallbackUserId: string,
-  ) {
+  async createVisit(workspaceId: string, input: CreateVisitRequest, fallbackUserId: string) {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 

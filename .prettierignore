@@ -11,3 +11,8 @@ pnpm-lock.yaml
 pubspec.lock
 AGENTS.md
 README.md
+.storage/
+packages/contracts/openapi.json
+packages/database/drizzle/meta/
+apps/mobile/
+.github/workflows/

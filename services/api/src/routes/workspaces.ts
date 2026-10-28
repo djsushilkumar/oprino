@@ -299,7 +299,9 @@ export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async
       const { invitationId } = req.params as { invitationId: string };
       try {
         await workspaceService.revokeInvitation(req.workspaceId!, invitationId, req.user!.id);
-        return reply.status(200).send({ success: true, message: 'Invitation revoked successfully' });
+        return reply
+          .status(200)
+          .send({ success: true, message: 'Invitation revoked successfully' });
       } catch (err: any) {
         req.log.error(err, 'Failed to revoke invitation');
         const status = err.statusCode || 500;
@@ -472,4 +474,3 @@ export const workspaceRoutes: FastifyPluginAsync<WorkspaceRoutesOptions> = async
     },
   );
 };
-

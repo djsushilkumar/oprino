@@ -1,14 +1,15 @@
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://oprino-api.onrender.com';
 
 const isProductionBuild =
-  process.env.NODE_ENV === 'production' ||
-  process.env.VERCEL_ENV === 'production';
+  process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
 if (isProductionBuild) {
   try {
     const parsed = new URL(apiUrl);
     if (parsed.protocol !== 'https:') {
-      throw new Error(`Production web build requires HTTPS API URL, received "${parsed.protocol}" in "${apiUrl}"`);
+      throw new Error(
+        `Production web build requires HTTPS API URL, received "${parsed.protocol}" in "${apiUrl}"`,
+      );
     }
     const host = parsed.hostname.toLowerCase();
     if (
@@ -21,10 +22,14 @@ if (isProductionBuild) {
       /^192\.168\./.test(host) ||
       /^172\.(1[6-9]|2\d|3[0-1])\./.test(host)
     ) {
-      throw new Error(`Production web build cannot target local loopback or private host "${host}" in "${apiUrl}"`);
+      throw new Error(
+        `Production web build cannot target local loopback or private host "${host}" in "${apiUrl}"`,
+      );
     }
   } catch (err) {
-    throw new Error(`Security gate violation: Invalid NEXT_PUBLIC_API_URL for production web build: ${err.message}`);
+    throw new Error(
+      `Security gate violation: Invalid NEXT_PUBLIC_API_URL for production web build: ${err.message}`,
+    );
   }
 }
 

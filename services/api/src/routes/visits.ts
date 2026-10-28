@@ -39,11 +39,7 @@ export const visitRoutes: FastifyPluginAsync<VisitRoutesOptions> = async (app, o
       }
 
       try {
-        const visit = await visitService.createVisit(
-          req.workspaceId!,
-          parsed.data,
-          req.user!.id,
-        );
+        const visit = await visitService.createVisit(req.workspaceId!, parsed.data, req.user!.id);
         return reply.status(201).send(visit);
       } catch (err: any) {
         req.log.error(err, 'Failed to create visit');
@@ -155,7 +151,8 @@ export const visitRoutes: FastifyPluginAsync<VisitRoutesOptions> = async (app, o
         const status = err.statusCode || 500;
         return reply.status(status).send({
           statusCode: status,
-          error: status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
+          error:
+            status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
           message: err.message || 'Failed to check in visit',
         });
       }
@@ -196,7 +193,8 @@ export const visitRoutes: FastifyPluginAsync<VisitRoutesOptions> = async (app, o
         const status = err.statusCode || 500;
         return reply.status(status).send({
           statusCode: status,
-          error: status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
+          error:
+            status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
           message: err.message || 'Failed to check out visit',
         });
       }

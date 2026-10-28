@@ -26,7 +26,9 @@ async function main() {
   await sql`GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO oprino_app`;
   await sql`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO oprino_app`;
   await sql`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO oprino_app`;
-  console.log('✔ Non-superuser role oprino_app successfully provisioned with RLS table permissions.');
+  console.log(
+    '✔ Non-superuser role oprino_app successfully provisioned with RLS table permissions.',
+  );
   await sql.end();
 }
 

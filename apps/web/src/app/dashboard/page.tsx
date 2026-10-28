@@ -213,7 +213,9 @@ export default function DashboardShellPage() {
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}
+            >
               {workspaces.length > 1 && (
                 <select
                   value={activeWorkspace?.id || ''}

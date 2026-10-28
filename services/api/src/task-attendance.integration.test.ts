@@ -698,25 +698,53 @@ describe('Phase 02B: Task & Attendance Core Domain Integration & Security Tests'
     assert.strictEqual(taskRows.length, 0, 'RLS must block tasks when tenant context is omitted');
 
     const assigneeRows = await appDb.select().from(schema.taskAssignees);
-    assert.strictEqual(assigneeRows.length, 0, 'RLS must block task_assignees without tenant context');
+    assert.strictEqual(
+      assigneeRows.length,
+      0,
+      'RLS must block task_assignees without tenant context',
+    );
 
     const checklistRows = await appDb.select().from(schema.taskChecklistItems);
-    assert.strictEqual(checklistRows.length, 0, 'RLS must block task_checklist_items without tenant context');
+    assert.strictEqual(
+      checklistRows.length,
+      0,
+      'RLS must block task_checklist_items without tenant context',
+    );
 
     const commentRows = await appDb.select().from(schema.taskComments);
-    assert.strictEqual(commentRows.length, 0, 'RLS must block task_comments without tenant context');
+    assert.strictEqual(
+      commentRows.length,
+      0,
+      'RLS must block task_comments without tenant context',
+    );
 
     const activityRows = await appDb.select().from(schema.taskActivity);
-    assert.strictEqual(activityRows.length, 0, 'RLS must block task_activity without tenant context');
+    assert.strictEqual(
+      activityRows.length,
+      0,
+      'RLS must block task_activity without tenant context',
+    );
 
     const shiftRows = await appDb.select().from(schema.attendanceShifts);
-    assert.strictEqual(shiftRows.length, 0, 'RLS must block attendance_shifts without tenant context');
+    assert.strictEqual(
+      shiftRows.length,
+      0,
+      'RLS must block attendance_shifts without tenant context',
+    );
 
     const sessionRows = await appDb.select().from(schema.attendanceSessions);
-    assert.strictEqual(sessionRows.length, 0, 'RLS must block attendance_sessions without tenant context');
+    assert.strictEqual(
+      sessionRows.length,
+      0,
+      'RLS must block attendance_sessions without tenant context',
+    );
 
     const eventRows = await appDb.select().from(schema.attendanceEvents);
-    assert.strictEqual(eventRows.length, 0, 'RLS must block attendance_events without tenant context');
+    assert.strictEqual(
+      eventRows.length,
+      0,
+      'RLS must block attendance_events without tenant context',
+    );
   });
 
   test('RLS: SET LOCAL app.current_workspace_id isolates Phase 02B queries to that tenant only', async () => {

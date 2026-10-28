@@ -79,9 +79,7 @@ export const geofences = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [
-    index('geofences_workspace_active_idx').on(table.workspaceId, table.isActive),
-  ],
+  (table) => [index('geofences_workspace_active_idx').on(table.workspaceId, table.isActive)],
 );
 
 /**
@@ -108,11 +106,7 @@ export const dailyTravelSummaries = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    unique('daily_travel_summaries_user_date_idx').on(
-      table.workspaceId,
-      table.userId,
-      table.date,
-    ),
+    unique('daily_travel_summaries_user_date_idx').on(table.workspaceId, table.userId, table.date),
   ],
 );
 

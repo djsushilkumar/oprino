@@ -14,10 +14,14 @@ for (const signal of signals) {
       return;
     }
     isShuttingDown = true;
-    logger.info(`Received ${signal}, initiating graceful background worker shutdown (timeout: ${env.SHUTDOWN_TIMEOUT_MS}ms)...`);
+    logger.info(
+      `Received ${signal}, initiating graceful background worker shutdown (timeout: ${env.SHUTDOWN_TIMEOUT_MS}ms)...`,
+    );
 
     const forceExitTimer = setTimeout(() => {
-      logger.error(`Graceful worker shutdown timed out after ${env.SHUTDOWN_TIMEOUT_MS}ms. Forcing exit.`);
+      logger.error(
+        `Graceful worker shutdown timed out after ${env.SHUTDOWN_TIMEOUT_MS}ms. Forcing exit.`,
+      );
       process.exit(1);
     }, env.SHUTDOWN_TIMEOUT_MS);
     forceExitTimer.unref();

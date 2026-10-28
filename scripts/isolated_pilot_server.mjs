@@ -9,7 +9,9 @@
 // - Zero connection to production database
 
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
-  console.error('FATAL SECURITY VIOLATION: scripts/isolated_pilot_server.mjs is an in-memory test double and must NEVER be run in production or staging environments!');
+  console.error(
+    'FATAL SECURITY VIOLATION: scripts/isolated_pilot_server.mjs is an in-memory test double and must NEVER be run in production or staging environments!',
+  );
   process.exit(1);
 }
 
@@ -80,7 +82,8 @@ function sendJson(res, statusCode, data) {
     'Content-Length': Buffer.byteLength(body),
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-workspace-id, x-installation-id, x-app-version, x-platform',
+    'Access-Control-Allow-Headers':
+      'Content-Type, Authorization, x-workspace-id, x-installation-id, x-app-version, x-platform',
     'X-Oprino-Environment': 'isolated-mock-pilot',
     'X-Oprino-Mock-Server': 'true',
     'X-Oprino-Backend-Type': 'in-memory-test-double',
@@ -95,7 +98,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-workspace-id, x-installation-id, x-app-version, x-platform',
+      'Access-Control-Allow-Headers':
+        'Content-Type, Authorization, x-workspace-id, x-installation-id, x-app-version, x-platform',
       'X-Oprino-Environment': 'isolated-mock-pilot',
       'X-Oprino-Mock-Server': 'true',
     });
@@ -108,7 +112,12 @@ const server = http.createServer((req, res) => {
   const isManager = authHeader.includes('manager');
 
   // Check device revocation
-  if (state.isDeviceRevoked && !pathname.includes('/auth') && !pathname.includes('/health') && !pathname.includes('/test')) {
+  if (
+    state.isDeviceRevoked &&
+    !pathname.includes('/auth') &&
+    !pathname.includes('/health') &&
+    !pathname.includes('/test')
+  ) {
     return sendJson(res, 401, {
       code: 'DEVICE_REVOKED',
       error: 'DEVICE_REVOKED',
@@ -139,16 +148,37 @@ const server = http.createServer((req, res) => {
   }
 
   // 2. Auth Sign-in & Sign-up
-  if (req.method === 'POST' && (pathname === '/v1/auth/sign-in/email' || pathname === '/v1/auth/signin' || pathname === '/v1/auth/signup')) {
+  if (
+    req.method === 'POST' &&
+    (pathname === '/v1/auth/sign-in/email' ||
+      pathname === '/v1/auth/signin' ||
+      pathname === '/v1/auth/signup')
+  ) {
     let raw = '';
     req.on('data', (c) => (raw += c));
     req.on('end', () => {
       try {
         const body = JSON.parse(raw);
         const email = (body.email || '').toLowerCase().trim();
-        const role = email.includes('admin') || email.includes('owner') ? 'Admin' : email.includes('manager') ? 'Manager' : 'Employee';
-        const userId = role === 'Admin' ? 'usr-admin-1' : role === 'Manager' ? 'usr-manager-1' : 'usr-employee-1';
-        const name = body.name || (role === 'Admin' ? 'Sarah Admin (Company Owner)' : role === 'Manager' ? 'Maria Santos (Manager)' : 'Alex Johnson (Field Tech)');
+        const role =
+          email.includes('admin') || email.includes('owner')
+            ? 'Admin'
+            : email.includes('manager')
+              ? 'Manager'
+              : 'Employee';
+        const userId =
+          role === 'Admin'
+            ? 'usr-admin-1'
+            : role === 'Manager'
+              ? 'usr-manager-1'
+              : 'usr-employee-1';
+        const name =
+          body.name ||
+          (role === 'Admin'
+            ? 'Sarah Admin (Company Owner)'
+            : role === 'Manager'
+              ? 'Maria Santos (Manager)'
+              : 'Alex Johnson (Field Tech)');
 
         const token = `pilot_${role.toLowerCase()}_token_${Date.now()}`;
         return sendJson(res, 200, {
@@ -173,14 +203,75 @@ const server = http.createServer((req, res) => {
     const isOwner = authHeader.includes('admin') || authHeader.includes('owner');
     const roleName = isOwner ? 'Admin' : isManager ? 'Manager' : 'Employee';
     const userId = isOwner ? 'usr-admin-1' : isManager ? 'usr-manager-1' : 'usr-employee-1';
-    const email = isOwner ? 'admin@acme.com' : isManager ? 'manager@acme.com' : 'field.lead@acme.com';
-    const name = isOwner ? 'Sarah Admin (Company Owner)' : isManager ? 'Maria Santos (Manager)' : 'Alex Johnson (Field Tech)';
+    const email = isOwner
+      ? 'admin@acme.com'
+      : isManager
+        ? 'manager@acme.com'
+        : 'field.lead@acme.com';
+    const name = isOwner
+      ? 'Sarah Admin (Company Owner)'
+      : isManager
+        ? 'Maria Santos (Manager)'
+        : 'Alex Johnson (Field Tech)';
 
     const permissions = isOwner
-      ? ['workspace.read', 'workspace.manage', 'members.read', 'members.manage', 'attendance.read', 'attendance.write', 'attendance.manage', 'attendance.self_punch', 'tasks.read', 'tasks.write', 'tasks.verify', 'tasks.manage', 'visits.read', 'visits.write', 'visits.manage', 'media.upload', 'media.read', 'devices.read', 'devices.revoke', 'reports.read', 'location.read', 'location.record']
+      ? [
+          'workspace.read',
+          'workspace.manage',
+          'members.read',
+          'members.manage',
+          'attendance.read',
+          'attendance.write',
+          'attendance.manage',
+          'attendance.self_punch',
+          'tasks.read',
+          'tasks.write',
+          'tasks.verify',
+          'tasks.manage',
+          'visits.read',
+          'visits.write',
+          'visits.manage',
+          'media.upload',
+          'media.read',
+          'devices.read',
+          'devices.revoke',
+          'reports.read',
+          'location.read',
+          'location.record',
+        ]
       : isManager
-        ? ['workspace.read', 'members.read', 'attendance.read', 'attendance.write', 'attendance.manage', 'attendance.self_punch', 'tasks.read', 'tasks.write', 'tasks.verify', 'media.read', 'devices.read', 'devices.revoke', 'reports.read', 'location.read', 'location.record', 'visits.read', 'visits.write']
-        : ['workspace.read', 'attendance.read', 'attendance.write', 'attendance.self_punch', 'tasks.read', 'tasks.write', 'visits.read', 'visits.write', 'media.upload', 'media.read', 'location.record'];
+        ? [
+            'workspace.read',
+            'members.read',
+            'attendance.read',
+            'attendance.write',
+            'attendance.manage',
+            'attendance.self_punch',
+            'tasks.read',
+            'tasks.write',
+            'tasks.verify',
+            'media.read',
+            'devices.read',
+            'devices.revoke',
+            'reports.read',
+            'location.read',
+            'location.record',
+            'visits.read',
+            'visits.write',
+          ]
+        : [
+            'workspace.read',
+            'attendance.read',
+            'attendance.write',
+            'attendance.self_punch',
+            'tasks.read',
+            'tasks.write',
+            'visits.read',
+            'visits.write',
+            'media.upload',
+            'media.read',
+            'location.record',
+          ];
 
     return sendJson(res, 200, {
       user: { id: userId, email, name, emailVerified: true },
@@ -224,9 +315,33 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && pathname === '/v1/workspaces/members') {
     return sendJson(res, 200, {
       members: [
-        { id: 'usr-admin-1', name: 'Sarah Admin (Owner)', email: 'admin@acme.com', roleName: 'Admin', roleId: 'role-admin', status: 'ACTIVE', membershipId: 'mem-admin-1' },
-        { id: 'usr-manager-1', name: 'Maria Santos (Manager)', email: 'manager@acme.com', roleName: 'Manager', roleId: 'role-manager', status: 'ACTIVE', membershipId: 'mem-manager-1' },
-        { id: 'usr-employee-1', name: 'Alex Johnson (Field Tech)', email: 'alex@acme.com', roleName: 'Employee', roleId: 'role-employee', status: 'ACTIVE', membershipId: 'mem-employee-1' },
+        {
+          id: 'usr-admin-1',
+          name: 'Sarah Admin (Owner)',
+          email: 'admin@acme.com',
+          roleName: 'Admin',
+          roleId: 'role-admin',
+          status: 'ACTIVE',
+          membershipId: 'mem-admin-1',
+        },
+        {
+          id: 'usr-manager-1',
+          name: 'Maria Santos (Manager)',
+          email: 'manager@acme.com',
+          roleName: 'Manager',
+          roleId: 'role-manager',
+          status: 'ACTIVE',
+          membershipId: 'mem-manager-1',
+        },
+        {
+          id: 'usr-employee-1',
+          name: 'Alex Johnson (Field Tech)',
+          email: 'alex@acme.com',
+          roleName: 'Employee',
+          roleId: 'role-employee',
+          status: 'ACTIVE',
+          membershipId: 'mem-employee-1',
+        },
       ],
     });
   }
@@ -270,7 +385,7 @@ const server = http.createServer((req, res) => {
           userName: 'Alex Johnson (Field Tech)',
           status: 'ON_DUTY',
           latitude: 28.6139,
-          longitude: 77.2090,
+          longitude: 77.209,
           accuracy: 5.2,
           speed: 1.5,
           batteryLevel: 0.94,
@@ -281,7 +396,10 @@ const server = http.createServer((req, res) => {
   }
 
   // 4f. Team Attendance Overview
-  if (req.method === 'GET' && (pathname === '/v1/attendance/history' || pathname === '/v1/attendance/team')) {
+  if (
+    req.method === 'GET' &&
+    (pathname === '/v1/attendance/history' || pathname === '/v1/attendance/team')
+  ) {
     return sendJson(res, 200, {
       sessions: [
         {
@@ -292,7 +410,7 @@ const server = http.createServer((req, res) => {
           punchInTime: new Date(Date.now() - 3600000 * 2).toISOString(),
           punchOutTime: null,
           punchInLatitude: 28.6139,
-          punchInLongitude: 77.2090,
+          punchInLongitude: 77.209,
           punchInAccuracy: 4.8,
           selfieMediaKey: 'ws-pilot-1/selfies/selfie-alex-1.jpg',
           createdAt: new Date().toISOString(),
@@ -449,7 +567,13 @@ const server = http.createServer((req, res) => {
     req.pipe(writeStream);
     writeStream.on('finish', () => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, fileKey: relativeKey, bytesWritten: writeStream.bytesWritten }));
+      res.end(
+        JSON.stringify({
+          success: true,
+          fileKey: relativeKey,
+          bytesWritten: writeStream.bytesWritten,
+        }),
+      );
     });
     writeStream.on('error', (err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -684,7 +808,8 @@ const server = http.createServer((req, res) => {
       return sendJson(res, 403, {
         code: 'OFF_DUTY_TRACKING_PROHIBITED',
         error: 'OFF_DUTY_TRACKING_PROHIBITED',
-        message: 'Zero off-duty tracking invariant: GPS location collection is strictly prohibited while off-duty.',
+        message:
+          'Zero off-duty tracking invariant: GPS location collection is strictly prohibited while off-duty.',
       });
     }
     return sendJson(res, 200, {
@@ -700,7 +825,9 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`⚠️  OPRINO SYNTHETIC MOCK PILOT SERVER (TEST-DOUBLE ONLY)`);
-  console.log(`🔒 Bound strictly to http://${HOST}:${PORT} (Local-only, NOT a production or real Fastify API)`);
+  console.log(
+    `🔒 Bound strictly to http://${HOST}:${PORT} (Local-only, NOT a production or real Fastify API)`,
+  );
   console.log(`📁 Local Isolated Media Storage: ${STORAGE_DIR}`);
   console.log(`🏢 Synthetic Workspace: Apex Field Services (ws-pilot-1)`);
 });

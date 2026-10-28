@@ -65,11 +65,7 @@ export const geofencesRoutes: FastifyPluginAsync<GeofencesRoutesOptions> = async
       const activeWorkspaceId = request.workspaceId!;
       const userId = request.user!.id;
 
-      const result = await telemetryService.createGeofence(
-        activeWorkspaceId,
-        userId,
-        parsed.data,
-      );
+      const result = await telemetryService.createGeofence(activeWorkspaceId, userId, parsed.data);
 
       return reply.status(201).send(result);
     },

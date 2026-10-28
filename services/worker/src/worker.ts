@@ -50,7 +50,10 @@ export function createWorkerManager(options?: {
             SELECT telemetry_prune_workspace_records(${workspaceId}::uuid, ${retentionDays}) as deleted_count;
           `) as unknown as [{ deleted_count: number }];
 
-          logger.info({ workspaceId, retentionDays, deletedCount: result?.deleted_count ?? 0 }, 'Per-workspace retention purge complete');
+          logger.info(
+            { workspaceId, retentionDays, deletedCount: result?.deleted_count ?? 0 },
+            'Per-workspace retention purge complete',
+          );
           return { success: true, workspaceId, deletedCount: result?.deleted_count ?? 0 };
         } else {
           // 2. Global scheduled run: iterate across active workspaces respecting per-workspace retention
@@ -67,8 +70,15 @@ export function createWorkerManager(options?: {
             totalDeleted += res?.deleted_count ?? 0;
           }
 
-          logger.info({ totalWorkspaces: activeWorkspaces.length, totalDeleted }, 'Multi-tenant telemetry retention purge complete');
-          return { success: true, totalWorkspaces: activeWorkspaces.length, deletedCount: totalDeleted };
+          logger.info(
+            { totalWorkspaces: activeWorkspaces.length, totalDeleted },
+            'Multi-tenant telemetry retention purge complete',
+          );
+          return {
+            success: true,
+            totalWorkspaces: activeWorkspaces.length,
+            deletedCount: totalDeleted,
+          };
         }
       }
 
@@ -87,7 +97,7 @@ export function createWorkerManager(options?: {
         });
 
         let generated = 0;
-        for (const t of (templates as any[])) {
+        for (const t of templates as any[]) {
           await dbClient.client.begin(async (sql) => {
             await sql`SELECT set_config('app.current_workspace_id', ${t.workspace_id}, true)`;
 
@@ -180,7 +190,12 @@ export function createWorkerManager(options?: {
               AND t.status NOT IN ('COMPLETED', 'VERIFIED')
             LIMIT 100;
           `;
-        })) as unknown as Array<{ id: string; workspace_id: string; title: string; user_id: string | null }>;
+        })) as unknown as Array<{
+          id: string;
+          workspace_id: string;
+          title: string;
+          user_id: string | null;
+        }>;
 
         let notified = 0;
         for (const ot of overdueTasks) {
@@ -209,7 +224,10 @@ export function createWorkerManager(options?: {
           }
         }
 
-        logger.info({ overdueCount: overdueTasks.length, notifiedCount: notified }, 'Overdue SLA monitor complete');
+        logger.info(
+          { overdueCount: overdueTasks.length, notifiedCount: notified },
+          'Overdue SLA monitor complete',
+        );
         return { success: true, notifiedCount: notified };
       }
 

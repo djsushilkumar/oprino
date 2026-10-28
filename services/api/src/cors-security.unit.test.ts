@@ -63,7 +63,10 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-preview-deploy-123-djsushilkumar.vercel.app');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      'https://oprino-preview-deploy-123-djsushilkumar.vercel.app',
+    );
     assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
   });
 
@@ -78,7 +81,10 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-git-feat-billing-djsushilkumar-7890.vercel.app');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      'https://oprino-git-feat-billing-djsushilkumar-7890.vercel.app',
+    );
     assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
   });
 
@@ -108,7 +114,11 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect third-party domain imitating oprino prefix');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      undefined,
+      'Must NOT reflect third-party domain imitating oprino prefix',
+    );
   });
 
   it('6. Negative test: Strictly rejects third-party domain imitating oprino-evil prefix', async () => {
@@ -122,7 +132,11 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect oprino-evil prefix');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      undefined,
+      'Must NOT reflect oprino-evil prefix',
+    );
   });
 
   it('7. Negative test: Strictly rejects third-party domain imitating oprino-fake-login prefix', async () => {
@@ -136,7 +150,11 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect oprino-fake-login prefix');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      undefined,
+      'Must NOT reflect oprino-fake-login prefix',
+    );
   });
 
   it('8. Negative test: Strictly rejects unscoped Vercel deployment lacking verified team namespace', async () => {
@@ -150,7 +168,11 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect unscoped preview domain');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      undefined,
+      'Must NOT reflect unscoped preview domain',
+    );
   });
 
   it('9. Negative test: Strictly rejects arbitrary third-party Vercel domains', async () => {
@@ -164,7 +186,11 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect untrusted Vercel origin');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      undefined,
+      'Must NOT reflect untrusted Vercel origin',
+    );
   });
 
   it('10. Negative test: Strictly rejects cleartext HTTP even for legitimate domain', async () => {
@@ -178,7 +204,11 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect cleartext HTTP origin');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      undefined,
+      'Must NOT reflect cleartext HTTP origin',
+    );
   });
 
   it('11. Negative test: Strictly rejects suffix injection attacks targeting Vercel regex', async () => {
@@ -192,7 +222,11 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], undefined, 'Must NOT reflect suffix spoofing origin');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      undefined,
+      'Must NOT reflect suffix spoofing origin',
+    );
   });
 
   it('12. Authorizes explicit approved staging environment origin', async () => {
@@ -206,7 +240,10 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-staging.vercel.app');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      'https://oprino-staging.vercel.app',
+    );
     assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
   });
 
@@ -221,7 +258,10 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     });
 
     assert.strictEqual(res.statusCode, 204);
-    assert.strictEqual(res.headers['access-control-allow-origin'], 'https://oprino-preview.vercel.app');
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      'https://oprino-preview.vercel.app',
+    );
     assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
   });
 
@@ -240,4 +280,3 @@ describe('CORS Security Boundaries & Credentialed Authorization Tests', () => {
     assert.strictEqual(res.headers['access-control-allow-credentials'], 'true');
   });
 });
-

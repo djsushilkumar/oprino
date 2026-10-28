@@ -174,7 +174,10 @@ export class ReportService {
         if (t.status === 'VERIFIED') {
           verifiedTasks++;
         }
-        if (t.verificationNotes?.includes('REJECTED') || t.status === 'IN_PROGRESS' && t.verifiedBy) {
+        if (
+          t.verificationNotes?.includes('REJECTED') ||
+          (t.status === 'IN_PROGRESS' && t.verifiedBy)
+        ) {
           rejectedTasks++;
         }
 
@@ -235,9 +238,7 @@ export class ReportService {
       const plannedVisits = rows.filter((v) => v.status === 'PLANNED').length;
       const totalDurationMinutes = rows.reduce((acc, v) => acc + (v.durationMinutes || 0), 0);
       const averageDurationMinutes =
-        completedVisits > 0
-          ? Math.round((totalDurationMinutes / completedVisits) * 10) / 10
-          : 0;
+        completedVisits > 0 ? Math.round((totalDurationMinutes / completedVisits) * 10) / 10 : 0;
 
       return {
         totalVisits,

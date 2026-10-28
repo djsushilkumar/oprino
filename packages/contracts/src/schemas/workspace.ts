@@ -224,9 +224,17 @@ export const WorkspaceSettingsSchema = z
 
 export const UpdateWorkspaceSettingsRequestSchema = z
   .object({
-    locationRetentionDays: z.union([z.literal(7), z.literal(30), z.literal(90), z.literal(180)]).optional(),
+    locationRetentionDays: z
+      .union([z.literal(7), z.literal(30), z.literal(90), z.literal(180)])
+      .optional(),
     attendancePolicy: z
-      .enum(['SIMPLE', 'GPS_REQUIRED', 'SELFIE_REQUIRED', 'GPS_AND_SELFIE_REQUIRED', 'GEOFENCE_REQUIRED'])
+      .enum([
+        'SIMPLE',
+        'GPS_REQUIRED',
+        'SELFIE_REQUIRED',
+        'GPS_AND_SELFIE_REQUIRED',
+        'GEOFENCE_REQUIRED',
+      ])
       .optional(),
   })
   .openapi('UpdateWorkspaceSettingsRequest');
@@ -251,7 +259,9 @@ export type ListWorkspaceMembersResponse = z.infer<typeof ListWorkspaceMembersRe
 export type InviteWorkspaceMemberRequest = z.infer<typeof InviteWorkspaceMemberRequestSchema>;
 export type WorkspaceInvitation = z.infer<typeof WorkspaceInvitationSchema>;
 export type InviteWorkspaceMemberResponse = z.infer<typeof InviteWorkspaceMemberResponseSchema>;
-export type ListWorkspaceInvitationsResponse = z.infer<typeof ListWorkspaceInvitationsResponseSchema>;
+export type ListWorkspaceInvitationsResponse = z.infer<
+  typeof ListWorkspaceInvitationsResponseSchema
+>;
 export type RevokeInvitationRequest = z.infer<typeof RevokeInvitationRequestSchema>;
 export type AcceptInvitationRequest = z.infer<typeof AcceptInvitationRequestSchema>;
 export type ValidateInvitationResponse = z.infer<typeof ValidateInvitationResponseSchema>;
@@ -264,4 +274,3 @@ export type UpdateWorkspaceMemberResponse = z.infer<typeof UpdateWorkspaceMember
 export type WorkspaceSettings = z.infer<typeof WorkspaceSettingsSchema>;
 export type UpdateWorkspaceSettingsRequest = z.infer<typeof UpdateWorkspaceSettingsRequestSchema>;
 export type WorkspaceSettingsResponse = z.infer<typeof WorkspaceSettingsResponseSchema>;
-

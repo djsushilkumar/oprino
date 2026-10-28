@@ -96,7 +96,10 @@ describe('Phase 05: Production Hardening, Observability & Security Verification'
     assert.strictEqual(res.headers['x-content-type-options'], 'nosniff');
     assert.ok(res.headers['x-frame-options'], 'Expected x-frame-options header');
     assert.ok(res.headers['content-security-policy'], 'Expected content-security-policy header');
-    assert.ok(res.headers['strict-transport-security'], 'Expected strict-transport-security header');
+    assert.ok(
+      res.headers['strict-transport-security'],
+      'Expected strict-transport-security header',
+    );
     assert.ok(
       res.headers['strict-transport-security']?.includes('max-age=63072000'),
       'Expected strict HSTS max-age',

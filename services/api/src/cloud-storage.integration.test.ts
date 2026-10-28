@@ -44,8 +44,7 @@ export function evaluateLiveR2Preconditions(
   if (!env.S3_SECRET_ACCESS_KEY) missing.push('S3_SECRET_ACCESS_KEY');
 
   const runLiveVal = env.RUN_LIVE_R2_TESTS?.trim().toLowerCase();
-  const isRunLiveRequested =
-    runLiveVal === 'true' || runLiveVal === '1';
+  const isRunLiveRequested = runLiveVal === 'true' || runLiveVal === '1';
 
   if (missing.length > 0) {
     if (isRunLiveRequested) {
@@ -74,14 +73,11 @@ describe('Phase 3: Cloudflare R2 Cloud Storage & Staging Security Integration', 
   describe('1. Cloud Storage Driver Architecture & S3/R2 Presigning Semantics', () => {
     const s3Config = {
       bucket: process.env.S3_BUCKET_NAME || 'oprino-staging-media',
-      endpoint:
-        process.env.S3_ENDPOINT ||
-        'https://cf-staging-account.r2.cloudflarestorage.com',
+      endpoint: process.env.S3_ENDPOINT || 'https://cf-staging-account.r2.cloudflarestorage.com',
       region: process.env.S3_REGION || 'auto',
       accessKeyId: process.env.S3_ACCESS_KEY_ID || 'mock-staging-r2-access-key-id',
       secretAccessKey:
-        process.env.S3_SECRET_ACCESS_KEY ||
-        'mock-staging-r2-secret-access-key-minimum-32-chars',
+        process.env.S3_SECRET_ACCESS_KEY || 'mock-staging-r2-secret-access-key-minimum-32-chars',
       forcePathStyle: false,
     };
 
@@ -99,18 +95,12 @@ describe('Phase 3: Cloudflare R2 Cloud Storage & Staging Security Integration', 
       });
 
       assert.ok(uploadUrl.startsWith('https://'), 'Upload URL must use secure HTTPS');
-      assert.ok(
-        uploadUrl.includes(s3Config.bucket),
-        'Upload URL must target staging bucket',
-      );
+      assert.ok(uploadUrl.includes(s3Config.bucket), 'Upload URL must target staging bucket');
       assert.ok(
         uploadUrl.includes('X-Amz-Algorithm=AWS4-HMAC-SHA256'),
         'Must use AWS Signature v4 algorithm',
       );
-      assert.ok(
-        uploadUrl.includes('X-Amz-Credential='),
-        'Must include SigV4 credential scope',
-      );
+      assert.ok(uploadUrl.includes('X-Amz-Credential='), 'Must include SigV4 credential scope');
       assert.ok(
         uploadUrl.includes('X-Amz-Signature='),
         'Must include cryptographically signed HMAC signature',
@@ -132,10 +122,7 @@ describe('Phase 3: Cloudflare R2 Cloud Storage & Staging Security Integration', 
         downloadUrl.includes('X-Amz-Expires=900'),
         'Must enforce 15-minute manager view expiry',
       );
-      assert.ok(
-        downloadUrl.includes('X-Amz-Signature='),
-        'Must include SigV4 signature',
-      );
+      assert.ok(downloadUrl.includes('X-Amz-Signature='), 'Must include SigV4 signature');
     });
   });
 
@@ -152,11 +139,7 @@ describe('Phase 3: Cloudflare R2 Cloud Storage & Staging Security Integration', 
         secretAccessKey: 'mock-secret',
       });
 
-      const mediaService = new MediaService(
-        {} as any,
-        s3Driver,
-        'http://127.0.0.1:3001',
-      );
+      const mediaService = new MediaService({} as any, s3Driver, 'http://127.0.0.1:3001');
 
       const authMiddleware: any = {
         authenticate: async (req: any) => {
@@ -219,12 +202,7 @@ describe('Phase 3: Cloudflare R2 Cloud Storage & Staging Security Integration', 
             'http://localhost:3000',
           ],
           AllowedMethods: ['PUT', 'GET', 'HEAD'],
-          AllowedHeaders: [
-            'Content-Type',
-            'x-amz-content-sha256',
-            'x-amz-date',
-            'Authorization',
-          ],
+          AllowedHeaders: ['Content-Type', 'x-amz-content-sha256', 'x-amz-date', 'Authorization'],
           ExposeHeaders: ['ETag'],
           MaxAgeSeconds: 3600,
         },

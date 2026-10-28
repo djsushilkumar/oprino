@@ -282,14 +282,44 @@ export default function TasksPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#F8FAFC',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <HeaderNav context={context} onSignOut={handleSignOut} />
 
-      <main style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '2rem 1.5rem', flex: 1 }}>
+      <main
+        style={{
+          maxWidth: '1200px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '2rem 1.5rem',
+          flex: 1,
+        }}
+      >
         {/* Top Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.5rem',
+          }}
+        >
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+            <h1
+              style={{
+                fontSize: '1.75rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                margin: 0,
+                letterSpacing: '-0.02em',
+              }}
+            >
               Tasks & Proof of Work
             </h1>
             <p style={{ color: '#64748B', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
@@ -351,7 +381,9 @@ export default function TasksPage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>Status:</label>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>
+              Status:
+            </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -376,7 +408,9 @@ export default function TasksPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>Priority:</label>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>
+              Priority:
+            </label>
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
@@ -399,56 +433,177 @@ export default function TasksPage() {
         </div>
 
         {/* Task Table */}
-        <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '8px',
+            border: '1px solid #E2E8F0',
+            overflow: 'hidden',
+          }}
+        >
           {isLoading ? (
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontSize: '0.875rem' }}>
+            <div
+              style={{
+                padding: '3rem',
+                textAlign: 'center',
+                color: '#64748B',
+                fontSize: '0.875rem',
+              }}
+            >
               Loading tasks...
             </div>
           ) : tasks.length === 0 ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: '#64748B' }}>
               <p style={{ margin: 0, fontWeight: 600 }}>No tasks found</p>
               <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                {canCreate ? 'Create your first task to start operations.' : 'No tasks assigned to your view.'}
+                {canCreate
+                  ? 'Create your first task to start operations.'
+                  : 'No tasks assigned to your view.'}
               </p>
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                  <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Task / Customer</th>
-                  <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Requirements</th>
-                  <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Status</th>
-                  <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Priority</th>
-                  <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Assignees</th>
-                  <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Due Date</th>
-                  <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Actions</th>
+                  <th
+                    style={{
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Task / Customer
+                  </th>
+                  <th
+                    style={{
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Requirements
+                  </th>
+                  <th
+                    style={{
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Status
+                  </th>
+                  <th
+                    style={{
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Priority
+                  </th>
+                  <th
+                    style={{
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Assignees
+                  </th>
+                  <th
+                    style={{
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Due Date
+                  </th>
+                  <th
+                    style={{
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {tasks.map((task) => (
                   <tr key={task.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                     <td style={{ padding: '1rem', maxWidth: '280px' }}>
-                      <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.875rem' }}>{task.title}</div>
+                      <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.875rem' }}>
+                        {task.title}
+                      </div>
                       {task.description && (
-                        <div style={{ color: '#64748B', fontSize: '0.8125rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div
+                          style={{
+                            color: '#64748B',
+                            fontSize: '0.8125rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
                           {task.description}
                         </div>
                       )}
                       {(task.customerName || task.siteName) && (
-                        <div style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#164CFF', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <div
+                          style={{
+                            marginTop: '0.35rem',
+                            fontSize: '0.75rem',
+                            color: '#164CFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.45rem',
+                          }}
+                        >
+                          <span
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                          >
                             <Icon name="building" size={12} color="#164CFF" />
                             {task.customerName || 'Customer'}
                           </span>
                           {task.siteName && (
-                            <span style={{ color: '#64748B', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span
+                              style={{
+                                color: '#64748B',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                              }}
+                            >
                               • <Icon name="pin" size={12} color="#64748B" /> {task.siteName}
                             </span>
                           )}
                         </div>
                       )}
                       {task.status === 'VERIFIED' && (
-                        <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#059669', fontWeight: 500 }}>
+                        <div
+                          style={{
+                            marginTop: '0.25rem',
+                            fontSize: '0.75rem',
+                            color: '#059669',
+                            fontWeight: 500,
+                          }}
+                        >
                           ✓ Verified {task.verifierName ? `by ${task.verifierName}` : ''}
                         </div>
                       )}
@@ -456,12 +611,38 @@ export default function TasksPage() {
                     <td style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                         {task.requiresPhotoProof && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', padding: '0.15rem 0.4rem', backgroundColor: '#F0FDF4', color: '#166534', borderRadius: '4px', fontWeight: 600, width: 'fit-content' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                              fontSize: '0.7rem',
+                              padding: '0.15rem 0.4rem',
+                              backgroundColor: '#F0FDF4',
+                              color: '#166534',
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                              width: 'fit-content',
+                            }}
+                          >
                             <Icon name="camera" size={12} color="#166534" /> Photo Proof
                           </span>
                         )}
                         {task.requiresSignature && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', padding: '0.15rem 0.4rem', backgroundColor: '#EFF6FF', color: '#1E40AF', borderRadius: '4px', fontWeight: 600, width: 'fit-content' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                              fontSize: '0.7rem',
+                              padding: '0.15rem 0.4rem',
+                              backgroundColor: '#EFF6FF',
+                              color: '#1E40AF',
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                              width: 'fit-content',
+                            }}
+                          >
                             <Icon name="signature" size={12} color="#1E40AF" /> Signature
                           </span>
                         )}
@@ -473,9 +654,18 @@ export default function TasksPage() {
                     <td style={{ padding: '1rem' }}>{getStatusBadge(task.status)}</td>
                     <td style={{ padding: '1rem' }}>{getPriorityBadge(task.priority)}</td>
                     <td style={{ padding: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          flexWrap: 'wrap',
+                        }}
+                      >
                         {task.assignees.length === 0 ? (
-                          <span style={{ color: '#94A3B8', fontSize: '0.8125rem' }}>Unassigned</span>
+                          <span style={{ color: '#94A3B8', fontSize: '0.8125rem' }}>
+                            Unassigned
+                          </span>
                         ) : (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                             {task.assignees.map((a) => (
@@ -591,13 +781,28 @@ export default function TasksPage() {
                 overflowY: 'auto',
               }}
             >
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 1rem 0', color: '#0F172A' }}>
+              <h2
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  margin: '0 0 1rem 0',
+                  color: '#0F172A',
+                }}
+              >
                 Create New Task
               </h2>
 
               <form onSubmit={handleCreateTask}>
                 <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Title *
                   </label>
                   <input
@@ -618,7 +823,15 @@ export default function TasksPage() {
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Description
                   </label>
                   <textarea
@@ -637,9 +850,24 @@ export default function TasksPage() {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginBottom: '1rem',
+                  }}
+                >
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: '#334155',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
                       Customer
                     </label>
                     <select
@@ -665,7 +893,15 @@ export default function TasksPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: '#334155',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
                       Customer Site
                     </label>
                     <select
@@ -693,9 +929,24 @@ export default function TasksPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginBottom: '1rem',
+                  }}
+                >
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: '#334155',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
                       Priority
                     </label>
                     <select
@@ -719,7 +970,15 @@ export default function TasksPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: '#334155',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
                       Due Date
                     </label>
                     <input
@@ -740,13 +999,34 @@ export default function TasksPage() {
 
                 {/* Assign Team Members Selector */}
                 <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Assign Team Members
                   </label>
                   {members.length === 0 ? (
-                    <div style={{ fontSize: '0.8125rem', color: '#94A3B8' }}>No team members available in this workspace.</div>
+                    <div style={{ fontSize: '0.8125rem', color: '#94A3B8' }}>
+                      No team members available in this workspace.
+                    </div>
                   ) : (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', maxHeight: '110px', overflowY: 'auto', padding: '0.5rem', border: '1px solid #CBD5E1', borderRadius: '6px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '0.35rem',
+                        maxHeight: '110px',
+                        overflowY: 'auto',
+                        padding: '0.5rem',
+                        border: '1px solid #CBD5E1',
+                        borderRadius: '6px',
+                      }}
+                    >
                       {members.map((m) => {
                         const isSelected = newAssigneeIds.includes(m.id);
                         return (
@@ -776,7 +1056,9 @@ export default function TasksPage() {
                           >
                             <span>{isSelected ? '✓' : '+'}</span>
                             <span>{m.name}</span>
-                            <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>({m.roleName})</span>
+                            <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>
+                              ({m.roleName})
+                            </span>
                           </button>
                         );
                       })}
@@ -785,23 +1067,59 @@ export default function TasksPage() {
                 </div>
 
                 {/* Proof Requirements Toggles */}
-                <div style={{ marginBottom: '1.25rem', padding: '0.75rem', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
-                  <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#334155', marginBottom: '0.5rem' }}>
+                <div
+                  style={{
+                    marginBottom: '1.25rem',
+                    padding: '0.75rem',
+                    backgroundColor: '#F8FAFC',
+                    borderRadius: '6px',
+                    border: '1px solid #E2E8F0',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '0.8125rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
                     Proof of Work Requirements
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: '#1E293B', cursor: 'pointer' }}>
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontSize: '0.8125rem',
+                        color: '#1E293B',
+                        cursor: 'pointer',
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={newRequiresPhotoProof}
                         onChange={(e) => setNewRequiresPhotoProof(e.target.checked)}
                         style={{ width: '16px', height: '16px' }}
                       />
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <Icon name="camera" size={14} color="#0F172A" /> Require Geotagged Photo Proof
+                      <span
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                      >
+                        <Icon name="camera" size={14} color="#0F172A" /> Require Geotagged Photo
+                        Proof
                       </span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: '#1E293B', cursor: 'pointer' }}>
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontSize: '0.8125rem',
+                        color: '#1E293B',
+                        cursor: 'pointer',
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={newRequiresSignature}
@@ -814,7 +1132,15 @@ export default function TasksPage() {
                 </div>
 
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Checklist Items (All must be completed prior to task close)
                   </label>
                   {newChecklist.map((item, index) => (
@@ -925,10 +1251,33 @@ export default function TasksPage() {
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '1.25rem',
+                }}
+              >
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '4px', backgroundColor: reviewTask.status === 'VERIFIED' ? '#ECFDF5' : '#FEF3C7', color: reviewTask.status === 'VERIFIED' ? '#047857' : '#B45309' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '4px',
+                        backgroundColor: reviewTask.status === 'VERIFIED' ? '#ECFDF5' : '#FEF3C7',
+                        color: reviewTask.status === 'VERIFIED' ? '#047857' : '#B45309',
+                      }}
+                    >
                       {reviewTask.status}
                     </span>
                     <span style={{ fontSize: '0.8125rem', color: '#64748B' }}>
@@ -939,12 +1288,25 @@ export default function TasksPage() {
                     {reviewTask.title}
                   </h2>
                   {reviewTask.customerName && (
-                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <p
+                      style={{
+                        margin: '0.25rem 0 0 0',
+                        fontSize: '0.8125rem',
+                        color: '#475569',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.45rem',
+                      }}
+                    >
+                      <span
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                      >
                         <Icon name="building" size={13} color="#475569" /> {reviewTask.customerName}
                       </span>
                       {reviewTask.siteName && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <span
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                        >
                           • <Icon name="pin" size={13} color="#475569" /> {reviewTask.siteName}
                         </span>
                       )}
@@ -966,39 +1328,96 @@ export default function TasksPage() {
               </div>
 
               {/* Requirements & Checklist Summary */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', backgroundColor: '#F8FAFC', padding: '1rem', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1rem',
+                  marginBottom: '1.5rem',
+                  backgroundColor: '#F8FAFC',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #E2E8F0',
+                }}
+              >
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     Proof Requirements
                   </div>
                   <div style={{ marginTop: '0.35rem', fontSize: '0.8125rem', color: '#1E293B' }}>
-                    <div>Photo Proof: {reviewTask.requiresPhotoProof ? '✅ Required' : 'Optional'}</div>
-                    <div>Signature: {reviewTask.requiresSignature ? '✅ Required' : 'Optional'}</div>
+                    <div>
+                      Photo Proof: {reviewTask.requiresPhotoProof ? '✅ Required' : 'Optional'}
+                    </div>
+                    <div>
+                      Signature: {reviewTask.requiresSignature ? '✅ Required' : 'Optional'}
+                    </div>
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     Verification Details
                   </div>
                   <div style={{ marginTop: '0.35rem', fontSize: '0.8125rem', color: '#1E293B' }}>
                     <div>Verifier: {reviewTask.verifierName || 'None'}</div>
-                    <div>Date: {reviewTask.verifiedAt ? new Date(reviewTask.verifiedAt).toLocaleString() : 'Pending'}</div>
+                    <div>
+                      Date:{' '}
+                      {reviewTask.verifiedAt
+                        ? new Date(reviewTask.verifiedAt).toLocaleString()
+                        : 'Pending'}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Proofs Section */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.75rem' }}>
+                <h3
+                  style={{
+                    fontSize: '0.9375rem',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    marginBottom: '0.75rem',
+                  }}
+                >
                   Submitted Proofs of Work ({taskProofs.length})
                 </h3>
 
                 {isLoadingProofs ? (
-                  <div style={{ padding: '2rem', textAlign: 'center', color: '#64748B', fontSize: '0.875rem' }}>
+                  <div
+                    style={{
+                      padding: '2rem',
+                      textAlign: 'center',
+                      color: '#64748B',
+                      fontSize: '0.875rem',
+                    }}
+                  >
                     Loading uploaded proofs...
                   </div>
                 ) : taskProofs.length === 0 ? (
-                  <div style={{ padding: '1.5rem', backgroundColor: '#F1F5F9', borderRadius: '8px', textAlign: 'center', color: '#64748B', fontSize: '0.8125rem' }}>
+                  <div
+                    style={{
+                      padding: '1.5rem',
+                      backgroundColor: '#F1F5F9',
+                      borderRadius: '8px',
+                      textAlign: 'center',
+                      color: '#64748B',
+                      fontSize: '0.8125rem',
+                    }}
+                  >
                     No proofs recorded for this task.
                   </div>
                 ) : (
@@ -1013,7 +1432,14 @@ export default function TasksPage() {
                           backgroundColor: '#FFFFFF',
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '0.5rem',
+                          }}
+                        >
                           <span
                             style={{
                               fontSize: '0.75rem',
@@ -1032,7 +1458,9 @@ export default function TasksPage() {
                               size={12}
                               color={p.proofType === 'SIGNATURE' ? '#1D4ED8' : '#15803D'}
                             />
-                            <span>{p.proofType === 'SIGNATURE' ? 'ON-GLASS SIGNATURE' : 'PHOTO PROOF'}</span>
+                            <span>
+                              {p.proofType === 'SIGNATURE' ? 'ON-GLASS SIGNATURE' : 'PHOTO PROOF'}
+                            </span>
                           </span>
                           <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
                             {new Date(p.createdAt).toLocaleString()}
@@ -1040,8 +1468,18 @@ export default function TasksPage() {
                         </div>
 
                         {p.proofType === 'SIGNATURE' && (
-                          <div style={{ backgroundColor: '#F8FAFC', padding: '0.75rem', borderRadius: '6px', border: '1px solid #E2E8F0', marginBottom: '0.5rem' }}>
-                            <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0F172A' }}>
+                          <div
+                            style={{
+                              backgroundColor: '#F8FAFC',
+                              padding: '0.75rem',
+                              borderRadius: '6px',
+                              border: '1px solid #E2E8F0',
+                              marginBottom: '0.5rem',
+                            }}
+                          >
+                            <div
+                              style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0F172A' }}
+                            >
                               Signer: {p.signerName || 'Customer Representative'}
                             </div>
                             {p.signerPhone && (
@@ -1049,7 +1487,20 @@ export default function TasksPage() {
                                 Phone: {p.signerPhone}
                               </div>
                             )}
-                            <div style={{ marginTop: '0.5rem', padding: '1rem', backgroundColor: '#FFFFFF', border: '1px dashed #CBD5E1', borderRadius: '4px', textAlign: 'center', fontStyle: 'italic', color: '#164CFF', fontFamily: 'cursive', fontSize: '1.25rem' }}>
+                            <div
+                              style={{
+                                marginTop: '0.5rem',
+                                padding: '1rem',
+                                backgroundColor: '#FFFFFF',
+                                border: '1px dashed #CBD5E1',
+                                borderRadius: '4px',
+                                textAlign: 'center',
+                                fontStyle: 'italic',
+                                color: '#164CFF',
+                                fontFamily: 'cursive',
+                                fontSize: '1.25rem',
+                              }}
+                            >
                               {p.signerName || 'Digitally Signed On-Glass'}
                             </div>
                           </div>
@@ -1105,12 +1556,16 @@ export default function TasksPage() {
                         )}
 
                         {p.notes && (
-                          <div style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.5rem' }}>
+                          <div
+                            style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.5rem' }}
+                          >
                             <span style={{ fontWeight: 600 }}>Notes: </span>
                             {p.notes}
                           </div>
                         )}
-                        <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '0.25rem' }}>
+                        <div
+                          style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '0.25rem' }}
+                        >
                           Uploaded by: {p.userName || p.userId}
                         </div>
                       </div>
@@ -1122,7 +1577,15 @@ export default function TasksPage() {
               {/* Manager Verification Actions */}
               {reviewTask.status === 'COMPLETED' && canVerify && (
                 <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1.25rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Manager Verification Review Notes
                   </label>
                   <textarea
@@ -1157,7 +1620,9 @@ export default function TasksPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      {isSubmittingVerification ? 'Processing...' : 'Reject Proofs (Return to In Progress)'}
+                      {isSubmittingVerification
+                        ? 'Processing...'
+                        : 'Reject Proofs (Return to In Progress)'}
                     </button>
                     <button
                       type="button"
@@ -1211,16 +1676,37 @@ export default function TasksPage() {
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               }}
             >
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: '#0F172A' }}>
+              <h3
+                style={{
+                  fontSize: '1.125rem',
+                  fontWeight: 700,
+                  margin: '0 0 0.5rem 0',
+                  color: '#0F172A',
+                }}
+              >
                 Assign Task: {assigningTask.title}
               </h3>
               <p style={{ fontSize: '0.8125rem', color: '#64748B', margin: '0 0 1rem 0' }}>
                 Select workspace members to assign to this task.
               </p>
               <form onSubmit={handleSaveAssignees}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', maxHeight: '180px', overflowY: 'auto', padding: '0.6rem', border: '1px solid #CBD5E1', borderRadius: '6px', marginBottom: '1.25rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '0.4rem',
+                    maxHeight: '180px',
+                    overflowY: 'auto',
+                    padding: '0.6rem',
+                    border: '1px solid #CBD5E1',
+                    borderRadius: '6px',
+                    marginBottom: '1.25rem',
+                  }}
+                >
                   {members.length === 0 ? (
-                    <div style={{ fontSize: '0.8125rem', color: '#94A3B8' }}>No members available in this workspace.</div>
+                    <div style={{ fontSize: '0.8125rem', color: '#94A3B8' }}>
+                      No members available in this workspace.
+                    </div>
                   ) : (
                     members.map((m) => {
                       const isSelected = editAssigneeIds.includes(m.id);
@@ -1251,7 +1737,9 @@ export default function TasksPage() {
                         >
                           <span>{isSelected ? '✓' : '+'}</span>
                           <span>{m.name}</span>
-                          <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>({m.roleName})</span>
+                          <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+                            ({m.roleName})
+                          </span>
                         </button>
                       );
                     })

@@ -54,9 +54,13 @@ export const AttendanceSessionResponseSchema = z
     punchInTime: z.string().openapi({ example: '2026-10-05T09:02:15.000Z' }),
     punchOutTime: z.string().nullable().optional().openapi({ example: null }),
     durationMinutes: z.number().int().nullable().optional().openapi({ example: 480 }),
-    selfieMediaKey: z.string().nullable().optional().openapi({ example: 'w1/attendance/u1/selfie.jpg' }),
+    selfieMediaKey: z
+      .string()
+      .nullable()
+      .optional()
+      .openapi({ example: 'w1/attendance/u1/selfie.jpg' }),
     punchInLatitude: z.number().nullable().optional().openapi({ example: 28.6139 }),
-    punchInLongitude: z.number().nullable().optional().openapi({ example: 77.2090 }),
+    punchInLongitude: z.number().nullable().optional().openapi({ example: 77.209 }),
     punchInAccuracy: z.number().nullable().optional().openapi({ example: 10.5 }),
     isLate: z.boolean().openapi({ example: false }),
     lateMinutes: z.number().int().openapi({ example: 0 }),
@@ -70,11 +74,15 @@ export const AttendanceSessionResponseSchema = z
 export const PunchInRequestSchema = z
   .object({
     idempotencyKey: z.string().min(1).max(255).openapi({ example: 'mut-punch-in-uuid-123' }),
-    shiftId: z.string().uuid().optional().openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    shiftId: z
+      .string()
+      .uuid()
+      .optional()
+      .openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     note: z.string().optional().openapi({ example: 'Starting shift on site A' }),
     selfieMediaKey: z.string().optional().openapi({ example: 'w1/attendance/u1/selfie.jpg' }),
     latitude: z.number().optional().openapi({ example: 28.6139 }),
-    longitude: z.number().optional().openapi({ example: 77.2090 }),
+    longitude: z.number().optional().openapi({ example: 77.209 }),
     accuracy: z.number().optional().openapi({ example: 10.5 }),
   })
   .openapi('PunchInRequest');
@@ -123,7 +131,10 @@ export const ShiftRosterSchema = z
     shiftName: z.string().optional(),
     userId: z.string().uuid().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     userName: z.string().optional(),
-    scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2026-10-09' }),
+    scheduledDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .openapi({ example: '2026-10-09' }),
     status: ShiftRosterStatusEnum.openapi({ example: 'SCHEDULED' }),
     createdAt: z.string(),
     updatedAt: z.string(),
@@ -157,4 +168,3 @@ export type TeamAttendanceResponse = z.infer<typeof TeamAttendanceResponseSchema
 export type ShiftRoster = z.infer<typeof ShiftRosterSchema>;
 export type AssignShiftRosterRequest = z.infer<typeof AssignShiftRosterRequestSchema>;
 export type ListShiftRostersResponse = z.infer<typeof ListShiftRostersResponseSchema>;
-

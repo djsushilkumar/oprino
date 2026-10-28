@@ -1,0 +1,33 @@
+# Auto detect text files and perform LF normalization on checkin
+* text=auto eol=lf
+
+# Explicitly declare text files to always use LF line endings
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.dart text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.sql text eol=lf
+*.css text eol=lf
+
+# Shell scripts must always use LF
+*.sh text eol=lf
+scripts/*.sh text eol=lf
+
+# PowerShell scripts
+*.ps1 text
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.ico binary
+*.jar binary
+*.keystore binary
+*.jks binary
+

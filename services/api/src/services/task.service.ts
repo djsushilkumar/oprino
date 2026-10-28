@@ -242,7 +242,9 @@ export class TaskService {
     const checklistRows = await tx
       .select()
       .from(taskChecklistItems)
-      .where(and(eq(taskChecklistItems.workspaceId, workspaceId), eq(taskChecklistItems.taskId, taskId)))
+      .where(
+        and(eq(taskChecklistItems.workspaceId, workspaceId), eq(taskChecklistItems.taskId, taskId)),
+      )
       .orderBy(asc(taskChecklistItems.sortOrder));
 
     // Load comments
@@ -355,11 +357,7 @@ export class TaskService {
   /**
    * Lists tasks in workspace with filters and pagination.
    */
-  async listTasks(
-    workspaceId: string,
-    filters: TaskFilterDto,
-    restrictToAssigneeId?: string,
-  ) {
+  async listTasks(workspaceId: string, filters: TaskFilterDto, restrictToAssigneeId?: string) {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 
@@ -372,7 +370,9 @@ export class TaskService {
         conditions.push(eq(tasks.priority, filters.priority));
       }
       if (filters.overdue === 'true') {
-        conditions.push(sql`${tasks.dueAt} IS NOT NULL AND ${tasks.dueAt} < NOW() AND ${tasks.status} NOT IN ('COMPLETED', 'VERIFIED')`);
+        conditions.push(
+          sql`${tasks.dueAt} IS NOT NULL AND ${tasks.dueAt} < NOW() AND ${tasks.status} NOT IN ('COMPLETED', 'VERIFIED')`,
+        );
       }
 
       // If user is restricted to own tasks or filtering by assignee
@@ -429,10 +429,7 @@ export class TaskService {
         .from(taskAssignees)
         .innerJoin(users, eq(taskAssignees.userId, users.id))
         .where(
-          and(
-            eq(taskAssignees.workspaceId, workspaceId),
-            inArray(taskAssignees.taskId, taskIds),
-          ),
+          and(eq(taskAssignees.workspaceId, workspaceId), inArray(taskAssignees.taskId, taskIds)),
         );
 
       const assigneesByTaskId: Record<string, any[]> = {};
@@ -526,8 +523,10 @@ export class TaskService {
       if (input.dueAt !== undefined) updates.dueAt = input.dueAt ? new Date(input.dueAt) : null;
       if (input.customerId !== undefined) updates.customerId = input.customerId;
       if (input.siteId !== undefined) updates.siteId = input.siteId;
-      if (input.requiresSignature !== undefined) updates.requiresSignature = input.requiresSignature;
-      if (input.requiresPhotoProof !== undefined) updates.requiresPhotoProof = input.requiresPhotoProof;
+      if (input.requiresSignature !== undefined)
+        updates.requiresSignature = input.requiresSignature;
+      if (input.requiresPhotoProof !== undefined)
+        updates.requiresPhotoProof = input.requiresPhotoProof;
 
       await tx
         .update(tasks)
@@ -698,7 +697,9 @@ export class TaskService {
             .limit(1);
 
           if (!sigProof) {
-            const error = new Error('Cannot complete task: mandatory customer signature is required');
+            const error = new Error(
+              'Cannot complete task: mandatory customer signature is required',
+            );
             (error as any).statusCode = 400;
             throw error;
           }
@@ -743,12 +744,7 @@ export class TaskService {
   /**
    * Adds a checklist item to a task.
    */
-  async addChecklistItem(
-    workspaceId: string,
-    taskId: string,
-    title: string,
-    sortOrder = 0,
-  ) {
+  async addChecklistItem(workspaceId: string, taskId: string, title: string, sortOrder = 0) {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 
@@ -827,12 +823,7 @@ export class TaskService {
   /**
    * Adds an operational comment to a task.
    */
-  async addComment(
-    workspaceId: string,
-    taskId: string,
-    authorId: string,
-    content: string,
-  ) {
+  async addComment(workspaceId: string, taskId: string, authorId: string, content: string) {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 
@@ -953,4 +944,3 @@ export class TaskService {
     });
   }
 }
-

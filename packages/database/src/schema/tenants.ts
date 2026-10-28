@@ -111,9 +111,7 @@ export const workspaceInvitations = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [
-    unique('workspace_invitations_token_hash_idx').on(table.tokenHash),
-  ],
+  (table) => [unique('workspace_invitations_token_hash_idx').on(table.tokenHash)],
 );
 
 /**
@@ -174,4 +172,3 @@ export type UserDevice = typeof userDevices.$inferSelect;
 export type NewUserDevice = typeof userDevices.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;
-

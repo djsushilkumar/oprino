@@ -21,7 +21,11 @@ export const NotificationSchema = z
     title: z.string().openapi({ example: 'New Task Assigned' }),
     body: z.string().openapi({ example: 'You have been assigned to HVAC Maintenance Unit 4B' }),
     entityType: z.string().nullable().optional().openapi({ example: 'task' }),
-    entityId: z.string().nullable().optional().openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    entityId: z
+      .string()
+      .nullable()
+      .optional()
+      .openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     isRead: z.boolean().openapi({ example: false }),
     readAt: z.string().nullable().optional(),
     createdAt: z.string().openapi({ example: '2026-10-09T08:00:00.000Z' }),

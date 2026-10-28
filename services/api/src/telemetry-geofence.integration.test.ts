@@ -60,7 +60,6 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
     tokenOwnerA = dataA.token;
     userOwnerAId = dataA.user.id;
 
-
     // Provision Workspace A
     const wsResA = await app.inject({
       method: 'POST',
@@ -86,7 +85,9 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
       const [empRole] = await tx
         .select()
         .from(schema.roles)
-        .where(sql`${schema.roles.workspaceId} = ${workspaceAId} AND ${schema.roles.name} = 'Employee'`);
+        .where(
+          sql`${schema.roles.workspaceId} = ${workspaceAId} AND ${schema.roles.name} = 'Employee'`,
+        );
 
       await tx.insert(schema.workspaceMemberships).values({
         workspaceId: workspaceAId,
@@ -135,7 +136,9 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
       const [empRole] = await tx
         .select()
         .from(schema.roles)
-        .where(sql`${schema.roles.workspaceId} = ${workspaceBId} AND ${schema.roles.name} = 'Employee'`);
+        .where(
+          sql`${schema.roles.workspaceId} = ${workspaceBId} AND ${schema.roles.name} = 'Employee'`,
+        );
 
       await tx.insert(schema.workspaceMemberships).values({
         workspaceId: workspaceBId,
@@ -497,7 +500,11 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
 
     assert.equal(syncRes.statusCode, 200);
     const syncBody = JSON.parse(syncRes.body);
-    assert.equal(syncBody.accepted, 1, 'Offline point recorded during valid duty session must be accepted after punch-out');
+    assert.equal(
+      syncBody.accepted,
+      1,
+      'Offline point recorded during valid duty session must be accepted after punch-out',
+    );
     assert.equal(syncBody.dropped, 0);
   });
 
@@ -523,15 +530,15 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
         {
           id: pt1Id,
           recordedAt: new Date(now - 10000).toISOString(),
-          latitude: 28.6140,
-          longitude: 77.2090,
+          latitude: 28.614,
+          longitude: 77.209,
           accuracy: 8.0,
         },
         {
           id: pt2Id,
           recordedAt: new Date(now - 5000).toISOString(),
-          latitude: 28.6150,
-          longitude: 77.2100,
+          latitude: 28.615,
+          longitude: 77.21,
           accuracy: 8.0,
         },
       ],
@@ -584,8 +591,16 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
         );
     });
 
-    assert.equal(summary1.pointCount, summary2.pointCount, 'Duplicate batch must not increment pointCount');
-    assert.equal(summary1.totalDistanceMeters, summary2.totalDistanceMeters, 'Duplicate batch must not accumulate duplicate distance');
+    assert.equal(
+      summary1.pointCount,
+      summary2.pointCount,
+      'Duplicate batch must not increment pointCount',
+    );
+    assert.equal(
+      summary1.totalDistanceMeters,
+      summary2.totalDistanceMeters,
+      'Duplicate batch must not accumulate duplicate distance',
+    );
 
     // Punch out
     await app.inject({
@@ -656,7 +671,12 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
       expiresAt: Date.now() - 5000,
     });
     if ((pubsub as any).isRedisConnected && (pubsub as any).redisPub) {
-      await (pubsub as any).redisPub.set(`stream_ticket:${expiredTicket}`, expiredPayload, 'EX', 10);
+      await (pubsub as any).redisPub.set(
+        `stream_ticket:${expiredTicket}`,
+        expiredPayload,
+        'EX',
+        10,
+      );
     }
     (pubsub as any).streamingTickets?.set(expiredTicket, {
       userId: userOwnerAId,
@@ -694,13 +714,13 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
           id: validId,
           recordedAt: new Date(now).toISOString(),
           latitude: 28.6139,
-          longitude: 77.2090,
+          longitude: 77.209,
           accuracy: 10.0,
         },
         {
           id: badAccuracyId,
           recordedAt: new Date(now + 1000).toISOString(),
-          latitude: 28.6140,
+          latitude: 28.614,
           longitude: 77.2091,
           accuracy: 85.0, // > 50m: rejected by quality filter
         },
@@ -765,15 +785,15 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
         {
           id: cPt1,
           recordedAt: new Date(now + 1000).toISOString(),
-          latitude: 28.6200,
-          longitude: 77.2100,
+          latitude: 28.62,
+          longitude: 77.21,
           accuracy: 5.0,
         },
         {
           id: cPt2,
           recordedAt: new Date(now + 2000).toISOString(),
-          latitude: 28.6210,
-          longitude: 77.2110,
+          latitude: 28.621,
+          longitude: 77.211,
           accuracy: 5.0,
         },
       ],
@@ -837,7 +857,10 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
     });
 
     assert.equal(rowCount, 2, 'Exactly 2 points must exist in database, zero duplicates');
-    assert.ok(summary.pointCount >= 2, 'Summary pointCount must reflect inserted points without duplicate inflation');
+    assert.ok(
+      summary.pointCount >= 2,
+      'Summary pointCount must reflect inserted points without duplicate inflation',
+    );
 
     // Punch out
     await app.inject({
@@ -881,8 +904,8 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
           {
             id: oooPt3,
             recordedAt: new Date(baseTime + 30000).toISOString(),
-            latitude: 28.6330,
-            longitude: 77.2230,
+            latitude: 28.633,
+            longitude: 77.223,
             accuracy: 8.0,
           },
         ],
@@ -902,15 +925,15 @@ describe('Phase 02C: GPS Location Pipeline, Geofencing & Tracking Security Tests
           {
             id: oooPt1,
             recordedAt: new Date(baseTime + 10000).toISOString(),
-            latitude: 28.6310,
-            longitude: 77.2210,
+            latitude: 28.631,
+            longitude: 77.221,
             accuracy: 8.0,
           },
           {
             id: oooPt2,
             recordedAt: new Date(baseTime + 20000).toISOString(),
-            latitude: 28.6320,
-            longitude: 77.2220,
+            latitude: 28.632,
+            longitude: 77.222,
             accuracy: 8.0,
           },
         ],

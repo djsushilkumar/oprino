@@ -154,7 +154,9 @@ export function validateEnv(customEnv?: Record<string, unknown>): Env {
 
     // 6. Validate Public CORS Origins
     if (result.data.CORS_ORIGINS) {
-      const origins = result.data.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+      const origins = result.data.CORS_ORIGINS.split(',')
+        .map((o) => o.trim())
+        .filter(Boolean);
       for (const origin of origins) {
         if (origin === '*' || origin === 'oprino://app') continue;
         try {
@@ -179,7 +181,9 @@ export function validateEnv(customEnv?: Record<string, unknown>): Env {
           }
         } catch (err: any) {
           if (err.message.startsWith('Insecure')) throw err;
-          throw new Error(`Invalid ${envName} CORS Origin: "${origin}" is not a valid absolute URL.`);
+          throw new Error(
+            `Invalid ${envName} CORS Origin: "${origin}" is not a valid absolute URL.`,
+          );
         }
       }
     }

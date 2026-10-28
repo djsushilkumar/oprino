@@ -25,7 +25,7 @@ export const attendanceShifts = pgTable('attendance_shifts', {
     .references(() => workspaces.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull(),
   startTime: varchar('start_time', { length: 10 }).notNull(), // e.g. "09:00" or "22:00"
-  endTime: varchar('end_time', { length: 10 }).notNull(),     // e.g. "17:00" or "06:00"
+  endTime: varchar('end_time', { length: 10 }).notNull(), // e.g. "17:00" or "06:00"
   timezone: varchar('timezone', { length: 50 }).notNull().default('UTC'),
   isActive: boolean('is_active').notNull().default(true),
   createdBy: uuid('created_by')

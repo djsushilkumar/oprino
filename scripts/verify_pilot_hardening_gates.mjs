@@ -1,6 +1,6 @@
 /**
  * Oprino Phase 4C Hardening: Regression & Security Gates Verification
- * 
+ *
  * Verifies:
  * 1. Local-only mock server binding (127.0.0.1)
  * 2. Production rejection of mock server (fails fast on NODE_ENV=production)
@@ -34,9 +34,13 @@ async function runHardeningVerification() {
     env: { ...process.env, NODE_ENV: 'production' },
     encoding: 'utf-8',
   });
-  assert(prodCheck.status !== 0, 'Mock server strictly refuses to execute under NODE_ENV=production');
   assert(
-    prodCheck.stderr.includes('FATAL SECURITY VIOLATION') || prodCheck.stdout.includes('FATAL SECURITY VIOLATION'),
+    prodCheck.status !== 0,
+    'Mock server strictly refuses to execute under NODE_ENV=production',
+  );
+  assert(
+    prodCheck.stderr.includes('FATAL SECURITY VIOLATION') ||
+      prodCheck.stdout.includes('FATAL SECURITY VIOLATION'),
     'Outputs fatal security violation error message when production execution is attempted',
   );
 
@@ -46,29 +50,47 @@ async function runHardeningVerification() {
     env: { ...process.env, NODE_ENV: 'staging' },
     encoding: 'utf-8',
   });
-  assert(stagingCheck.status !== 0, 'Mock server strictly refuses to execute under NODE_ENV=staging');
+  assert(
+    stagingCheck.status !== 0,
+    'Mock server strictly refuses to execute under NODE_ENV=staging',
+  );
 
   // GATE 3: Mock Server Identification & Local Binding
   console.log('\n--- GATE 3: Mock Server Headers & Local Loopback Binding ---');
   const healthRes = await new Promise((resolve, reject) => {
-    http.get('http://127.0.0.1:3001/health/ready', (res) => {
-      let data = '';
-      res.on('data', (c) => (data += c));
-      res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: JSON.parse(data) }));
-    }).on('error', reject);
+    http
+      .get('http://127.0.0.1:3001/health/ready', (res) => {
+        let data = '';
+        res.on('data', (c) => (data += c));
+        res.on('end', () =>
+          resolve({ status: res.statusCode, headers: res.headers, body: JSON.parse(data) }),
+        );
+      })
+      .on('error', reject);
   });
 
   assert(healthRes.status === 200, 'Mock server reachable on local loopback 127.0.0.1:3001');
-  assert(healthRes.headers['x-oprino-mock-server'] === 'true', 'X-Oprino-Mock-Server header is explicitly true');
-  assert(healthRes.headers['x-oprino-backend-type'] === 'in-memory-test-double', 'X-Oprino-Backend-Type confirms in-memory-test-double');
+  assert(
+    healthRes.headers['x-oprino-mock-server'] === 'true',
+    'X-Oprino-Mock-Server header is explicitly true',
+  );
+  assert(
+    healthRes.headers['x-oprino-backend-type'] === 'in-memory-test-double',
+    'X-Oprino-Backend-Type confirms in-memory-test-double',
+  );
   assert(healthRes.body.mock === true, 'Response payload explicitly includes mock: true');
-  assert(healthRes.body.engine === 'synthetic-in-memory-mock', 'Engine metadata confirms synthetic-in-memory-mock');
+  assert(
+    healthRes.body.engine === 'synthetic-in-memory-mock',
+    'Engine metadata confirms synthetic-in-memory-mock',
+  );
 
   // GATE 4: Android Manifest Cleartext Isolation (Debug vs Release)
   console.log('\n--- GATE 4: Android Manifest Cleartext Isolation ---');
   const mainManifestPath = path.resolve('apps/mobile/android/app/src/main/AndroidManifest.xml');
   const debugManifestPath = path.resolve('apps/mobile/android/app/src/debug/AndroidManifest.xml');
-  const releaseManifestPath = path.resolve('apps/mobile/android/app/src/release/AndroidManifest.xml');
+  const releaseManifestPath = path.resolve(
+    'apps/mobile/android/app/src/release/AndroidManifest.xml',
+  );
 
   const mainManifest = fs.readFileSync(mainManifestPath, 'utf-8');
   const debugManifest = fs.readFileSync(debugManifestPath, 'utf-8');
@@ -96,8 +118,14 @@ async function runHardeningVerification() {
   const paths = Object.keys(openApi.paths || {});
   console.log(`  Found ${paths.length} API paths defined in OpenAPI specification`);
   assert(paths.includes('/health/ready'), 'Contract defines /health/ready endpoint');
-  assert(paths.some((p) => p.includes('/attendance')), 'Contract defines attendance endpoints');
-  assert(paths.some((p) => p.includes('/tasks')), 'Contract defines tasks endpoints');
+  assert(
+    paths.some((p) => p.includes('/attendance')),
+    'Contract defines attendance endpoints',
+  );
+  assert(
+    paths.some((p) => p.includes('/tasks')),
+    'Contract defines tasks endpoints',
+  );
 
   console.log('\n=============================================================');
   console.log('🎉 ALL 5 SECURITY & REGRESSION HARDENING GATES VERIFIED (PASS)!');

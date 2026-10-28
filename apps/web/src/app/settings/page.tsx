@@ -145,7 +145,13 @@ export default function SettingsPage() {
             <span>{successMessage}</span>
             <button
               onClick={() => setSuccessMessage(null)}
-              style={{ background: 'none', border: 'none', color: '#065F46', cursor: 'pointer', fontWeight: 700 }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#065F46',
+                cursor: 'pointer',
+                fontWeight: 700,
+              }}
             >
               ✕
             </button>
@@ -174,7 +180,10 @@ export default function SettingsPage() {
             Loading workspace settings...
           </div>
         ) : (
-          <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <form
+            onSubmit={handleSaveSettings}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+          >
             {/* CARD 1: GPS Retention (BLK-006) */}
             <div
               style={{
@@ -185,7 +194,14 @@ export default function SettingsPage() {
                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginBottom: '0.5rem',
+                }}
+              >
                 <div
                   style={{
                     width: '36px',
@@ -201,30 +217,60 @@ export default function SettingsPage() {
                   <Icon name="clock" size={20} color="#164CFF" />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                  <h2
+                    style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', margin: 0 }}
+                  >
                     GPS Data Retention Policy (BLK-006)
                   </h2>
                   <p style={{ margin: '0.15rem 0 0', fontSize: '0.8125rem', color: '#64748B' }}>
-                    Automated duty-hours telemetry pruning to ensure privacy compliance and reduce storage overhead.
+                    Automated duty-hours telemetry pruning to ensure privacy compliance and reduce
+                    storage overhead.
                   </p>
                 </div>
               </div>
 
               <div style={{ marginTop: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#0F172A', marginBottom: '0.5rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#0F172A',
+                    marginBottom: '0.5rem',
+                  }}
+                >
                   Select Retention Duration
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gap: '0.75rem',
+                  }}
+                >
                   {[
                     { days: 7, label: '7 Days', desc: 'Minimal storage, immediate compliance.' },
-                    { days: 30, label: '30 Days (Default)', desc: 'Recommended balance for monthly audits.' },
-                    { days: 90, label: '90 Days', desc: 'Quarterly review & historical dispute resolution.' },
-                    { days: 180, label: '180 Days', desc: 'Extended multi-month compliance archive.' },
+                    {
+                      days: 30,
+                      label: '30 Days (Default)',
+                      desc: 'Recommended balance for monthly audits.',
+                    },
+                    {
+                      days: 90,
+                      label: '90 Days',
+                      desc: 'Quarterly review & historical dispute resolution.',
+                    },
+                    {
+                      days: 180,
+                      label: '180 Days',
+                      desc: 'Extended multi-month compliance archive.',
+                    },
                   ].map((opt) => (
                     <label
                       key={opt.days}
                       style={{
-                        border: retentionDays === opt.days ? '2px solid #164CFF' : '1px solid #CBD5E1',
+                        border:
+                          retentionDays === opt.days ? '2px solid #164CFF' : '1px solid #CBD5E1',
                         backgroundColor: retentionDays === opt.days ? '#EEF2FF' : '#FFFFFF',
                         borderRadius: '10px',
                         padding: '1rem',
@@ -269,7 +315,8 @@ export default function SettingsPage() {
                 >
                   <Icon name="shield" size={16} color="#164CFF" />
                   <span>
-                    Pruning runs nightly via isolated workspace transactions. Data belonging to other companies is never accessed or affected.
+                    Pruning runs nightly via isolated workspace transactions. Data belonging to
+                    other companies is never accessed or affected.
                   </span>
                 </div>
               </div>
@@ -285,7 +332,14 @@ export default function SettingsPage() {
                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginBottom: '0.5rem',
+                }}
+              >
                 <div
                   style={{
                     width: '36px',
@@ -301,20 +355,37 @@ export default function SettingsPage() {
                   <Icon name="camera" size={20} color="#059669" />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                  <h2
+                    style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', margin: 0 }}
+                  >
                     Frontline Attendance Verification Policy (BLK-004)
                   </h2>
                   <p style={{ margin: '0.15rem 0 0', fontSize: '0.8125rem', color: '#64748B' }}>
-                    Control required proofs when field employees Punch In and Punch Out on the mobile app.
+                    Control required proofs when field employees Punch In and Punch Out on the
+                    mobile app.
                   </p>
                 </div>
               </div>
 
               <div style={{ marginTop: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#0F172A', marginBottom: '0.5rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#0F172A',
+                    marginBottom: '0.5rem',
+                  }}
+                >
                   Enforcement Level
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: '0.75rem',
+                  }}
+                >
                   {[
                     {
                       id: 'SIMPLE',
@@ -345,7 +416,10 @@ export default function SettingsPage() {
                     <label
                       key={policy.id}
                       style={{
-                        border: attendancePolicy === policy.id ? '2px solid #164CFF' : '1px solid #CBD5E1',
+                        border:
+                          attendancePolicy === policy.id
+                            ? '2px solid #164CFF'
+                            : '1px solid #CBD5E1',
                         backgroundColor: attendancePolicy === policy.id ? '#EEF2FF' : '#FFFFFF',
                         borderRadius: '10px',
                         padding: '1rem',
@@ -386,7 +460,9 @@ export default function SettingsPage() {
                     lineHeight: 1.4,
                   }}
                 >
-                  <strong>Compliance Note:</strong> Photographic selfie capture serves as visual verification of attendance for managers. Facial recognition or automated biometric matching is not claimed or performed.
+                  <strong>Compliance Note:</strong> Photographic selfie capture serves as visual
+                  verification of attendance for managers. Facial recognition or automated biometric
+                  matching is not claimed or performed.
                 </div>
               </div>
             </div>
@@ -414,8 +490,16 @@ export default function SettingsPage() {
                 </button>
               </div>
             ) : (
-              <div style={{ fontSize: '0.875rem', color: '#64748B', fontStyle: 'italic', textAlign: 'right' }}>
-                Only workspace Owners and Administrators can modify retention and compliance policies.
+              <div
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#64748B',
+                  fontStyle: 'italic',
+                  textAlign: 'right',
+                }}
+              >
+                Only workspace Owners and Administrators can modify retention and compliance
+                policies.
               </div>
             )}
           </form>

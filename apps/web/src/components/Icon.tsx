@@ -36,13 +36,7 @@ export interface IconProps {
   style?: React.CSSProperties;
 }
 
-export function Icon({
-  name,
-  size = 20,
-  color = 'currentColor',
-  className,
-  style,
-}: IconProps) {
+export function Icon({ name, size = 20, color = 'currentColor', className, style }: IconProps) {
   const commonProps = {
     width: size,
     height: size,

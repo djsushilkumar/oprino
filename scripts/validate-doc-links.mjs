@@ -50,7 +50,12 @@ for (const file of markdownFiles) {
     }
 
     // Ignore anchors, web urls, mailto
-    if (url.startsWith('#') || url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) {
+    if (
+      url.startsWith('#') ||
+      url.startsWith('http://') ||
+      url.startsWith('https://') ||
+      url.startsWith('mailto:')
+    ) {
       continue;
     }
 
@@ -81,7 +86,9 @@ console.log(`Total broken links found: ${brokenLinks}`);
 if (failures.length > 0) {
   console.log(`\nBroken Link Details:`);
   for (const f of failures.slice(0, 30)) {
-    console.log(`  ❌ In ${f.sourceFile}: "${f.linkUrl}" -> Target does not exist: ${f.resolvedPath}`);
+    console.log(
+      `  ❌ In ${f.sourceFile}: "${f.linkUrl}" -> Target does not exist: ${f.resolvedPath}`,
+    );
   }
   if (failures.length > 30) {
     console.log(`  ... and ${failures.length - 30} more broken links.`);

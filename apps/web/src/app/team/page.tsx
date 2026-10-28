@@ -4,11 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
 import { Icon } from '../../components/Icon';
-import {
-  webApi,
-  getStoredToken,
-  type WorkspaceMember,
-} from '../../lib/api';
+import { webApi, getStoredToken, type WorkspaceMember } from '../../lib/api';
 import type {
   MeResponse,
   WorkspaceInvitation,
@@ -164,7 +160,11 @@ export default function TeamPage() {
 
   // Revoke Invitation
   const handleRevokeInvitation = async (invitationId: string) => {
-    if (!confirm('Are you sure you want to revoke this invitation? The activation link will immediately stop working.')) {
+    if (
+      !confirm(
+        'Are you sure you want to revoke this invitation? The activation link will immediately stop working.',
+      )
+    ) {
       return;
     }
 
@@ -220,7 +220,10 @@ export default function TeamPage() {
         return;
       }
 
-      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+      const lines = text
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
       if (lines.length < 2) {
         setBulkParseError('CSV must contain a header row and at least one data row.');
         return;
@@ -256,7 +259,9 @@ export default function TeamPage() {
       }
 
       if (parsedRows.length > 100) {
-        setBulkParseError(`Import is bounded to 100 rows per batch. Found ${parsedRows.length} rows.`);
+        setBulkParseError(
+          `Import is bounded to 100 rows per batch. Found ${parsedRows.length} rows.`,
+        );
         return;
       }
 
@@ -286,7 +291,9 @@ export default function TeamPage() {
         results: res.results,
       });
 
-      setSuccessMessage(`Bulk import processed: ${res.successCount} invited, ${res.failureCount} failed.`);
+      setSuccessMessage(
+        `Bulk import processed: ${res.successCount} invited, ${res.failureCount} failed.`,
+      );
       await loadData();
     } catch (err: any) {
       setBulkParseError(err.message || 'Bulk import failed');
@@ -346,12 +353,8 @@ export default function TeamPage() {
   const totalEmployees = members.filter((m) =>
     m.roleName.toLowerCase().includes('employee'),
   ).length;
-  const totalManagers = members.filter((m) =>
-    m.roleName.toLowerCase().includes('manager'),
-  ).length;
-  const totalOwners = members.filter((m) =>
-    m.roleName.toLowerCase().includes('owner'),
-  ).length;
+  const totalManagers = members.filter((m) => m.roleName.toLowerCase().includes('manager')).length;
+  const totalOwners = members.filter((m) => m.roleName.toLowerCase().includes('owner')).length;
   const totalPendingInvites = invitations.filter((i) => i.status === 'PENDING').length;
 
   return (
@@ -398,7 +401,8 @@ export default function TeamPage() {
               </span>
             </div>
             <p style={{ color: '#64748B', fontSize: '0.9375rem', marginTop: '0.25rem' }}>
-              Manage operations supervisors, dispatchers, and field technicians for mobile execution.
+              Manage operations supervisors, dispatchers, and field technicians for mobile
+              execution.
             </p>
           </div>
 
@@ -631,7 +635,14 @@ export default function TeamPage() {
         </div>
 
         {/* Tab Switching: Active Members vs Pending Invitations */}
-        <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #E2E8F0', marginBottom: '1.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            borderBottom: '1px solid #E2E8F0',
+            marginBottom: '1.5rem',
+          }}
+        >
           <button
             onClick={() => setActiveTab('members')}
             style={{
@@ -653,7 +664,8 @@ export default function TeamPage() {
               padding: '0.75rem 1rem',
               border: 'none',
               background: 'none',
-              borderBottom: activeTab === 'invitations' ? '3px solid #164CFF' : '3px solid transparent',
+              borderBottom:
+                activeTab === 'invitations' ? '3px solid #164CFF' : '3px solid transparent',
               color: activeTab === 'invitations' ? '#164CFF' : '#64748B',
               fontWeight: 700,
               fontSize: '0.9375rem',
@@ -703,7 +715,15 @@ export default function TeamPage() {
                 gap: '1rem',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1', maxWidth: '360px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  flex: '1',
+                  maxWidth: '360px',
+                }}
+              >
                 <Icon name="search" size={18} color="#94A3B8" />
                 <input
                   type="text"
@@ -721,7 +741,9 @@ export default function TeamPage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.8125rem', color: '#64748B', fontWeight: 600 }}>Role:</span>
+                <span style={{ fontSize: '0.8125rem', color: '#64748B', fontWeight: 600 }}>
+                  Role:
+                </span>
                 <select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
@@ -756,16 +778,45 @@ export default function TeamPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                      }}
+                    >
                       NAME & EMAIL
                     </th>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                      }}
+                    >
                       ROLE & PERMISSION
                     </th>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                      }}
+                    >
                       STATUS
                     </th>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textAlign: 'right' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                        textAlign: 'right',
+                      }}
+                    >
                       LIFECYCLE ACTIONS
                     </th>
                   </tr>
@@ -813,8 +864,20 @@ export default function TeamPage() {
                                 width: '36px',
                                 height: '36px',
                                 borderRadius: '50%',
-                                backgroundColor: isSuspended ? '#FEE2E2' : isEmployee ? '#D1FAE5' : isManager ? '#E0E7FF' : '#DBEAFE',
-                                color: isSuspended ? '#991B1B' : isEmployee ? '#065F46' : isManager ? '#3730A3' : '#1E40AF',
+                                backgroundColor: isSuspended
+                                  ? '#FEE2E2'
+                                  : isEmployee
+                                    ? '#D1FAE5'
+                                    : isManager
+                                      ? '#E0E7FF'
+                                      : '#DBEAFE',
+                                color: isSuspended
+                                  ? '#991B1B'
+                                  : isEmployee
+                                    ? '#065F46'
+                                    : isManager
+                                      ? '#3730A3'
+                                      : '#1E40AF',
                                 fontWeight: 700,
                                 fontSize: '0.875rem',
                                 display: 'flex',
@@ -826,10 +889,14 @@ export default function TeamPage() {
                               {initials}
                             </div>
                             <div>
-                              <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.9375rem' }}>
+                              <div
+                                style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.9375rem' }}
+                              >
                                 {m.name}
                               </div>
-                              <div style={{ color: '#64748B', fontSize: '0.8125rem' }}>{m.email}</div>
+                              <div style={{ color: '#64748B', fontSize: '0.8125rem' }}>
+                                {m.email}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -879,7 +946,13 @@ export default function TeamPage() {
                             )}
 
                             {isLastActiveOwner && (
-                              <span style={{ fontSize: '0.7rem', color: '#64748B', fontStyle: 'italic' }}>
+                              <span
+                                style={{
+                                  fontSize: '0.7rem',
+                                  color: '#64748B',
+                                  fontStyle: 'italic',
+                                }}
+                              >
                                 (Primary Owner)
                               </span>
                             )}
@@ -910,7 +983,14 @@ export default function TeamPage() {
                         </td>
 
                         <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'flex-end',
+                              gap: '0.5rem',
+                            }}
+                          >
                             {/* Suspend or Reactivate */}
                             {isSuspended ? (
                               <button
@@ -946,7 +1026,11 @@ export default function TeamPage() {
                                   });
                                   setLifecycleError(null);
                                 }}
-                                title={isLastActiveOwner ? 'Cannot suspend the last active Owner' : 'Suspend employee'}
+                                title={
+                                  isLastActiveOwner
+                                    ? 'Cannot suspend the last active Owner'
+                                    : 'Suspend employee'
+                                }
                                 style={{
                                   padding: '0.35rem 0.75rem',
                                   borderRadius: '6px',
@@ -974,7 +1058,11 @@ export default function TeamPage() {
                                 });
                                 setLifecycleError(null);
                               }}
-                              title={isLastActiveOwner ? 'Cannot remove the last active Owner' : 'Remove from workspace'}
+                              title={
+                                isLastActiveOwner
+                                  ? 'Cannot remove the last active Owner'
+                                  : 'Remove from workspace'
+                              }
                               style={{
                                 padding: '0.35rem 0.75rem',
                                 borderRadius: '6px',
@@ -1013,25 +1101,62 @@ export default function TeamPage() {
           >
             {invitations.length === 0 ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: '#64748B' }}>
-                No invitations currently pending. Click "Invite Member" to generate a secure activation link.
+                No invitations currently pending. Click "Invite Member" to generate a secure
+                activation link.
               </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                      }}
+                    >
                       INVITED EMAIL
                     </th>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                      }}
+                    >
                       ROLE
                     </th>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                      }}
+                    >
                       STATUS
                     </th>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                      }}
+                    >
                       EXPIRES AT
                     </th>
-                    <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textAlign: 'right' }}>
+                    <th
+                      style={{
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#475569',
+                        textAlign: 'right',
+                      }}
+                    >
                       ACTIONS
                     </th>
                   </tr>
@@ -1039,10 +1164,19 @@ export default function TeamPage() {
                 <tbody>
                   {invitations.map((inv) => (
                     <tr key={inv.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '1rem 1.25rem', fontWeight: 600, color: '#0F172A', fontSize: '0.875rem' }}>
+                      <td
+                        style={{
+                          padding: '1rem 1.25rem',
+                          fontWeight: 600,
+                          color: '#0F172A',
+                          fontSize: '0.875rem',
+                        }}
+                      >
                         {inv.email}
                       </td>
-                      <td style={{ padding: '1rem 1.25rem', fontSize: '0.8125rem', color: '#475569' }}>
+                      <td
+                        style={{ padding: '1rem 1.25rem', fontSize: '0.8125rem', color: '#475569' }}
+                      >
                         {inv.roleName}
                       </td>
                       <td style={{ padding: '1rem 1.25rem' }}>
@@ -1059,7 +1193,9 @@ export default function TeamPage() {
                           {inv.status}
                         </span>
                       </td>
-                      <td style={{ padding: '1rem 1.25rem', fontSize: '0.8125rem', color: '#64748B' }}>
+                      <td
+                        style={{ padding: '1rem 1.25rem', fontSize: '0.8125rem', color: '#64748B' }}
+                      >
                         {new Date(inv.expiresAt).toLocaleDateString()}
                       </td>
                       <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
@@ -1156,7 +1292,9 @@ export default function TeamPage() {
             </div>
 
             {generatedInviteLink ? (
-              <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div
+                style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}
+              >
                 <div
                   style={{
                     backgroundColor: '#ECFDF5',
@@ -1170,12 +1308,21 @@ export default function TeamPage() {
                     ✅ Invitation Link Generated!
                   </div>
                   <div style={{ fontSize: '0.8125rem' }}>
-                    Share this link with <strong>{inviteEmail}</strong>. They will use it to choose their own secure password and activate their account.
+                    Share this link with <strong>{inviteEmail}</strong>. They will use it to choose
+                    their own secure password and activate their account.
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.35rem',
+                    }}
+                  >
                     Single-Use Activation URL (Valid for 7 days)
                   </label>
                   <input
@@ -1194,7 +1341,14 @@ export default function TeamPage() {
                   />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '0.75rem',
+                    marginTop: '0.5rem',
+                  }}
+                >
                   <button
                     onClick={() => {
                       setGeneratedInviteLink(null);
@@ -1232,7 +1386,15 @@ export default function TeamPage() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleInviteSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <form
+                onSubmit={handleInviteSubmit}
+                style={{
+                  padding: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1.25rem',
+                }}
+              >
                 {inviteError && (
                   <div
                     style={{
@@ -1249,7 +1411,15 @@ export default function TeamPage() {
                 )}
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#0F172A', marginBottom: '0.375rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#0F172A',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
                     Full Name <span style={{ color: '#DC2626' }}>*</span>
                   </label>
                   <input
@@ -1271,7 +1441,15 @@ export default function TeamPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#0F172A', marginBottom: '0.375rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#0F172A',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
                     Work Email <span style={{ color: '#DC2626' }}>*</span>
                   </label>
                   <input
@@ -1293,13 +1471,22 @@ export default function TeamPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#0F172A', marginBottom: '0.375rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#0F172A',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
                     Role & Operational Permissions
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                     <label
                       style={{
-                        border: inviteRole === 'Employee' ? '2px solid #164CFF' : '1px solid #E2E8F0',
+                        border:
+                          inviteRole === 'Employee' ? '2px solid #164CFF' : '1px solid #E2E8F0',
                         backgroundColor: inviteRole === 'Employee' ? '#EEF2FF' : '#FFFFFF',
                         borderRadius: '8px',
                         padding: '0.75rem',
@@ -1317,7 +1504,9 @@ export default function TeamPage() {
                           checked={inviteRole === 'Employee'}
                           onChange={() => setInviteRole('Employee')}
                         />
-                        <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0F172A' }}>Employee</span>
+                        <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0F172A' }}>
+                          Employee
+                        </span>
                       </div>
                       <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
                         Mobile selfie punch, visits, GPS tracking during duty.
@@ -1326,7 +1515,8 @@ export default function TeamPage() {
 
                     <label
                       style={{
-                        border: inviteRole === 'Manager' ? '2px solid #164CFF' : '1px solid #E2E8F0',
+                        border:
+                          inviteRole === 'Manager' ? '2px solid #164CFF' : '1px solid #E2E8F0',
                         backgroundColor: inviteRole === 'Manager' ? '#EEF2FF' : '#FFFFFF',
                         borderRadius: '8px',
                         padding: '0.75rem',
@@ -1344,7 +1534,9 @@ export default function TeamPage() {
                           checked={inviteRole === 'Manager'}
                           onChange={() => setInviteRole('Manager')}
                         />
-                        <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0F172A' }}>Manager</span>
+                        <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0F172A' }}>
+                          Manager
+                        </span>
                       </div>
                       <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
                         Live map monitoring, attendance approval, task dispatch.
@@ -1453,7 +1645,8 @@ export default function TeamPage() {
                   Bulk Employee Onboarding (CSV)
                 </h3>
                 <p style={{ margin: '0.2rem 0 0', fontSize: '0.8125rem', color: '#64748B' }}>
-                  Upload up to 100 employees per batch with automated role mapping and single-use activation tokens.
+                  Upload up to 100 employees per batch with automated role mapping and single-use
+                  activation tokens.
                 </p>
               </div>
               <button
@@ -1470,7 +1663,16 @@ export default function TeamPage() {
               </button>
             </div>
 
-            <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div
+              style={{
+                padding: '1.5rem',
+                overflowY: 'auto',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.25rem',
+              }}
+            >
               {/* Template Download Banner */}
               <div
                 style={{
@@ -1511,7 +1713,15 @@ export default function TeamPage() {
 
               {/* File Input */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#0F172A', marginBottom: '0.35rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#0F172A',
+                    marginBottom: '0.35rem',
+                  }}
+                >
                   Choose CSV File
                 </label>
                 <input
@@ -1546,13 +1756,34 @@ export default function TeamPage() {
               {/* Preview Table if rows parsed */}
               {bulkRows.length > 0 && !importSummary && (
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
                     <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>
                       Ready to import {bulkRows.length} employees ({bulkFileName})
                     </div>
                   </div>
-                  <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', maxHeight: '200px', overflowY: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem', textAlign: 'left' }}>
+                  <div
+                    style={{
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <table
+                      style={{
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        fontSize: '0.8125rem',
+                        textAlign: 'left',
+                      }}
+                    >
                       <thead style={{ backgroundColor: '#F8FAFC', position: 'sticky', top: 0 }}>
                         <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
                           <th style={{ padding: '0.5rem 0.75rem', color: '#475569' }}>#</th>
@@ -1588,16 +1819,39 @@ export default function TeamPage() {
                       marginBottom: '1rem',
                     }}
                   >
-                    <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#0F172A', marginBottom: '0.25rem' }}>
-                      Import Summary: {importSummary.successCount} Successful, {importSummary.failureCount} Failed (Total: {importSummary.totalRows})
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: '0.9375rem',
+                        color: '#0F172A',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
+                      Import Summary: {importSummary.successCount} Successful,{' '}
+                      {importSummary.failureCount} Failed (Total: {importSummary.totalRows})
                     </div>
                     <div style={{ fontSize: '0.8125rem', color: '#475569' }}>
-                      Invitations created have 7-day single-use activation tokens without default credentials.
+                      Invitations created have 7-day single-use activation tokens without default
+                      credentials.
                     </div>
                   </div>
 
-                  <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', maxHeight: '200px', overflowY: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem', textAlign: 'left' }}>
+                  <div
+                    style={{
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <table
+                      style={{
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        fontSize: '0.8125rem',
+                        textAlign: 'left',
+                      }}
+                    >
                       <thead style={{ backgroundColor: '#F8FAFC', position: 'sticky', top: 0 }}>
                         <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
                           <th style={{ padding: '0.5rem 0.75rem', color: '#475569' }}>Row</th>
@@ -1610,7 +1864,9 @@ export default function TeamPage() {
                         {importSummary.results.map((res, i) => (
                           <tr key={i} style={{ borderBottom: '1px solid #F1F5F9' }}>
                             <td style={{ padding: '0.5rem 0.75rem' }}>{res.row}</td>
-                            <td style={{ padding: '0.5rem 0.75rem', fontWeight: 600 }}>{res.email}</td>
+                            <td style={{ padding: '0.5rem 0.75rem', fontWeight: 600 }}>
+                              {res.email}
+                            </td>
                             <td style={{ padding: '0.5rem 0.75rem' }}>
                               <span
                                 style={{
@@ -1622,21 +1878,22 @@ export default function TeamPage() {
                                     res.status === 'INVITED'
                                       ? '#ECFDF5'
                                       : res.status === 'SKIPPED'
-                                      ? '#EFF6FF'
-                                      : '#FEF2F2',
+                                        ? '#EFF6FF'
+                                        : '#FEF2F2',
                                   color:
                                     res.status === 'INVITED'
                                       ? '#065F46'
                                       : res.status === 'SKIPPED'
-                                      ? '#1E40AF'
-                                      : '#DC2626',
+                                        ? '#1E40AF'
+                                        : '#DC2626',
                                 }}
                               >
                                 {res.status}
                               </span>
                             </td>
                             <td style={{ padding: '0.5rem 0.75rem', color: '#64748B' }}>
-                              {res.error || (res.invitationUrl ? 'Activation link ready' : 'Completed')}
+                              {res.error ||
+                                (res.invitationUrl ? 'Activation link ready' : 'Completed')}
                             </td>
                           </tr>
                         ))}
@@ -1690,7 +1947,9 @@ export default function TeamPage() {
                     opacity: isImporting ? 0.7 : 1,
                   }}
                 >
-                  {isImporting ? 'Processing Batch...' : `Confirm Import (${bulkRows.length} Employees)`}
+                  {isImporting
+                    ? 'Processing Batch...'
+                    : `Confirm Import (${bulkRows.length} Employees)`}
                 </button>
               )}
             </div>
@@ -1755,26 +2014,40 @@ export default function TeamPage() {
               </div>
             )}
 
-            <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.5, margin: '0 0 1.25rem' }}>
+            <p
+              style={{
+                fontSize: '0.875rem',
+                color: '#475569',
+                lineHeight: 1.5,
+                margin: '0 0 1.25rem',
+              }}
+            >
               {lifecycleModal.action === 'ROLE_CHANGE' && (
                 <>
-                  Are you sure you want to change the role of <strong>{lifecycleModal.member.name}</strong> to{' '}
-                  <strong>{lifecycleModal.newRole}</strong>? Their operational permissions and route access will update immediately.
+                  Are you sure you want to change the role of{' '}
+                  <strong>{lifecycleModal.member.name}</strong> to{' '}
+                  <strong>{lifecycleModal.newRole}</strong>? Their operational permissions and route
+                  access will update immediately.
                 </>
               )}
               {lifecycleModal.action === 'SUSPEND' && (
                 <>
-                  Suspending <strong>{lifecycleModal.member.name}</strong> will immediately terminate any active duty-hours GPS tracking sessions, revoke mobile session authorizations, and prevent logging in until reactivated.
+                  Suspending <strong>{lifecycleModal.member.name}</strong> will immediately
+                  terminate any active duty-hours GPS tracking sessions, revoke mobile session
+                  authorizations, and prevent logging in until reactivated.
                 </>
               )}
               {lifecycleModal.action === 'ACTIVATE' && (
                 <>
-                  Reactivating <strong>{lifecycleModal.member.name}</strong> will restore mobile access and allow starting duty-hours field tracking.
+                  Reactivating <strong>{lifecycleModal.member.name}</strong> will restore mobile
+                  access and allow starting duty-hours field tracking.
                 </>
               )}
               {lifecycleModal.action === 'REMOVE' && (
                 <>
-                  Removing <strong>{lifecycleModal.member.name}</strong> will revoke their membership, terminate all tracking sessions, and prevent further access to workspace records.
+                  Removing <strong>{lifecycleModal.member.name}</strong> will revoke their
+                  membership, terminate all tracking sessions, and prevent further access to
+                  workspace records.
                 </>
               )}
             </p>
@@ -1782,7 +2055,9 @@ export default function TeamPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
               <button
                 type="button"
-                onClick={() => setLifecycleModal({ isOpen: false, member: null, action: 'SUSPEND' })}
+                onClick={() =>
+                  setLifecycleModal({ isOpen: false, member: null, action: 'SUSPEND' })
+                }
                 style={{
                   padding: '0.65rem 1.25rem',
                   borderRadius: '8px',

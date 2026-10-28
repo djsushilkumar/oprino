@@ -5,13 +5,7 @@ import { useRouter } from 'next/navigation';
 import { HeaderNav } from '../../components/HeaderNav';
 import { Icon } from '../../components/Icon';
 import { webApi, getStoredToken } from '../../lib/api';
-import type {
-  MeResponse,
-  Visit,
-  Customer,
-  CustomerSite,
-  TaskResponse,
-} from '@oprino/contracts';
+import type { MeResponse, Visit, Customer, CustomerSite, TaskResponse } from '@oprino/contracts';
 
 export default function VisitsPage() {
   const router = useRouter();
@@ -179,12 +173,28 @@ export default function VisitsPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#F8FAFC',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <HeaderNav context={context} onSignOut={handleSignOut} />
 
-      <main style={{ flex: 1, padding: '2rem', maxWidth: '1400px', width: '100%', margin: '0 auto' }}>
+      <main
+        style={{ flex: 1, padding: '2rem', maxWidth: '1400px', width: '100%', margin: '0 auto' }}
+      >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '2rem',
+          }}
+        >
           <div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
               Field Visits & Dispatch
@@ -216,8 +226,24 @@ export default function VisitsPage() {
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', padding: '0.25rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            marginBottom: '1.5rem',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '8px',
+              border: '1px solid #CBD5E1',
+              padding: '0.25rem',
+            }}
+          >
             {['ALL', 'PLANNED', 'CHECKED_IN', 'CHECKED_OUT'].map((st) => (
               <button
                 key={st}
@@ -377,7 +403,13 @@ export default function VisitsPage() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.25rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+              gap: '1.25rem',
+            }}
+          >
             {visits.map((visit, index) => {
               const badge = getStatusBadge(visit.status);
 
@@ -397,7 +429,14 @@ export default function VisitsPage() {
                 >
                   <div>
                     {/* Badge, Stop Sequence & Controls */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span
                           style={{
@@ -455,7 +494,8 @@ export default function VisitsPage() {
                                 fontWeight: 700,
                                 borderRadius: '4px',
                                 border: '1px solid #CBD5E1',
-                                backgroundColor: index === visits.length - 1 ? '#F8FAFC' : '#FFFFFF',
+                                backgroundColor:
+                                  index === visits.length - 1 ? '#F8FAFC' : '#FFFFFF',
                                 color: index === visits.length - 1 ? '#CBD5E1' : '#334155',
                                 cursor: index === visits.length - 1 ? 'not-allowed' : 'pointer',
                               }}
@@ -467,33 +507,80 @@ export default function VisitsPage() {
                         )}
 
                         {visit.plannedAt && (
-                          <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              color: '#64748B',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                            }}
+                          >
                             <Icon name="calendar" size={12} color="#64748B" />
-                            {new Date(visit.plannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(visit.plannedAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
                           </span>
                         )}
                       </div>
                     </div>
 
                     {/* Customer & Site */}
-                    <div style={{ fontWeight: 700, fontSize: '1.0625rem', color: '#0F172A', marginBottom: '0.25rem' }}>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: '1.0625rem',
+                        color: '#0F172A',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
                       {visit.customerName || 'Customer Visit'}
                     </div>
                     {visit.siteName && (
-                      <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <div
+                        style={{
+                          fontSize: '0.875rem',
+                          color: '#475569',
+                          marginBottom: '0.5rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                        }}
+                      >
                         <Icon name="pin" size={13} color="#475569" />
                         <span>{visit.siteName}</span>
                       </div>
                     )}
 
                     {visit.taskTitle && (
-                      <div style={{ fontSize: '0.8125rem', color: '#4F46E5', backgroundColor: '#EEF2FF', padding: '0.25rem 0.5rem', borderRadius: '4px', display: 'inline-block', marginBottom: '0.75rem' }}>
+                      <div
+                        style={{
+                          fontSize: '0.8125rem',
+                          color: '#4F46E5',
+                          backgroundColor: '#EEF2FF',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '4px',
+                          display: 'inline-block',
+                          marginBottom: '0.75rem',
+                        }}
+                      >
                         Task: {visit.taskTitle}
                       </div>
                     )}
 
                     {visit.notes && (
-                      <div style={{ fontSize: '0.8125rem', color: '#64748B', backgroundColor: '#F8FAFC', padding: '0.5rem', borderRadius: '6px', marginBottom: '0.75rem', fontStyle: 'italic' }}>
+                      <div
+                        style={{
+                          fontSize: '0.8125rem',
+                          color: '#64748B',
+                          backgroundColor: '#F8FAFC',
+                          padding: '0.5rem',
+                          borderRadius: '6px',
+                          marginBottom: '0.75rem',
+                          fontStyle: 'italic',
+                        }}
+                      >
                         "{visit.notes}"
                       </div>
                     )}
@@ -501,23 +588,52 @@ export default function VisitsPage() {
 
                   {/* Visit Footer: Tech & GPS Stats */}
                   <div style={{ paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748B', marginBottom: '0.25rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: '0.75rem',
+                        color: '#64748B',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
                       <span>Technician:</span>
-                      <span style={{ fontWeight: 600, color: '#334155' }}>{visit.userName || 'Assigned Tech'}</span>
+                      <span style={{ fontWeight: 600, color: '#334155' }}>
+                        {visit.userName || 'Assigned Tech'}
+                      </span>
                     </div>
 
                     {visit.checkInTime && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748B', marginBottom: '0.25rem' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          fontSize: '0.75rem',
+                          color: '#64748B',
+                          marginBottom: '0.25rem',
+                        }}
+                      >
                         <span>Check-In:</span>
                         <span style={{ fontWeight: 600, color: '#1E40AF' }}>
-                          {new Date(visit.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {visit.checkInLatitude != null && ` (${visit.checkInLatitude.toFixed(3)}, ${visit.checkInLongitude?.toFixed(3)})`}
+                          {new Date(visit.checkInTime).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                          {visit.checkInLatitude != null &&
+                            ` (${visit.checkInLatitude.toFixed(3)}, ${visit.checkInLongitude?.toFixed(3)})`}
                         </span>
                       </div>
                     )}
 
                     {visit.checkOutTime && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748B' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          fontSize: '0.75rem',
+                          color: '#64748B',
+                        }}
+                      >
                         <span>Duration:</span>
                         <span style={{ fontWeight: 700, color: '#065F46' }}>
                           {visit.durationMinutes} min
@@ -560,7 +676,15 @@ export default function VisitsPage() {
               </h2>
               <form onSubmit={handleScheduleVisit}>
                 <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Select Customer *
                   </label>
                   <select
@@ -570,7 +694,13 @@ export default function VisitsPage() {
                       setSelectedCustomerId(e.target.value);
                       setSelectedSiteId('');
                     }}
-                    style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.875rem' }}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.875rem',
+                    }}
                   >
                     <option value="">-- Choose Customer --</option>
                     {customers.map((c) => (
@@ -582,14 +712,28 @@ export default function VisitsPage() {
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Select Facility / Site
                   </label>
                   <select
                     value={selectedSiteId}
                     onChange={(e) => setSelectedSiteId(e.target.value)}
                     disabled={!selectedCustomerId}
-                    style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.875rem' }}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.875rem',
+                    }}
                   >
                     <option value="">-- Choose Site (Optional) --</option>
                     {(sitesByCustomer[selectedCustomerId] || []).map((s) => (
@@ -601,13 +745,27 @@ export default function VisitsPage() {
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Link Operational Task (Optional)
                   </label>
                   <select
                     value={selectedTaskId}
                     onChange={(e) => setSelectedTaskId(e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.875rem' }}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.875rem',
+                    }}
                   >
                     <option value="">-- No Linked Task --</option>
                     {tasks.map((t) => (
@@ -619,19 +777,41 @@ export default function VisitsPage() {
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Scheduled Date & Time
                   </label>
                   <input
                     type="datetime-local"
                     value={plannedTime}
                     onChange={(e) => setPlannedTime(e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.875rem' }}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.875rem',
+                    }}
                   />
                 </div>
 
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     Visit Instructions / Notes
                   </label>
                   <textarea
@@ -639,7 +819,13 @@ export default function VisitsPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Check in with security gate, request badge for chiller plant..."
-                    style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.875rem' }}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.875rem',
+                    }}
                   />
                 </div>
 
@@ -647,14 +833,32 @@ export default function VisitsPage() {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    style={{ padding: '0.5rem 1rem', backgroundColor: '#F1F5F9', border: 'none', borderRadius: '6px', fontSize: '0.875rem', fontWeight: 600, color: '#475569', cursor: 'pointer' }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#F1F5F9',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#475569',
+                      cursor: 'pointer',
+                    }}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    style={{ padding: '0.5rem 1.25rem', backgroundColor: '#4F46E5', border: 'none', borderRadius: '6px', fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF', cursor: 'pointer' }}
+                    style={{
+                      padding: '0.5rem 1.25rem',
+                      backgroundColor: '#4F46E5',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#FFFFFF',
+                      cursor: 'pointer',
+                    }}
                   >
                     {isSubmitting ? 'Scheduling...' : 'Dispatch Visit'}
                   </button>

@@ -121,7 +121,8 @@ export const schedulingRoutes: FastifyPluginAsync<SchedulingRoutesOptions> = asy
         const status = err.statusCode || 500;
         return reply.status(status).send({
           statusCode: status,
-          error: status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
+          error:
+            status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
           message: err.message || 'Failed to update recurring template',
         });
       }
@@ -154,10 +155,7 @@ export const schedulingRoutes: FastifyPluginAsync<SchedulingRoutesOptions> = asy
       }
 
       try {
-        const rosters = await schedulingService.assignShiftRosters(
-          req.workspaceId!,
-          parsed.data,
-        );
+        const rosters = await schedulingService.assignShiftRosters(req.workspaceId!, parsed.data);
         return reply.status(201).send(rosters);
       } catch (err: any) {
         req.log.error(err, 'Failed to assign shift rosters');

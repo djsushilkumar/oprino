@@ -14,18 +14,24 @@ console.log(`Environment: "${envArg}"`);
 console.log(`Target API URL: "${apiUrlArg}"`);
 
 if (!envArg) {
-  console.error('❌ FAIL: Missing --environment define. Production builds require explicit ENVIRONMENT=PRODUCTION');
+  console.error(
+    '❌ FAIL: Missing --environment define. Production builds require explicit ENVIRONMENT=PRODUCTION',
+  );
   process.exit(1);
 }
 
 const normalized = envArg.toUpperCase().replace(/-/g, '_');
 if (normalized !== 'PRODUCTION' && normalized !== 'PROD') {
-  console.error(`❌ FAIL: Invalid release environment: "${envArg}". Production release builds must specify ENVIRONMENT=PRODUCTION.`);
+  console.error(
+    `❌ FAIL: Invalid release environment: "${envArg}". Production release builds must specify ENVIRONMENT=PRODUCTION.`,
+  );
   process.exit(1);
 }
 
 if (!apiUrlArg) {
-  console.error('❌ FAIL: Missing --api-url define. Production builds require explicit HTTPS API URL.');
+  console.error(
+    '❌ FAIL: Missing --api-url define. Production builds require explicit HTTPS API URL.',
+  );
   process.exit(1);
 }
 
@@ -38,7 +44,9 @@ try {
 }
 
 if (parsedUrl.protocol !== 'https:') {
-  console.error(`❌ FAIL: Insecure protocol "${parsedUrl.protocol}" in "${apiUrlArg}". Production API URL must strictly use HTTPS.`);
+  console.error(
+    `❌ FAIL: Insecure protocol "${parsedUrl.protocol}" in "${apiUrlArg}". Production API URL must strictly use HTTPS.`,
+  );
   process.exit(1);
 }
 
@@ -55,7 +63,9 @@ const isLoopbackOrPrivate =
   /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(host);
 
 if (isLoopbackOrPrivate) {
-  console.error(`❌ FAIL: Security barrier violation: Target host "${host}" is a loopback or private network address.`);
+  console.error(
+    `❌ FAIL: Security barrier violation: Target host "${host}" is a loopback or private network address.`,
+  );
   process.exit(1);
 }
 

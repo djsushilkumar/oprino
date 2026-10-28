@@ -48,9 +48,7 @@ export function NotificationBell() {
   const handleMarkAsRead = async (id: string) => {
     try {
       await webApi.markNotificationRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (e) {
       console.error('Failed to mark notification as read:', e);
@@ -218,12 +216,21 @@ export function NotificationBell() {
             }}
           >
             {isLoading && notifications.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#94A3B8', fontSize: '0.8125rem' }}>
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#94A3B8',
+                  fontSize: '0.8125rem',
+                }}
+              >
                 Loading notifications...
               </div>
             ) : notifications.length === 0 ? (
               <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#94A3B8' }}>
-                <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>No notifications yet</p>
+                <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>
+                  No notifications yet
+                </p>
                 <p style={{ fontSize: '0.75rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
                   Operational and dispatch alerts will appear here.
                 </p>
@@ -248,7 +255,14 @@ export function NotificationBell() {
                       gap: '0.25rem',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        gap: '0.5rem',
+                      }}
+                    >
                       <span
                         style={{
                           fontSize: '0.8125rem',
@@ -285,9 +299,19 @@ export function NotificationBell() {
                       {n.body}
                     </p>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginTop: '0.25rem',
+                      }}
+                    >
                       <span style={{ fontSize: '0.6875rem', color: '#94A3B8' }}>
-                        {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(n.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </span>
                       {!n.isRead && (
                         <span

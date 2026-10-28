@@ -68,11 +68,7 @@ export function HeaderNav({ context, onSignOut }: HeaderNavProps) {
                   transition: 'all 0.15s ease',
                 }}
               >
-                <Icon
-                  name={item.icon}
-                  size={16}
-                  color={isActive ? '#164CFF' : '#64748B'}
-                />
+                <Icon name={item.icon} size={16} color={isActive ? '#164CFF' : '#64748B'} />
                 <span>{item.label}</span>
               </Link>
             );

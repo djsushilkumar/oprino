@@ -32,7 +32,10 @@ export const LocationIngestResponseSchema = z
     dropped: z.number().int().openapi({ example: 0 }),
     reason: z.string().nullable().optional().openapi({ example: null }),
     serverTimestamp: z.string().openapi({ example: '2026-10-08T10:15:35.000Z' }),
-    acceptedIds: z.array(z.string().uuid()).optional().openapi({ example: ['c56a4180-65aa-42ec-a945-5fd21dec0538'] }),
+    acceptedIds: z
+      .array(z.string().uuid())
+      .optional()
+      .openapi({ example: ['c56a4180-65aa-42ec-a945-5fd21dec0538'] }),
     rejectedIds: z.array(z.string().uuid()).optional().openapi({ example: [] }),
   })
   .openapi('LocationIngestResponse');
@@ -43,7 +46,12 @@ export const LiveWorkerLocationSchema = z
     userName: z.string().openapi({ example: 'Alex Field Tech' }),
     userEmail: z.string().optional().openapi({ example: 'alex@example.com' }),
     dutyStatus: z.enum(['ON_DUTY', 'OFF_DUTY']).openapi({ example: 'ON_DUTY' }),
-    sessionId: z.string().uuid().nullable().optional().openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    sessionId: z
+      .string()
+      .uuid()
+      .nullable()
+      .optional()
+      .openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     recordedAt: z.string().openapi({ example: '2026-10-08T10:15:30.000Z' }),
     latitude: z.number().openapi({ example: 28.6139 }),
     longitude: z.number().openapi({ example: 77.209 }),
@@ -104,10 +112,13 @@ export const CreateGeofenceRequestSchema = z
   .object({
     name: z.string().min(1).max(100).openapi({ example: 'North Branch Depot' }),
     description: z.string().optional().openapi({ example: 'Logistics fulfillment depot' }),
-    latitude: z.number().min(-90).max(90).openapi({ example: 28.6500 }),
-    longitude: z.number().min(-180).max(180).openapi({ example: 77.2300 }),
+    latitude: z.number().min(-90).max(90).openapi({ example: 28.65 }),
+    longitude: z.number().min(-180).max(180).openapi({ example: 77.23 }),
     radiusMeters: z.number().positive().default(100).openapi({ example: 100 }),
-    geofenceType: z.enum(['OFFICE', 'CUSTOMER_SITE', 'CHECKPOINT']).default('OFFICE').openapi({ example: 'OFFICE' }),
+    geofenceType: z
+      .enum(['OFFICE', 'CUSTOMER_SITE', 'CHECKPOINT'])
+      .default('OFFICE')
+      .openapi({ example: 'OFFICE' }),
   })
   .openapi('CreateGeofenceRequest');
 
@@ -147,4 +158,3 @@ export type CreateGeofenceRequest = z.infer<typeof CreateGeofenceRequestSchema>;
 export type ListGeofencesResponse = z.infer<typeof ListGeofencesResponseSchema>;
 export type CheckGeofenceProximityRequest = z.infer<typeof CheckGeofenceProximityRequestSchema>;
 export type CheckGeofenceProximityResponse = z.infer<typeof CheckGeofenceProximityResponseSchema>;
-

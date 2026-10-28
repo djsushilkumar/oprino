@@ -103,10 +103,7 @@ import {
   ConfirmMediaUploadRequestSchema,
   ListTaskProofsResponseSchema,
 } from './schemas/proof.js';
-import {
-  SyncBatchRequestSchema,
-  SyncBatchResponseSchema,
-} from './schemas/sync.js';
+import { SyncBatchRequestSchema, SyncBatchResponseSchema } from './schemas/sync.js';
 import {
   AttendanceReportResponseSchema,
   TaskSlaReportResponseSchema,
@@ -235,7 +232,6 @@ registry.register('VisitReportResponse', VisitReportResponseSchema);
 registry.register('Notification', NotificationSchema);
 registry.register('ListNotificationsResponse', ListNotificationsResponseSchema);
 registry.register('MarkNotificationReadResponse', MarkNotificationReadResponseSchema);
-
 
 // ---------------------------------------------------------------------------
 // Path Definitions
@@ -1505,7 +1501,8 @@ registry.registerPath({
   method: 'put',
   path: '/v1/visits/sequence',
   summary: 'Reorder Visits for Day Dispatch Route',
-  description: 'Atomically updates the stop sequence numbers for an assigned worker on a specific date',
+  description:
+    'Atomically updates the stop sequence numbers for an assigned worker on a specific date',
   tags: ['Visits'],
   operationId: 'reorderVisits',
   request: {
@@ -1715,7 +1712,8 @@ registry.registerPath({
   method: 'get',
   path: '/v1/reports/export/csv',
   summary: 'Export Attendance Report as CSV',
-  description: 'Streams attendance report summary in comma-separated values format for spreadsheet integration',
+  description:
+    'Streams attendance report summary in comma-separated values format for spreadsheet integration',
   tags: ['Reports'],
   operationId: 'exportAttendanceCsv',
   request: {
@@ -1820,5 +1818,3 @@ export function generateOpenApiDocument(): Record<string, any> {
     ],
   });
 }
-
-

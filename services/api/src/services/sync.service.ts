@@ -10,11 +10,7 @@ import {
   visits,
   taskProofs,
 } from '@oprino/database/schema';
-import type {
-  SyncBatchRequest,
-  SyncBatchResponse,
-  SyncMutationResult,
-} from '@oprino/contracts';
+import type { SyncBatchRequest, SyncBatchResponse, SyncMutationResult } from '@oprino/contracts';
 
 export class SyncService {
   constructor(private db: Database) {}
@@ -221,10 +217,7 @@ export class SyncService {
       .select()
       .from(attendanceSessions)
       .where(
-        and(
-          eq(attendanceSessions.workspaceId, workspaceId),
-          eq(attendanceSessions.userId, userId),
-        ),
+        and(eq(attendanceSessions.workspaceId, workspaceId), eq(attendanceSessions.userId, userId)),
       )
       .orderBy(sql`${attendanceSessions.punchInTime} DESC`)
       .limit(1);
@@ -457,7 +450,10 @@ export class SyncService {
     }
 
     const checkInTime = visit.checkInTime ? new Date(visit.checkInTime) : clientTime;
-    const durationMinutes = Math.max(0, Math.round((clientTime.getTime() - checkInTime.getTime()) / 60000));
+    const durationMinutes = Math.max(
+      0,
+      Math.round((clientTime.getTime() - checkInTime.getTime()) / 60000),
+    );
 
     await tx
       .update(visits)

@@ -138,8 +138,12 @@ function ActivateContent() {
 
         {isLoading ? (
           <div style={{ textAlign: 'center', padding: '2rem 0', color: '#64748B' }}>
-            <div style={{ marginBottom: '0.75rem', fontWeight: 600 }}>Verifying activation token...</div>
-            <div style={{ fontSize: '0.8125rem' }}>Please wait while we validate your invitation.</div>
+            <div style={{ marginBottom: '0.75rem', fontWeight: 600 }}>
+              Verifying activation token...
+            </div>
+            <div style={{ fontSize: '0.8125rem' }}>
+              Please wait while we validate your invitation.
+            </div>
           </div>
         ) : validationError ? (
           <div>
@@ -158,8 +162,16 @@ function ActivateContent() {
               <strong>Activation Error:</strong>
               <div style={{ marginTop: '0.25rem' }}>{validationError}</div>
             </div>
-            <p style={{ fontSize: '0.8125rem', color: '#64748B', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-              If your link has expired or has already been used, please request a new invitation link from your workspace administrator.
+            <p
+              style={{
+                fontSize: '0.8125rem',
+                color: '#64748B',
+                lineHeight: 1.5,
+                marginBottom: '1.5rem',
+              }}
+            >
+              If your link has expired or has already been used, please request a new invitation
+              link from your workspace administrator.
             </p>
             <Link
               href="/auth/signin"
@@ -209,10 +221,24 @@ function ActivateContent() {
                   marginBottom: '1.5rem',
                 }}
               >
-                <div style={{ fontSize: '0.75rem', color: '#0369A1', fontWeight: 700, textTransform: 'uppercase' }}>
+                <div
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#0369A1',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                  }}
+                >
                   Workspace Invitation
                 </div>
-                <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '1rem', marginTop: '0.25rem' }}>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    fontSize: '1rem',
+                    marginTop: '0.25rem',
+                  }}
+                >
                   {invitation.workspaceName}
                 </div>
                 <div style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.25rem' }}>
@@ -237,7 +263,10 @@ function ActivateContent() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <form
+              onSubmit={handleSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+            >
               <div>
                 <label
                   style={{
@@ -332,7 +361,14 @@ export default function ActivatePage() {
   return (
     <Suspense
       fallback={
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           Loading...
         </div>
       }

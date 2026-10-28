@@ -13,7 +13,10 @@ export interface AttendanceRoutesOptions {
   authMiddleware: ReturnType<typeof createAuthMiddleware>;
 }
 
-export const attendanceRoutes: FastifyPluginAsync<AttendanceRoutesOptions> = async (app, options) => {
+export const attendanceRoutes: FastifyPluginAsync<AttendanceRoutesOptions> = async (
+  app,
+  options,
+) => {
   const { attendanceService, authMiddleware } = options;
 
   // POST /v1/attendance/punch-in - Duty Start

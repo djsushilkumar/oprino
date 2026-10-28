@@ -15,10 +15,7 @@ export const syncRoutes: FastifyPluginAsync<SyncRoutesOptions> = async (app, opt
   app.post(
     '/v1/sync/mutations',
     {
-      preHandler: [
-        authMiddleware.authenticate,
-        authMiddleware.requireWorkspace,
-      ],
+      preHandler: [authMiddleware.authenticate, authMiddleware.requireWorkspace],
     },
     async (req, reply) => {
       const parsed = SyncBatchRequestSchema.safeParse(req.body);

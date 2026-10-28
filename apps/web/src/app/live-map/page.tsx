@@ -15,7 +15,12 @@ import type * as MapLibreGL from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 // Helper to generate a polygon circle for MapLibre GeoJSON layer
-function createGeoJsonCircle(centerLng: number, centerLat: number, radiusMeters: number, points = 48): [number, number][] {
+function createGeoJsonCircle(
+  centerLng: number,
+  centerLat: number,
+  radiusMeters: number,
+  points = 48,
+): [number, number][] {
   const coords: [number, number][] = [];
   const km = radiusMeters / 1000;
   const distanceX = km / (111.32 * Math.cos((centerLat * Math.PI) / 180));
@@ -45,9 +50,7 @@ export default function LiveMapPage() {
   const [historyData, setHistoryData] = useState<LocationHistoryResponse | null>(null);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [isHistoryMode, setIsHistoryMode] = useState<boolean>(false);
-  const [historyDate, setHistoryDate] = useState<string>(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [historyDate, setHistoryDate] = useState<string>(new Date().toISOString().slice(0, 10));
 
   const [isSseConnected, setIsSseConnected] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -60,7 +63,9 @@ export default function LiveMapPage() {
   const [newFenceLat, setNewFenceLat] = useState<number>(28.6139);
   const [newFenceLon, setNewFenceLon] = useState<number>(77.209);
   const [newFenceRadius, setNewFenceRadius] = useState<number>(150);
-  const [newFenceType, setNewFenceType] = useState<'OFFICE' | 'CUSTOMER_SITE' | 'CHECKPOINT'>('OFFICE');
+  const [newFenceType, setNewFenceType] = useState<'OFFICE' | 'CUSTOMER_SITE' | 'CHECKPOINT'>(
+    'OFFICE',
+  );
 
   // MapLibre references
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -191,7 +196,10 @@ export default function LiveMapPage() {
     // Backup polling fallback every 15s if SSE disconnects
     const pollInterval = setInterval(() => {
       if (!isSseConnected) {
-        webApi.getLiveWorkers().then((res) => setWorkers(res.workers)).catch(() => {});
+        webApi
+          .getLiveWorkers()
+          .then((res) => setWorkers(res.workers))
+          .catch(() => {});
       }
     }, 15000);
 
@@ -429,7 +437,8 @@ export default function LiveMapPage() {
         const el = marker.getElement();
         const initial = worker.userName ? worker.userName[0].toUpperCase() : 'T';
         const color = isSelected ? '#38BDF8' : isStale ? '#F59E0B' : '#6366F1';
-        const speedText = worker.speed && worker.speed > 0.5 ? `${(worker.speed * 3.6).toFixed(0)} km/h` : '';
+        const speedText =
+          worker.speed && worker.speed > 0.5 ? `${(worker.speed * 3.6).toFixed(0)} km/h` : '';
         const safeInitial = escapeHtml(initial);
         const safeUserName = escapeHtml(worker.userName);
         const safeSpeedText = speedText ? escapeHtml(speedText) : '';
@@ -482,7 +491,12 @@ export default function LiveMapPage() {
       });
 
       // Fit bounds only on initial render or when manually triggered to prevent continuous viewport snapping
-      if (!hasInitiallyFittedRef.current && hasValidCoords && !selectedWorker && workers.length > 0) {
+      if (
+        !hasInitiallyFittedRef.current &&
+        hasValidCoords &&
+        !selectedWorker &&
+        workers.length > 0
+      ) {
         hasInitiallyFittedRef.current = true;
         currentMap.fitBounds(bounds, {
           padding: 60,
@@ -513,7 +527,10 @@ export default function LiveMapPage() {
       return;
     }
 
-    const coordinates: [number, number][] = historyData.points.map((p) => [p.longitude, p.latitude]);
+    const coordinates: [number, number][] = historyData.points.map((p) => [
+      p.longitude,
+      p.latitude,
+    ]);
 
     source.setData({
       type: 'FeatureCollection',
@@ -613,13 +630,36 @@ export default function LiveMapPage() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#F8FAFC',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <HeaderNav context={context} onSignOut={() => router.push('/auth/signin')} />
 
       {/* Main Container */}
-      <main style={{ flex: 1, padding: '1.25rem 2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <main
+        style={{
+          flex: 1,
+          padding: '1.25rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+        }}
+      >
         {/* Top Header Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
@@ -651,7 +691,8 @@ export default function LiveMapPage() {
               </span>
             </div>
             <p style={{ fontSize: '0.875rem', color: '#64748B', margin: '0.25rem 0 0' }}>
-              Real-device GPS telemetry, open MapLibre vector cartography, and geofenced workforce boundaries.
+              Real-device GPS telemetry, open MapLibre vector cartography, and geofenced workforce
+              boundaries.
             </p>
           </div>
 
@@ -730,8 +771,9 @@ export default function LiveMapPage() {
         >
           <Icon name="lock" size={18} color="#1E40AF" />
           <div>
-            <strong>Duty-Hours-Only Tracking Invariant:</strong> Location tracking operates strictly during active,
-            verified work shifts. Off-duty location tracking never occurs. Peer visibility remains disabled by default.
+            <strong>Duty-Hours-Only Tracking Invariant:</strong> Location tracking operates strictly
+            during active, verified work shifts. Off-duty location tracking never occurs. Peer
+            visibility remains disabled by default.
           </div>
         </div>
 
@@ -788,11 +830,15 @@ export default function LiveMapPage() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <span style={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600 }}>MAP LAYER</span>
+                <span style={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600 }}>
+                  MAP LAYER
+                </span>
                 <span style={{ color: '#38BDF8', fontSize: '0.75rem', fontWeight: 700 }}>
                   ● MAPLIBRE OPEN VECTOR
                 </span>
-                <span style={{ color: '#64748B', fontSize: '0.75rem' }}>| Zero-Cost OSM Cartography</span>
+                <span style={{ color: '#64748B', fontSize: '0.75rem' }}>
+                  | Zero-Cost OSM Cartography
+                </span>
               </div>
 
               {isHistoryMode && (
@@ -846,7 +892,9 @@ export default function LiveMapPage() {
                   zIndex: 10,
                 }}
               >
-                <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>TIMELINE SCRUBBER:</span>
+                <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
+                  TIMELINE SCRUBBER:
+                </span>
                 <input
                   type="range"
                   min="0"
@@ -855,7 +903,14 @@ export default function LiveMapPage() {
                   onChange={(e) => setHistoryIndex(Number(e.target.value))}
                   style={{ flex: 1, accentColor: '#38BDF8', cursor: 'pointer' }}
                 />
-                <span style={{ fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, minWidth: '150px' }}>
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#E2E8F0',
+                    fontWeight: 600,
+                    minWidth: '150px',
+                  }}
+                >
                   {historyData.points[historyIndex]
                     ? `${new Date(historyData.points[historyIndex].recordedAt).toLocaleTimeString()} (${((historyData.points[historyIndex].speed || 0) * 3.6).toFixed(1)} km/h)`
                     : ''}
@@ -880,12 +935,18 @@ export default function LiveMapPage() {
                   gap: '0.85rem',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
                   <div>
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                    <h3
+                      style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', margin: 0 }}
+                    >
                       {selectedWorker.userName}
                     </h3>
-                    <span style={{ fontSize: '0.75rem', color: '#64748B' }}>{selectedWorker.userEmail}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                      {selectedWorker.userEmail}
+                    </span>
                   </div>
                   <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                     <span
@@ -918,26 +979,60 @@ export default function LiveMapPage() {
 
                 {/* Worker Metrics Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.5rem 0.75rem', borderRadius: '6px' }}>
-                    <span style={{ fontSize: '0.6875rem', color: '#64748B', display: 'block' }}>Speed</span>
+                  <div
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.6875rem', color: '#64748B', display: 'block' }}>
+                      Speed
+                    </span>
                     <strong style={{ fontSize: '0.875rem', color: '#0F172A' }}>
-                      {selectedWorker.speed ? `${(selectedWorker.speed * 3.6).toFixed(1)} km/h` : '0.0 km/h'}
+                      {selectedWorker.speed
+                        ? `${(selectedWorker.speed * 3.6).toFixed(1)} km/h`
+                        : '0.0 km/h'}
                     </strong>
                   </div>
-                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.5rem 0.75rem', borderRadius: '6px' }}>
-                    <span style={{ fontSize: '0.6875rem', color: '#64748B', display: 'block' }}>GPS Accuracy</span>
+                  <div
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.6875rem', color: '#64748B', display: 'block' }}>
+                      GPS Accuracy
+                    </span>
                     <strong style={{ fontSize: '0.875rem', color: '#0F172A' }}>
                       ±{selectedWorker.accuracy.toFixed(1)}m
                     </strong>
                   </div>
-                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.5rem 0.75rem', borderRadius: '6px' }}>
-                    <span style={{ fontSize: '0.6875rem', color: '#64748B', display: 'block' }}>Coordinates</span>
+                  <div
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.6875rem', color: '#64748B', display: 'block' }}>
+                      Coordinates
+                    </span>
                     <strong style={{ fontSize: '0.75rem', color: '#0F172A' }}>
                       {selectedWorker.latitude.toFixed(4)}, {selectedWorker.longitude.toFixed(4)}
                     </strong>
                   </div>
-                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.5rem 0.75rem', borderRadius: '6px' }}>
-                    <span style={{ fontSize: '0.6875rem', color: '#64748B', display: 'block' }}>Last Recorded Fix</span>
+                  <div
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.6875rem', color: '#64748B', display: 'block' }}>
+                      Last Recorded Fix
+                    </span>
                     <strong style={{ fontSize: '0.75rem', color: '#0F172A' }}>
                       {new Date(selectedWorker.recordedAt).toLocaleTimeString()}
                     </strong>
@@ -954,7 +1049,9 @@ export default function LiveMapPage() {
                       borderRadius: '6px',
                     }}
                   >
-                    <span style={{ fontSize: '0.6875rem', color: '#4F46E5', fontWeight: 600 }}>CURRENT ASSIGNED TASK</span>
+                    <span style={{ fontSize: '0.6875rem', color: '#4F46E5', fontWeight: 600 }}>
+                      CURRENT ASSIGNED TASK
+                    </span>
                     <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#1E1B4B' }}>
                       {selectedWorker.currentTaskTitle}
                     </div>
@@ -1004,7 +1101,8 @@ export default function LiveMapPage() {
                   fontSize: '0.875rem',
                 }}
               >
-                Click any employee marker on the map to inspect live GPS telemetry and daily route trails.
+                Click any employee marker on the map to inspect live GPS telemetry and daily route
+                trails.
               </div>
             )}
 
@@ -1022,7 +1120,9 @@ export default function LiveMapPage() {
                 gap: '0.75rem',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
                   Active Field Crew ({filteredWorkers.length})
                 </h3>
@@ -1064,11 +1164,25 @@ export default function LiveMapPage() {
               />
 
               {filteredWorkers.length === 0 ? (
-                <div style={{ fontSize: '0.8125rem', color: '#94A3B8', textAlign: 'center', padding: '2rem 0' }}>
+                <div
+                  style={{
+                    fontSize: '0.8125rem',
+                    color: '#94A3B8',
+                    textAlign: 'center',
+                    padding: '2rem 0',
+                  }}
+                >
                   No matching technicians on duty.
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    overflowY: 'auto',
+                  }}
+                >
                   {filteredWorkers.map((worker) => {
                     const isSelected = selectedWorker?.userId === worker.userId;
                     const isMoving = worker.speed && worker.speed > 0.8;
@@ -1097,11 +1211,16 @@ export default function LiveMapPage() {
                         }}
                       >
                         <div>
-                          <strong style={{ fontSize: '0.8125rem', color: '#0F172A', display: 'block' }}>
+                          <strong
+                            style={{ fontSize: '0.8125rem', color: '#0F172A', display: 'block' }}
+                          >
                             {worker.userName}
                           </strong>
                           <span style={{ fontSize: '0.6875rem', color: '#64748B' }}>
-                            {isMoving ? `Moving • ${(worker.speed! * 3.6).toFixed(1)} km/h` : 'Stationary'} • ±{worker.accuracy.toFixed(0)}m
+                            {isMoving
+                              ? `Moving • ${(worker.speed! * 3.6).toFixed(1)} km/h`
+                              : 'Stationary'}{' '}
+                            • ±{worker.accuracy.toFixed(0)}m
                           </span>
                         </div>
                         <span
@@ -1145,13 +1264,25 @@ export default function LiveMapPage() {
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
             }}
           >
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', margin: '0 0 1rem' }}>
+            <h2
+              style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', margin: '0 0 1rem' }}
+            >
               Create New Geofence
             </h2>
 
-            <form onSubmit={handleCreateGeofence} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form
+              onSubmit={handleCreateGeofence}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+            >
               <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block' }}>
+                <label
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#475569',
+                    display: 'block',
+                  }}
+                >
                   Boundary Name
                 </label>
                 <input
@@ -1172,7 +1303,14 @@ export default function LiveMapPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block' }}>
+                <label
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#475569',
+                    display: 'block',
+                  }}
+                >
                   Description (Optional)
                 </label>
                 <input
@@ -1193,7 +1331,14 @@ export default function LiveMapPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block' }}>
+                  <label
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#475569',
+                      display: 'block',
+                    }}
+                  >
                     Latitude
                   </label>
                   <input
@@ -1213,7 +1358,14 @@ export default function LiveMapPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block' }}>
+                  <label
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#475569',
+                      display: 'block',
+                    }}
+                  >
                     Longitude
                   </label>
                   <input
@@ -1236,7 +1388,14 @@ export default function LiveMapPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block' }}>
+                  <label
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#475569',
+                      display: 'block',
+                    }}
+                  >
                     Radius (Meters)
                   </label>
                   <input
@@ -1257,7 +1416,14 @@ export default function LiveMapPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block' }}>
+                  <label
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#475569',
+                      display: 'block',
+                    }}
+                  >
                     Type
                   </label>
                   <select
@@ -1279,7 +1445,14 @@ export default function LiveMapPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.75rem',
+                  marginTop: '0.5rem',
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setIsGeofenceModalOpen(false)}

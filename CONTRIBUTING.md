@@ -9,6 +9,7 @@ Welcome to the Oprino repository. We appreciate your contributions to building t
 All contributors and coding assistants must strictly adhere to the project rules and standards defined in [`AGENTS.md`](./AGENTS.md).
 
 ### Non-Negotiable Invariants:
+
 1. **Duty-Hours-Only Tracking:** Off-duty location tracking must **NEVER** occur. Peer location visibility remains **OFF by default**.
 2. **Multi-Tenant Isolation:** Enforce 5-stage tenant verification; always use transaction-scoped `SET LOCAL app.current_workspace_id` in database queries.
 3. **Never Commit Secrets:** Do not commit `.env` files, API keys, private keys, or credentials. Rely strictly on environment variables validated with Zod schemas.
@@ -41,12 +42,14 @@ oprino/
 ## 3. Development Workflow
 
 ### Prerequisites
+
 - Node.js >= 22
 - pnpm >= 11
 - Flutter >= 3.47
 - Docker & Docker Compose (for local PostgreSQL & Redis)
 
 ### Initial Setup
+
 ```bash
 # 1. Install dependencies
 pnpm install --frozen-lockfile
@@ -62,6 +65,7 @@ pnpm --filter @oprino/database migrate
 ```
 
 ### Running Locally
+
 ```bash
 # Start API & Web Dashboard in development mode
 pnpm dev
@@ -94,5 +98,6 @@ flutter test
 ---
 
 ## 5. Architecture Decisions & PR Standards
+
 - Any architectural change or dependency addition requires an explicit Architecture Decision Record (ADR) in `docs/architecture/ADR/`.
 - Every pull request must be linked to an audited milestone and tested against isolated service containers.

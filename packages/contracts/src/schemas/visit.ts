@@ -3,12 +3,7 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 
 extendZodWithOpenApi(z);
 
-export const VisitStatusEnum = z.enum([
-  'PLANNED',
-  'CHECKED_IN',
-  'CHECKED_OUT',
-  'CANCELLED',
-]);
+export const VisitStatusEnum = z.enum(['PLANNED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED']);
 export type VisitStatus = z.infer<typeof VisitStatusEnum>;
 
 export const VisitSchema = z
@@ -17,9 +12,19 @@ export const VisitSchema = z
     workspaceId: z.string().uuid().openapi({ example: 'w1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     customerId: z.string().uuid().openapi({ example: 'c1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     customerName: z.string().optional().openapi({ example: 'Apex Facilities Management' }),
-    siteId: z.string().uuid().nullable().optional().openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    siteId: z
+      .string()
+      .uuid()
+      .nullable()
+      .optional()
+      .openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     siteName: z.string().nullable().optional().openapi({ example: 'North Logistics Depot' }),
-    taskId: z.string().uuid().nullable().optional().openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    taskId: z
+      .string()
+      .uuid()
+      .nullable()
+      .optional()
+      .openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     taskTitle: z.string().nullable().optional().openapi({ example: 'Inspect HVAC Unit' }),
     userId: z.string().uuid().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     userName: z.string().optional().openapi({ example: 'Jane Field Tech' }),
@@ -28,13 +33,17 @@ export const VisitSchema = z
     checkInTime: z.string().nullable().optional().openapi({ example: '2026-10-08T14:05:00.000Z' }),
     checkOutTime: z.string().nullable().optional().openapi({ example: '2026-10-08T15:20:00.000Z' }),
     checkInLatitude: z.number().nullable().optional().openapi({ example: 28.6139 }),
-    checkInLongitude: z.number().nullable().optional().openapi({ example: 77.2090 }),
+    checkInLongitude: z.number().nullable().optional().openapi({ example: 77.209 }),
     checkOutLatitude: z.number().nullable().optional().openapi({ example: 28.6139 }),
-    checkOutLongitude: z.number().nullable().optional().openapi({ example: 77.2090 }),
+    checkOutLongitude: z.number().nullable().optional().openapi({ example: 77.209 }),
     durationMinutes: z.number().int().optional().default(0).openapi({ example: 75 }),
     sequenceOrder: z.number().int().nullable().optional().openapi({ example: 1 }),
     routeDate: z.string().nullable().optional().openapi({ example: '2026-10-09' }),
-    notes: z.string().nullable().optional().openapi({ example: 'Client signed paper receipt on site' }),
+    notes: z
+      .string()
+      .nullable()
+      .optional()
+      .openapi({ example: 'Client signed paper receipt on site' }),
     createdAt: z.string().openapi({ example: '2026-10-08T09:00:00.000Z' }),
     updatedAt: z.string().openapi({ example: '2026-10-08T09:00:00.000Z' }),
   })
@@ -43,9 +52,21 @@ export const VisitSchema = z
 export const CreateVisitRequestSchema = z
   .object({
     customerId: z.string().uuid().openapi({ example: 'c1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
-    siteId: z.string().uuid().optional().openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
-    taskId: z.string().uuid().optional().openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
-    userId: z.string().uuid().optional().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    siteId: z
+      .string()
+      .uuid()
+      .optional()
+      .openapi({ example: 's1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    taskId: z
+      .string()
+      .uuid()
+      .optional()
+      .openapi({ example: 't1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
+    userId: z
+      .string()
+      .uuid()
+      .optional()
+      .openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
     plannedAt: z.string().optional().openapi({ example: '2026-10-08T14:00:00.000Z' }),
     notes: z.string().optional().openapi({ example: 'Quarterly equipment audit' }),
   })
@@ -54,15 +75,20 @@ export const CreateVisitRequestSchema = z
 export const ReorderVisitsRequestSchema = z
   .object({
     userId: z.string().uuid().openapi({ example: 'u1b2c3d4-e5f6-7890-abcd-ef1234567890' }),
-    routeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2026-10-09' }),
-    orderedVisitIds: z.array(z.string().uuid()).openapi({ example: ['v1b2c3d4-e5f6-7890-abcd-ef1234567890'] }),
+    routeDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .openapi({ example: '2026-10-09' }),
+    orderedVisitIds: z
+      .array(z.string().uuid())
+      .openapi({ example: ['v1b2c3d4-e5f6-7890-abcd-ef1234567890'] }),
   })
   .openapi('ReorderVisitsRequest');
 
 export const VisitCheckInRequestSchema = z
   .object({
     latitude: z.number().min(-90).max(90).openapi({ example: 28.6139 }),
-    longitude: z.number().min(-180).max(180).openapi({ example: 77.2090 }),
+    longitude: z.number().min(-180).max(180).openapi({ example: 77.209 }),
     accuracy: z.number().positive().optional().openapi({ example: 8.5 }),
     notes: z.string().optional().openapi({ example: 'Arrived at client reception' }),
   })
@@ -71,7 +97,7 @@ export const VisitCheckInRequestSchema = z
 export const VisitCheckOutRequestSchema = z
   .object({
     latitude: z.number().min(-90).max(90).openapi({ example: 28.6139 }),
-    longitude: z.number().min(-180).max(180).openapi({ example: 77.2090 }),
+    longitude: z.number().min(-180).max(180).openapi({ example: 77.209 }),
     accuracy: z.number().positive().optional().openapi({ example: 8.5 }),
     notes: z.string().optional().openapi({ example: 'Inspection complete, customer signed' }),
   })
@@ -90,4 +116,3 @@ export type ReorderVisitsRequest = z.infer<typeof ReorderVisitsRequestSchema>;
 export type VisitCheckInRequest = z.infer<typeof VisitCheckInRequestSchema>;
 export type VisitCheckOutRequest = z.infer<typeof VisitCheckOutRequestSchema>;
 export type ListVisitsResponse = z.infer<typeof ListVisitsResponseSchema>;
-

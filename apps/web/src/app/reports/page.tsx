@@ -107,7 +107,12 @@ export default function ReportsPage() {
           {/* Date Range Selectors & Quick Actions */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-700">
-              <label htmlFor="report-start-date" className="text-xs font-semibold text-slate-400 uppercase">From:</label>
+              <label
+                htmlFor="report-start-date"
+                className="text-xs font-semibold text-slate-400 uppercase"
+              >
+                From:
+              </label>
               <input
                 id="report-start-date"
                 type="date"
@@ -117,7 +122,12 @@ export default function ReportsPage() {
               />
             </div>
             <div className="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-700">
-              <label htmlFor="report-end-date" className="text-xs font-semibold text-slate-400 uppercase">To:</label>
+              <label
+                htmlFor="report-end-date"
+                className="text-xs font-semibold text-slate-400 uppercase"
+              >
+                To:
+              </label>
               <input
                 id="report-end-date"
                 type="date"
@@ -147,7 +157,11 @@ export default function ReportsPage() {
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            <Icon name="clock" size={16} color={activeTab === 'attendance' ? '#FFFFFF' : '#94A3B8'} />
+            <Icon
+              name="clock"
+              size={16}
+              color={activeTab === 'attendance' ? '#FFFFFF' : '#94A3B8'}
+            />
             <span>Attendance Summary</span>
           </button>
           <button
@@ -193,7 +207,9 @@ export default function ReportsPage() {
                 {/* Metric Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60">
-                    <p className="text-xs uppercase font-bold text-slate-400">Total Company Hours</p>
+                    <p className="text-xs uppercase font-bold text-slate-400">
+                      Total Company Hours
+                    </p>
                     <p className="text-3xl font-black text-indigo-400 mt-2">
                       {attendanceReport.totalCompanyHours} hrs
                     </p>
@@ -205,9 +221,14 @@ export default function ReportsPage() {
                     </p>
                   </div>
                   <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60">
-                    <p className="text-xs uppercase font-bold text-slate-400">Total Late Incidents</p>
+                    <p className="text-xs uppercase font-bold text-slate-400">
+                      Total Late Incidents
+                    </p>
                     <p className="text-3xl font-black text-amber-400 mt-2">
-                      {(attendanceReport.items ?? []).reduce((acc, i) => acc + (i.lateDays || 0), 0)}
+                      {(attendanceReport.items ?? []).reduce(
+                        (acc, i) => acc + (i.lateDays || 0),
+                        0,
+                      )}
                     </p>
                   </div>
                   <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60">
@@ -215,7 +236,8 @@ export default function ReportsPage() {
                     <p className="text-3xl font-black text-emerald-400 mt-2">
                       {attendanceReport.totalEmployees > 0
                         ? Math.round(
-                            (attendanceReport.totalCompanyHours / attendanceReport.totalEmployees) * 10
+                            (attendanceReport.totalCompanyHours / attendanceReport.totalEmployees) *
+                              10,
                           ) / 10
                         : 0}{' '}
                       hrs
@@ -238,7 +260,7 @@ export default function ReportsPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800">
-                        {(!attendanceReport.items || attendanceReport.items.length === 0) ? (
+                        {!attendanceReport.items || attendanceReport.items.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="p-8 text-center text-slate-400">
                               No attendance records found for this period.
@@ -246,7 +268,10 @@ export default function ReportsPage() {
                           </tr>
                         ) : (
                           attendanceReport.items.map((item) => (
-                            <tr key={item.userId} className="hover:bg-slate-700/30 transition-colors">
+                            <tr
+                              key={item.userId}
+                              className="hover:bg-slate-700/30 transition-colors"
+                            >
                               <td className="p-4 font-bold text-white flex items-center gap-2">
                                 <span className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-black text-indigo-400">
                                   {item.userName.charAt(0)}
@@ -322,18 +347,20 @@ export default function ReportsPage() {
                 <div className="bg-slate-800/80 p-6 rounded-2xl border border-slate-700/60">
                   <h3 className="font-bold text-white mb-4">Task Status Distribution</h3>
                   <div className="flex flex-wrap gap-4">
-                    {Object.entries(taskSlaReport.statusDistribution ?? {}).map(([status, count]) => (
-                      <div
-                        key={status}
-                        className="p-4 bg-slate-900/60 rounded-xl border border-slate-700 flex items-center gap-3 min-w-[140px]"
-                      >
-                        <span className="w-3 h-3 rounded-full bg-indigo-500"></span>
-                        <div>
-                          <p className="text-xs font-bold text-slate-400">{status}</p>
-                          <p className="text-xl font-black text-white">{count}</p>
+                    {Object.entries(taskSlaReport.statusDistribution ?? {}).map(
+                      ([status, count]) => (
+                        <div
+                          key={status}
+                          className="p-4 bg-slate-900/60 rounded-xl border border-slate-700 flex items-center gap-3 min-w-[140px]"
+                        >
+                          <span className="w-3 h-3 rounded-full bg-indigo-500"></span>
+                          <div>
+                            <p className="text-xs font-bold text-slate-400">{status}</p>
+                            <p className="text-xl font-black text-white">{count}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -345,9 +372,7 @@ export default function ReportsPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60">
                     <p className="text-xs uppercase font-bold text-slate-400">Total Stops</p>
-                    <p className="text-3xl font-black text-white mt-2">
-                      {visitReport.totalVisits}
-                    </p>
+                    <p className="text-3xl font-black text-white mt-2">{visitReport.totalVisits}</p>
                   </div>
                   <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60">
                     <p className="text-xs uppercase font-bold text-slate-400">Completed Stops</p>

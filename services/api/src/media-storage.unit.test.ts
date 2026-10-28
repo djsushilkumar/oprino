@@ -549,7 +549,8 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
             APP_PUBLIC_URL: 'https://app.staging.oprino.com',
             BETTER_AUTH_SECRET: 'staging_secret_must_be_very_long_and_secure_123456789',
             BETTER_AUTH_URL: 'https://api.staging.oprino.com',
-            DATABASE_URL: 'postgresql://oprino_admin:password@staging-db.example.com:5432/oprino_staging_db',
+            DATABASE_URL:
+              'postgresql://oprino_admin:password@staging-db.example.com:5432/oprino_staging_db',
             REDIS_URL: 'rediss://staging-redis.example.com:6379',
             // Missing S3 credentials!
           }),
@@ -567,7 +568,8 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
         APP_PUBLIC_URL: 'https://app.staging.oprino.com',
         BETTER_AUTH_SECRET: 'staging_secret_must_be_very_long_and_secure_123456789',
         BETTER_AUTH_URL: 'https://api.staging.oprino.com',
-        DATABASE_URL: 'postgresql://oprino_admin:password@staging-db.example.com:5432/oprino_staging_db',
+        DATABASE_URL:
+          'postgresql://oprino_admin:password@staging-db.example.com:5432/oprino_staging_db',
         REDIS_URL: 'rediss://staging-redis.example.com:6379',
         STORAGE_DRIVER: 's3',
         S3_ENDPOINT: 'https://cf-staging-account.r2.cloudflarestorage.com',
@@ -595,7 +597,8 @@ describe('Media Storage & Security Hardening Unit & Domain Invariants', () => {
             APP_PUBLIC_URL: 'https://app.staging.oprino.com',
             BETTER_AUTH_SECRET: 'oprino_dev_secret_must_be_long_and_secure_for_auth',
             BETTER_AUTH_URL: 'https://api.staging.oprino.com',
-            DATABASE_URL: 'postgresql://oprino_admin:password@staging-db.example.com:5432/oprino_staging_db',
+            DATABASE_URL:
+              'postgresql://oprino_admin:password@staging-db.example.com:5432/oprino_staging_db',
             REDIS_URL: 'rediss://staging-redis.example.com:6379',
             STORAGE_DRIVER: 's3',
             S3_BUCKET_NAME: 'oprino-staging-media',

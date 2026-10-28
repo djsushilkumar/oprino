@@ -143,7 +143,9 @@ export function buildServer(options?: {
 
   // Dynamic preview deployments: used where static origin declaration is not feasible due to dynamic branch names.
   // Strictly scoped to the verified team namespace (-djsushilkumar) to reject third-party prefix squatting.
-  allowedOrigins.push(/^https:\/\/oprino-[a-zA-Z0-9_-]+-djsushilkumar(?:-[a-zA-Z0-9]+)?\.vercel\.app$/);
+  allowedOrigins.push(
+    /^https:\/\/oprino-[a-zA-Z0-9_-]+-djsushilkumar(?:-[a-zA-Z0-9]+)?\.vercel\.app$/,
+  );
 
   if (env.APP_PUBLIC_URL) {
     try {
@@ -177,7 +179,9 @@ export function buildServer(options?: {
       .filter(Boolean)
       .filter((o) => {
         if (o === '*') {
-          app.log.warn('⚠️ Wildcard CORS origin "*" ignored when credentials: true is enabled for cross-origin security.');
+          app.log.warn(
+            '⚠️ Wildcard CORS origin "*" ignored when credentials: true is enabled for cross-origin security.',
+          );
           return false;
         }
         return true;
@@ -260,9 +264,7 @@ export function buildServer(options?: {
         ? error.statusCode
         : 500;
     const isProduction =
-      env.NODE_ENV === 'production' ||
-      env.APP_ENV === 'production' ||
-      env.APP_ENV === 'staging';
+      env.NODE_ENV === 'production' || env.APP_ENV === 'production' || env.APP_ENV === 'staging';
 
     request.log.error(error);
 

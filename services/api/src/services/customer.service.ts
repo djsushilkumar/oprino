@@ -266,7 +266,9 @@ export class CustomerService {
       const rows = await tx
         .select()
         .from(customerSites)
-        .where(and(eq(customerSites.workspaceId, workspaceId), eq(customerSites.customerId, customerId)))
+        .where(
+          and(eq(customerSites.workspaceId, workspaceId), eq(customerSites.customerId, customerId)),
+        )
         .orderBy(desc(customerSites.createdAt));
 
       return {
@@ -395,7 +397,8 @@ export class CustomerService {
       if (input.address !== undefined) updates.address = input.address;
       if (input.latitude !== undefined) updates.latitude = input.latitude;
       if (input.longitude !== undefined) updates.longitude = input.longitude;
-      if (input.geofenceRadiusMeters !== undefined) updates.geofenceRadiusMeters = input.geofenceRadiusMeters;
+      if (input.geofenceRadiusMeters !== undefined)
+        updates.geofenceRadiusMeters = input.geofenceRadiusMeters;
       if (input.contactName !== undefined) updates.contactName = input.contactName;
       if (input.contactPhone !== undefined) updates.contactPhone = input.contactPhone;
       if (input.notes !== undefined) updates.notes = input.notes;

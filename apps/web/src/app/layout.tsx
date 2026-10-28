@@ -11,9 +11,7 @@ export const metadata: Metadata = {
       { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon.ico', sizes: 'any' },
     ],
-    apple: [
-      { url: '/favicon-180.png', sizes: '180x180', type: 'image/png' },
-    ],
+    apple: [{ url: '/favicon-180.png', sizes: '180x180', type: 'image/png' }],
   },
   manifest: '/site.webmanifest',
 };

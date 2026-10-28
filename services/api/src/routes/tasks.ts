@@ -159,7 +159,14 @@ export const taskRoutes: FastifyPluginAsync<TaskRoutesOptions> = async (app, opt
         const status = err.statusCode || 500;
         return reply.status(status).send({
           statusCode: status,
-          error: status === 409 ? 'Conflict' : status === 400 ? 'Bad Request' : status === 403 ? 'Forbidden' : 'Internal Server Error',
+          error:
+            status === 409
+              ? 'Conflict'
+              : status === 400
+                ? 'Bad Request'
+                : status === 403
+                  ? 'Forbidden'
+                  : 'Internal Server Error',
           message: err.message || 'Failed to update task',
         });
       }
@@ -170,10 +177,7 @@ export const taskRoutes: FastifyPluginAsync<TaskRoutesOptions> = async (app, opt
   app.post(
     '/v1/tasks/:taskId/transition',
     {
-      preHandler: [
-        authMiddleware.authenticate,
-        authMiddleware.requireWorkspace,
-      ],
+      preHandler: [authMiddleware.authenticate, authMiddleware.requireWorkspace],
     },
     async (req, reply) => {
       const { taskId } = req.params as { taskId: string };
@@ -376,7 +380,8 @@ export const taskRoutes: FastifyPluginAsync<TaskRoutesOptions> = async (app, opt
         const status = err.statusCode || 500;
         return reply.status(status).send({
           statusCode: status,
-          error: status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
+          error:
+            status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Internal Server Error',
           message: err.message || 'Failed to verify task',
         });
       }
@@ -413,4 +418,3 @@ export const taskRoutes: FastifyPluginAsync<TaskRoutesOptions> = async (app, opt
     },
   );
 };
-

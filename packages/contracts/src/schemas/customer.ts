@@ -11,7 +11,11 @@ export const CustomerSchema = z
     companyName: z.string().nullable().optional().openapi({ example: 'Apex Group Corp' }),
     email: z.string().email().nullable().optional().openapi({ example: 'facilities@apex.com' }),
     phone: z.string().nullable().optional().openapi({ example: '+1-555-0199' }),
-    notes: z.string().nullable().optional().openapi({ example: 'Primary commercial client for HVAC servicing' }),
+    notes: z
+      .string()
+      .nullable()
+      .optional()
+      .openapi({ example: 'Primary commercial client for HVAC servicing' }),
     isActive: z.boolean().openapi({ example: true }),
     createdAt: z.string().openapi({ example: '2026-10-08T09:00:00.000Z' }),
     updatedAt: z.string().openapi({ example: '2026-10-08T09:00:00.000Z' }),
@@ -55,7 +59,7 @@ export const CustomerSiteSchema = z
     name: z.string().openapi({ example: 'North Logistics Depot' }),
     address: z.string().openapi({ example: '742 Evergreen Terrace, Springfield' }),
     latitude: z.number().nullable().optional().openapi({ example: 28.6139 }),
-    longitude: z.number().nullable().optional().openapi({ example: 77.2090 }),
+    longitude: z.number().nullable().optional().openapi({ example: 77.209 }),
     geofenceRadiusMeters: z.number().positive().openapi({ example: 150.0 }),
     contactName: z.string().nullable().optional().openapi({ example: 'John Depot Lead' }),
     contactPhone: z.string().nullable().optional().openapi({ example: '+1-555-0288' }),
@@ -71,8 +75,13 @@ export const CreateCustomerSiteRequestSchema = z
     name: z.string().min(1).max(255).openapi({ example: 'North Logistics Depot' }),
     address: z.string().min(1).openapi({ example: '742 Evergreen Terrace, Springfield' }),
     latitude: z.number().min(-90).max(90).optional().openapi({ example: 28.6139 }),
-    longitude: z.number().min(-180).max(180).optional().openapi({ example: 77.2090 }),
-    geofenceRadiusMeters: z.number().positive().optional().default(100.0).openapi({ example: 100.0 }),
+    longitude: z.number().min(-180).max(180).optional().openapi({ example: 77.209 }),
+    geofenceRadiusMeters: z
+      .number()
+      .positive()
+      .optional()
+      .default(100.0)
+      .openapi({ example: 100.0 }),
     contactName: z.string().max(255).optional().openapi({ example: 'John Depot Lead' }),
     contactPhone: z.string().max(50).optional().openapi({ example: '+1-555-0288' }),
     notes: z.string().optional(),

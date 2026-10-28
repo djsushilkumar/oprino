@@ -47,22 +47,14 @@ export class NotificationService {
   /**
    * Lists notifications for the authenticated user with unread count.
    */
-  async listNotifications(
-    workspaceId: string,
-    userId: string,
-  ): Promise<ListNotificationsResponse> {
+  async listNotifications(workspaceId: string, userId: string): Promise<ListNotificationsResponse> {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 
       const rows = await tx
         .select()
         .from(notifications)
-        .where(
-          and(
-            eq(notifications.workspaceId, workspaceId),
-            eq(notifications.userId, userId),
-          ),
-        )
+        .where(and(eq(notifications.workspaceId, workspaceId), eq(notifications.userId, userId)))
         .orderBy(sql`${notifications.createdAt} DESC`)
         .limit(50);
 
@@ -123,10 +115,7 @@ export class NotificationService {
   /**
    * Marks all notifications for a user as read.
    */
-  async markAllAsRead(
-    workspaceId: string,
-    userId: string,
-  ): Promise<MarkNotificationReadResponse> {
+  async markAllAsRead(workspaceId: string, userId: string): Promise<MarkNotificationReadResponse> {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 

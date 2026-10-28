@@ -1,6 +1,6 @@
 /**
  * Oprino Phase 4C — Automated Pilot Scenarios & Invariant Verification Suite
- * 
+ *
  * Verifies end-to-end field ops workflows against isolated pilot backend:
  * 1. Isolated health check & synthetic tenant isolation
  * 2. Employee authentication & tenant scoped workspace
@@ -59,19 +59,23 @@ async function request(reqPath, options = {}) {
 async function uploadBinary(uploadUrl, buffer) {
   const url = new URL(uploadUrl);
   return new Promise((resolve, reject) => {
-    const req = http.request(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'image/jpeg',
-        'Content-Length': buffer.length,
+    const req = http.request(
+      url,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'image/jpeg',
+          'Content-Length': buffer.length,
+        },
       },
-    }, (res) => {
-      const chunks = [];
-      res.on('data', (c) => chunks.push(c));
-      res.on('end', () => {
-        resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8') });
-      });
-    });
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8') });
+        });
+      },
+    );
     req.on('error', reject);
     req.write(buffer);
     req.end();
@@ -99,9 +103,18 @@ async function runPilotVerification() {
   const healthRes = await request('/health/ready');
   assert(healthRes.status === 200, 'Isolated pilot server responds 200 OK');
   assert(healthRes.body.status === 'ok', 'Pilot server status is ok');
-  assert(healthRes.body.mock === true, 'Server unmistakably identifies as synthetic in-memory mock');
-  assert(healthRes.headers['x-oprino-mock-server'] === 'true', 'X-Oprino-Mock-Server header confirms test-double status');
-  assert(healthRes.body.services.storage === 'local-isolated', 'Storage strictly local-isolated (Zero Neon/R2)');
+  assert(
+    healthRes.body.mock === true,
+    'Server unmistakably identifies as synthetic in-memory mock',
+  );
+  assert(
+    healthRes.headers['x-oprino-mock-server'] === 'true',
+    'X-Oprino-Mock-Server header confirms test-double status',
+  );
+  assert(
+    healthRes.body.services.storage === 'local-isolated',
+    'Storage strictly local-isolated (Zero Neon/R2)',
+  );
 
   // SCENARIO 2: Employee Authentication & Tenant Isolation
   console.log('\n--- SCENARIO 2: Employee Login & Tenant Isolation ---');
@@ -109,8 +122,8 @@ async function runPilotVerification() {
     method: 'POST',
     body: {
       email: 'field.lead@acme.com',
-      password: 'PilotPassword123!'
-    }
+      password: 'PilotPassword123!',
+    },
   });
   assert(empLogin.status === 200, 'Employee login succeeds with synthetic credentials');
   assert(empLogin.body.user.email === 'field.lead@acme.com', 'Authenticated user email matches');
@@ -118,11 +131,17 @@ async function runPilotVerification() {
 
   // Verify Me Context & Workspace Isolation
   const meRes = await request('/v1/me', {
-    headers: { Authorization: `Bearer ${empToken}` }
+    headers: { Authorization: `Bearer ${empToken}` },
   });
   assert(meRes.status === 200, 'Context endpoint /v1/me returned 200');
-  assert(meRes.body.activeWorkspace.id === 'ws-pilot-1', 'Active workspace confirmed as ws-pilot-1');
-  assert(meRes.body.activeWorkspace.name === 'Apex Field Services', 'Tenant verified as Apex Field Services');
+  assert(
+    meRes.body.activeWorkspace.id === 'ws-pilot-1',
+    'Active workspace confirmed as ws-pilot-1',
+  );
+  assert(
+    meRes.body.activeWorkspace.name === 'Apex Field Services',
+    'Tenant verified as Apex Field Services',
+  );
   assert(meRes.body.role.name === 'Employee', 'Role verified as Employee');
 
   // SCENARIO 3: Device Registration & Governance (OnePlus Hardware)
@@ -134,8 +153,8 @@ async function runPilotVerification() {
       installationId: '55df2f92-6116-45ad-971e-374d9782b085',
       platform: 'ANDROID',
       model: 'OnePlus Nord CE4 (CPH2707)',
-      osVersion: 'Android 16 (API 36)'
-    }
+      osVersion: 'Android 16 (API 36)',
+    },
   });
   assert(devReg.status === 200, 'Device registration accepted');
   assert(devReg.body.status === 'REGISTERED', 'Physical device installation marked REGISTERED');
@@ -149,17 +168,23 @@ async function runPilotVerification() {
       latitude: 12.9716,
       longitude: 77.5946,
       accuracy: 4.5,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   });
-  assert(offDutyLoc.status === 403, 'Off-duty GPS submission strictly rejected with HTTP 403 Forbidden');
-  assert(offDutyLoc.body.code === 'OFF_DUTY_TRACKING_PROHIBITED', 'Zero off-duty tracking invariant explicitly enforced');
+  assert(
+    offDutyLoc.status === 403,
+    'Off-duty GPS submission strictly rejected with HTTP 403 Forbidden',
+  );
+  assert(
+    offDutyLoc.body.code === 'OFF_DUTY_TRACKING_PROHIBITED',
+    'Zero off-duty tracking invariant explicitly enforced',
+  );
 
   // SCENARIO 5: Attendance Punch-In with Selfie Proof Upload
   console.log('\n--- SCENARIO 5: Attendance Punch-In with Selfie Proof Upload ---');
   const selfieUrlRes = await request('/v1/media/attendance-selfie-url', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${empToken}` }
+    headers: { Authorization: `Bearer ${empToken}` },
   });
   assert(selfieUrlRes.status === 200, 'Presigned selfie upload URL generated');
   assert(Boolean(selfieUrlRes.body.uploadUrl), 'Upload URL provided');
@@ -168,7 +193,10 @@ async function runPilotVerification() {
   // Upload synthetic selfie binary
   const selfieBuffer = Buffer.from('JPEG_SELFIE_BINARY_PILOT_VERIFICATION_PAYLOAD_DATA');
   const selfieUploadRes = await uploadBinary(selfieUrlRes.body.uploadUrl, selfieBuffer);
-  assert(selfieUploadRes.status === 200, 'Selfie binary successfully written to local pilot storage');
+  assert(
+    selfieUploadRes.status === 200,
+    'Selfie binary successfully written to local pilot storage',
+  );
 
   // Execute Punch-In
   const punchInRes = await request('/v1/attendance/punch-in', {
@@ -178,8 +206,8 @@ async function runPilotVerification() {
       selfieMediaKey: selfieUrlRes.body.fileKey,
       latitude: 28.6139,
       longitude: 77.209,
-      accuracy: 4.2
-    }
+      accuracy: 4.2,
+    },
   });
   assert(punchInRes.status === 200, 'Punch-in accepted with valid selfie proof');
   assert(punchInRes.body.status === 'ON_DUTY', 'Attendance status transitioned to ON_DUTY');
@@ -190,11 +218,11 @@ async function runPilotVerification() {
     method: 'POST',
     headers: { Authorization: `Bearer ${empToken}` },
     body: {
-      latitude: 28.6140,
+      latitude: 28.614,
       longitude: 77.2092,
       accuracy: 3.5,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   });
   assert(onDutyLoc.status === 200, 'On-duty GPS breadcrumb accepted and recorded');
   assert(onDutyLoc.body.recorded === true, 'Breadcrumb successfully stored during active shift');
@@ -202,16 +230,19 @@ async function runPilotVerification() {
   // SCENARIO 7: Task Assignment & Checklist Progress
   console.log('\n--- SCENARIO 7: Task Assignment & Checklist Progress ---');
   const tasksRes = await request('/v1/tasks', {
-    headers: { Authorization: `Bearer ${empToken}` }
+    headers: { Authorization: `Bearer ${empToken}` },
   });
-  assert(tasksRes.status === 200 && tasksRes.body.tasks.length > 0, 'Employee fetches assigned field tasks');
+  assert(
+    tasksRes.status === 200 && tasksRes.body.tasks.length > 0,
+    'Employee fetches assigned field tasks',
+  );
   const task = tasksRes.body.tasks[0];
   console.log(`  Assigned Task: "${task.title}" at site: ${task.customerName}`);
 
   const checkRes = await request(`/v1/tasks/${task.id}/checklist/chk-1`, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${empToken}` },
-    body: { isCompleted: true }
+    body: { isCompleted: true },
   });
   assert(checkRes.status === 200, 'Checklist item 1 marked as completed');
 
@@ -220,7 +251,7 @@ async function runPilotVerification() {
   const proofUrlRes = await request('/v1/media/upload-url', {
     method: 'POST',
     headers: { Authorization: `Bearer ${empToken}` },
-    body: { taskId: task.id }
+    body: { taskId: task.id },
   });
   assert(proofUrlRes.status === 200, 'Task proof upload URL generated');
 
@@ -234,8 +265,8 @@ async function runPilotVerification() {
     body: {
       fileKey: proofUrlRes.body.fileKey,
       proofType: 'PHOTO',
-      notes: 'Completed intake filter replacement and pressure check'
-    }
+      notes: 'Completed intake filter replacement and pressure check',
+    },
   });
   assert(confirmProofRes.status === 201, 'Proof record linked to task');
 
@@ -245,8 +276,8 @@ async function runPilotVerification() {
     method: 'POST',
     body: {
       email: 'manager@acme.com',
-      password: 'PilotPassword123!'
-    }
+      password: 'PilotPassword123!',
+    },
   });
   assert(mgrLogin.status === 200, 'Manager authentication succeeds');
   const mgrToken = mgrLogin.body.token;
@@ -254,7 +285,7 @@ async function runPilotVerification() {
   const verifyTaskRes = await request(`/v1/tasks/${task.id}/verify`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${mgrToken}` },
-    body: { action: 'APPROVE' }
+    body: { action: 'APPROVE' },
   });
   assert(verifyTaskRes.status === 200, 'Manager approves task completion');
   assert(verifyTaskRes.body.status === 'VERIFIED', 'Task status transitioned to VERIFIED');
@@ -263,7 +294,7 @@ async function runPilotVerification() {
   console.log('\n--- SCENARIO 10: Attendance Punch-Out & Duty Cutoff ---');
   const punchOutRes = await request('/v1/attendance/punch-out', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${empToken}` }
+    headers: { Authorization: `Bearer ${empToken}` },
   });
   assert(punchOutRes.status === 200, 'Punch-out recorded successfully');
   assert(punchOutRes.body.status === 'OFF_DUTY', 'Attendance status transitioned to OFF_DUTY');
@@ -274,26 +305,35 @@ async function runPilotVerification() {
     headers: { Authorization: `Bearer ${empToken}` },
     body: {
       latitude: 28.6145,
-      longitude: 77.2100,
+      longitude: 77.21,
       accuracy: 5.0,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   });
-  assert(postDutyLoc.status === 403, 'Subsequent GPS breadcrumbs immediately rejected post punch-out');
-  assert(postDutyLoc.body.code === 'OFF_DUTY_TRACKING_PROHIBITED', 'Zero off-duty tracking invariant strictly maintained');
+  assert(
+    postDutyLoc.status === 403,
+    'Subsequent GPS breadcrumbs immediately rejected post punch-out',
+  );
+  assert(
+    postDutyLoc.body.code === 'OFF_DUTY_TRACKING_PROHIBITED',
+    'Zero off-duty tracking invariant strictly maintained',
+  );
 
   // SCENARIO 11: Device Revocation & Session Invalidation
   console.log('\n--- SCENARIO 11: Device Revocation & Session Invalidation ---');
   const revokeRes = await request('/v1/devices/revoke', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${mgrToken}` }
+    headers: { Authorization: `Bearer ${mgrToken}` },
   });
   assert(revokeRes.status === 200, 'Manager successfully revokes device installation');
 
   const revokedAccessRes = await request('/v1/tasks', {
-    headers: { Authorization: `Bearer ${empToken}` }
+    headers: { Authorization: `Bearer ${empToken}` },
   });
-  assert(revokedAccessRes.status === 401, 'Revoked device session immediately blocked with HTTP 401');
+  assert(
+    revokedAccessRes.status === 401,
+    'Revoked device session immediately blocked with HTTP 401',
+  );
   assert(revokedAccessRes.body.code === 'DEVICE_REVOKED', 'DEVICE_REVOKED error contract enforced');
 
   console.log('\n=============================================================');

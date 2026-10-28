@@ -65,17 +65,13 @@ export class TelemetryService {
 
   /**
    * INGESTION TIER: POST /v1/telemetry/locations
-   * 
+   *
    * Strict 3-Layer Duty Boundary Invariant:
    * Off-duty employee location tracking must NEVER occur.
    * If user is NOT currently in an active ON_DUTY session,
    * coordinates are dropped immediately with ZERO database writes.
    */
-  async ingestLocations(
-    workspaceId: string,
-    userId: string,
-    locations: LocationPointInput[],
-  ) {
+  async ingestLocations(workspaceId: string, userId: string, locations: LocationPointInput[]) {
     // 1. Quality pre-filter & timestamp validation
     const candidatePoints: (LocationPointInput & { recDate: Date })[] = [];
     const rejectedPointIds: string[] = [];
@@ -108,12 +104,7 @@ export class TelemetryService {
       }
 
       // Latitude and Longitude boundary checks
-      if (
-        loc.latitude < -90 ||
-        loc.latitude > 90 ||
-        loc.longitude < -180 ||
-        loc.longitude > 180
-      ) {
+      if (loc.latitude < -90 || loc.latitude > 90 || loc.longitude < -180 || loc.longitude > 180) {
         droppedCount++;
         rejectedPointIds.push(loc.id);
         continue;
@@ -170,8 +161,7 @@ export class TelemetryService {
         // punchInTime <= point.recordedAt AND (punchOutTime IS NULL OR point.recordedAt <= punchOutTime)
         const matched = candidateSessions.find(
           (s) =>
-            p.recDate >= s.punchInTime &&
-            (s.punchOutTime === null || p.recDate <= s.punchOutTime),
+            p.recDate >= s.punchInTime && (s.punchOutTime === null || p.recDate <= s.punchOutTime),
         );
 
         if (matched) {
@@ -259,7 +249,10 @@ export class TelemetryService {
             .limit(1);
 
           // Calculate distance delta across confirmed new points
-          const dateDistanceMap = new Map<string, { distance: number; count: number; maxDate: Date; minDate: Date }>();
+          const dateDistanceMap = new Map<
+            string,
+            { distance: number; count: number; maxDate: Date; minDate: Date }
+          >();
 
           let prevLat = lastKnown ? lastKnown.latitude : null;
           let prevLon = lastKnown ? lastKnown.longitude : null;
@@ -281,7 +274,12 @@ export class TelemetryService {
             if (curr.recDate < dateBucket.minDate) dateBucket.minDate = curr.recDate;
 
             if (prevLat !== null && prevLon !== null && prevTime !== null) {
-              const dist = calculateHaversineMeters(prevLat, prevLon, curr.latitude, curr.longitude);
+              const dist = calculateHaversineMeters(
+                prevLat,
+                prevLon,
+                curr.latitude,
+                curr.longitude,
+              );
               const timeDeltaSec = (curr.recDate.getTime() - prevTime) / 1000;
 
               // Anomaly filter: ignore jump if impossible travel speed (> 45 m/s)
@@ -341,9 +339,7 @@ export class TelemetryService {
       const latestMatched = matchedPoints[matchedPoints.length - 1];
       const activeSession = candidateSessions.find(
         (s) =>
-          s.id === latestMatched.sessionId &&
-          s.status === 'ON_DUTY' &&
-          s.punchOutTime === null,
+          s.id === latestMatched.sessionId && s.status === 'ON_DUTY' && s.punchOutTime === null,
       );
 
       return {
@@ -512,8 +508,7 @@ export class TelemetryService {
 
       let totalDurationMinutes = 0;
       if (points.length >= 2) {
-        const ms =
-          points[points.length - 1].recordedAt.getTime() - points[0].recordedAt.getTime();
+        const ms = points[points.length - 1].recordedAt.getTime() - points[0].recordedAt.getTime();
         totalDurationMinutes = Math.round(ms / 60000);
       }
 
@@ -636,12 +631,7 @@ export class TelemetryService {
   /**
    * Validates proximity of coordinates to a geofence.
    */
-  async validateProximity(
-    workspaceId: string,
-    geofenceId: string,
-    lat: number,
-    lon: number,
-  ) {
+  async validateProximity(workspaceId: string, geofenceId: string, lat: number, lon: number) {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`SELECT set_config('app.current_workspace_id', ${workspaceId}, true)`);
 
